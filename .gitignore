@@ -1,0 +1,17 @@
+# WordPress/PHP common ignores
+.DS_Store
+Thumbs.db
+error_log
+wp-config.php
+*.log
+
+# Editor ignores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Local dev
+node_modules/
+vendor/
+.env

@@ -1,0 +1,81 @@
+/* Fluid Typography Customizer - Full Grid/Flex Layout */
+
+.wpids-fluid-grid-container {
+    padding: 10px 0;
+}
+
+.wpids-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.wpids-grid-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.wpids-grid-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.wpids-grid-item label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #50575e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Input & Select Styling */
+.wpids-input-group {
+    display: flex;
+    width: 100%;
+}
+
+.wpids-grid-input {
+    flex: 2;
+    border-radius: 2px 0 0 2px !important;
+}
+
+.wpids-grid-select {
+    flex: 1;
+    border-radius: 0 2px 2px 0 !important;
+    background-color: #f6f7f7 !important;
+}
+
+/* Specific item widths */
+.wpids-grid-item input[type="number"] {
+    width: 100%;
+    height: 30px;
+}
+
+/* Description Box */
+.wpids-grid-description {
+    margin-top: 5px;
+    background: #f0f6fb;
+    padding: 12px;
+    border-left: 4px solid #007cba;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #1d2327;
+    border-radius: 0 2px 2px 0;
+}
+
+.wpids-grid-description code {
+    background: #fff;
+    padding: 1px 4px;
+    border-radius: 2px;
+    border: 1px solid #c3c4c7;
+}
+
+/* Cleanup old LI styles */
+#sub-section-wpids_typography_section li.customize-control {
+    width: 100% !important;
+    float: none !important;
+    clear: both !important;
+}

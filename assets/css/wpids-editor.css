@@ -1,0 +1,20 @@
+/* 
+ * WPIDS Utility Editor CSS 
+ * --------------------------------------------------------------
+ * This file is used to handle editor-specific overrides that 
+ * are not covered by the automatic Customizer/Theme sync.
+ */
+
+/* 
+ * Ensure Fluid Typography variables and Gradient variables 
+ * from the plugin are respected within the Gutenberg iframe.
+ */
+
+.editor-styles-wrapper {
+    /* Base typography sync if needed */
+}
+
+/* 
+ * You can add editor-only utility classes here 
+ * that help with the layout visibility during editing.
+ */
