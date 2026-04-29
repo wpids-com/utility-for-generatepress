@@ -140,8 +140,8 @@ class WPIDS_Settings {
 				</div>
 				<div class="wpids-header-nav">
 					<a href="#" class="active"><?php esc_html_e( 'Dashboard', 'generatepress-utility' ); ?></a>
-					<a href="https://wpids.com/utility-elite" target="_blank"><?php esc_html_e( 'Elite', 'generatepress-utility' ); ?></a>
-					<a href="https://my.wpids.com/help-support" target="_blank"><?php esc_html_e( 'Support', 'generatepress-utility' ); ?></a>
+					<a href="https://wpids.com/gp-utility-elite" target="_blank"><?php esc_html_e( 'Elite', 'generatepress-utility' ); ?></a>
+					<a href="https://wpids.com/help-support" target="_blank"><?php esc_html_e( 'Support', 'generatepress-utility' ); ?></a>
 					<a href="https://wpids.com/documentation" target="_blank"><?php esc_html_e( 'Documentation', 'generatepress-utility' ); ?></a>
 				</div>
 			</div>
