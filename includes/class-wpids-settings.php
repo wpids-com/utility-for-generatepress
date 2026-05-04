@@ -116,8 +116,12 @@ class WPIDS_Settings {
 		
 		$modules = array(
 			'enable_color_manager' => array(
-				'name' => __( 'Color Manager', 'generatepress-utility' ),
-				'desc' => __( 'Gradients & Houdini support.', 'generatepress-utility' )
+				'name' => __( 'Color Management', 'generatepress-utility' ),
+				'desc' => __( 'Import colors, generate shades, tints, and harmony variants.', 'generatepress-utility' )
+			),
+			'enable_gradient_palette' => array(
+				'name' => __( 'Gradient Palette', 'generatepress-utility' ),
+				'desc' => __( 'Create gradient presets as native WordPress variables (--wp--preset--gradient--*).', 'generatepress-utility' )
 			),
 			'enable_typography' => array(
 				'name' => __( 'Fluid Typography', 'generatepress-utility' ),
@@ -177,6 +181,10 @@ class WPIDS_Settings {
 				</table>
 			</div>
 
+			<?php 
+			$is_editor_sync = isset( $options['enable_editor_sync'] ) ? $options['enable_editor_sync'] : true;
+			if ( $is_editor_sync ) : 
+			?>
 			<div class="wpids-advanced-container" style="margin-top: 50px;">
 				<h2><?php esc_html_e( 'Custom CSS', 'generatepress-utility' ); ?></h2>
 				<form method="post" action="options.php">
@@ -187,8 +195,8 @@ class WPIDS_Settings {
 					<p style="color: #646970; font-size: 13px; margin-bottom:15px;">
 						<strong><?php esc_html_e( 'Advanced Raw CSS (No Linter)', 'generatepress-utility' ); ?></strong><br>
 						<?php 
-						/* translators: %s: code tag with @property */
 						printf( 
+							/* translators: %s: code tag with @property */
 							esc_html__( 'Write modern CSS like %s here. This CSS will be loaded in both the frontend and backend editor, bypassing the Customizer linter.', 'generatepress-utility' ),
 							'<code>@property</code>'
 						); 
@@ -198,10 +206,31 @@ class WPIDS_Settings {
 					<textarea name="wpids_utility_raw_css" rows="10" style="width: 100%; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; padding: 15px; background: #fff; color: #1d2327; border: 1px solid #c3c4c7; border-radius: 2px; box-shadow: inset 0 1px 2px rgba(0,0,0,.07);"><?php echo esc_textarea( $raw_css ); ?></textarea>
 					
 					<p style="margin-top: 20px;">
-						<input type="submit" name="submit" id="submit" class="wpids-btn-primary" value="<?php esc_attr_e( 'Save CSS Settings', 'generatepress-utility' ); ?>">
+						<input type="submit" name="submit" id="wpids-save-css-btn" class="wpids-btn-primary" value="<?php esc_attr_e( 'Save CSS Settings', 'generatepress-utility' ); ?>">
 					</p>
 				</form>
+				<script>
+				(function() {
+					var form = document.querySelector('.wpids-advanced-container form');
+					if ( ! form ) return;
+					form.addEventListener( 'submit', function() {
+						var btn = document.getElementById('wpids-save-css-btn');
+						if ( ! btn ) return;
+						setTimeout( function() {
+							btn.value = '<?php echo esc_js( __( 'Saved!', 'generatepress-utility' ) ); ?>';
+							btn.style.background = '#00a32a';
+							btn.style.borderColor = '#00a32a';
+							setTimeout( function() {
+								btn.value = '<?php echo esc_js( __( 'Save CSS Settings', 'generatepress-utility' ) ); ?>';
+								btn.style.background = '';
+								btn.style.borderColor = '';
+							}, 3000 );
+						}, 100 );
+					});
+				})();
+				</script>
 			</div>
+			<?php endif; ?>
 		</div>
 		<?php
 	}

@@ -42,19 +42,27 @@ class WPIDS_Color_Import_Control extends WP_Customize_Control {
 				<div id="wpids-parse-error" class="wpids-ci-error" style="display:none;"></div>
 			</div>
 
-			<!-- Step 2: Saved Color Sets -->
+			<!-- Step 2: Active Color Palette (Synced with GP) -->
 			<div class="wpids-ci-section">
-				<label class="wpids-ci-label">Active Color Sets</label>
-				<div id="wpids-saved-sets">
-					<?php if ( empty( $saved ) ) : ?>
-						<div class="wpids-ci-empty">No color sets yet. Import colors above to get started.</div>
-					<?php else : ?>
-						<?php foreach ( $saved as $i => $set ) : ?>
-							<?php $this->render_saved_set( $set, $i ); ?>
-						<?php endforeach; ?>
-					<?php endif; ?>
+				<label class="wpids-ci-label">GP Global Palette</label>
+				<div id="wpids-color-palette" class="wpids-gc-palette">
+					<!-- Swatches will be rendered here by JS -->
 				</div>
 			</div>
+
+			<!-- Dark Mode Auto-Sync Status Banner -->
+			<?php if ( class_exists( 'WPIDS_Dark_Mode' ) ) : ?>
+			<div class="wpids-dark-sync-banner">
+				<span class="wpids-dark-sync-icon">&#9790;</span>
+				<span>Dark Mode auto-sync is <strong>active</strong>. Math-derived dark colors override defaults automatically.</span>
+				<button type="button" id="wpids-resync-dark-btn" class="wpids-ci-btn wpids-ci-btn-ghost" style="margin:0;padding:3px 10px;font-size:11px;">Re-sync All</button>
+			</div>
+			<?php else : ?>
+			<div class="wpids-dark-sync-banner wpids-dark-sync-off">
+				<span class="wpids-dark-sync-icon">&#9790;</span>
+				<span>Dark Mode module inactive. Dark colors managed manually.</span>
+			</div>
+			<?php endif; ?>
 
 			<!-- Status -->
 			<div id="wpids-ci-status" class="wpids-ci-status" style="display:none;"></div>
@@ -123,39 +131,55 @@ class WPIDS_Color_Import_Control extends WP_Customize_Control {
 			</div>
 		</div>
 
-		<!-- Preview Modal -->
-		<div id="wpids-preview-modal" class="wpids-modal-overlay" style="display:none;" role="dialog" aria-modal="true">
-			<div class="wpids-modal-box wpids-preview-box">
+		<!-- Massive Menu Editor Modal -->
+		<div id="wpids-editor-modal" class="wpids-modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+			<div class="wpids-modal-box wpids-editor-box">
 				<div class="wpids-modal-header">
-					<h3>CSS Variables Preview</h3>
-					<button type="button" id="wpids-preview-close" class="wpids-modal-close">&times;</button>
+					<h3>Edit Color Variables</h3>
+					<button type="button" id="wpids-editor-close" class="wpids-modal-close" aria-label="Close">&times;</button>
 				</div>
-				<div class="wpids-modal-body">
-					<div id="wpids-preview-content" class="wpids-preview-content"></div>
-				</div>
-				<div class="wpids-modal-footer">
-					<button type="button" id="wpids-preview-copy" class="wpids-ci-btn wpids-ci-btn-ghost">Copy CSS</button>
-					<button type="button" id="wpids-preview-close-btn" class="wpids-ci-btn wpids-ci-btn-primary">Done</button>
-				</div>
-			</div>
-		</div>
-		<?php
-	}
 
-	private function render_saved_set( $set, $index ) {
-		$slug      = $set['slug'] ?? '';
-		$hex       = $set['hex'] ?? '#000000';
-		$var_count = count( $set['variables'] ?? array() );
-		?>
-		<div class="wpids-saved-set" data-index="<?php echo esc_attr( $index ); ?>">
-			<div class="wpids-set-swatch" style="background-color:<?php echo esc_attr( $hex ); ?>;"></div>
-			<div class="wpids-set-info">
-				<span class="wpids-set-slug">--<?php echo esc_html( $slug ); ?></span>
-				<span class="wpids-set-count"><?php echo esc_html( $var_count ); ?> variables</span>
-			</div>
-			<div class="wpids-set-actions">
-				<button type="button" class="wpids-set-preview" data-index="<?php echo esc_attr( $index ); ?>" title="Preview variables">&#128065;</button>
-				<button type="button" class="wpids-set-delete" data-index="<?php echo esc_attr( $index ); ?>" title="Remove">&times;</button>
+				<div class="wpids-modal-body">
+					<div class="wpids-editor-row">
+						<div class="wpids-editor-field">
+							<label class="wpids-ci-label">Name</label>
+							<input type="text" id="wpids-edit-name" class="wpids-ci-input" />
+						</div>
+						<div class="wpids-editor-field">
+							<label class="wpids-ci-label">Color</label>
+							<div id="wpids-react-color-picker-root"></div>
+							<input type="hidden" id="wpids-edit-hex" />
+						</div>
+						<div class="wpids-editor-field" style="flex:0; display:flex; align-items:flex-end;">
+							<button type="button" id="wpids-edit-delete" class="wpids-ci-btn wpids-ci-btn-danger" title="Delete from GP">Delete</button>
+						</div>
+					</div>
+
+					<!-- Math Options -->
+					<div class="wpids-modal-options" style="margin-top:16px;">
+						<label class="wpids-ci-label">Generate Derivatives</label>
+						<div class="wpids-options-grid">
+							<label class="wpids-option-check"><input type="checkbox" id="wpids-edit-opt-scale"> Lightness Scale (–10 to –90)</label>
+							<label class="wpids-option-check"><input type="checkbox" id="wpids-edit-opt-complementary"> Complementary (–comp)</label>
+							<label class="wpids-option-check"><input type="checkbox" id="wpids-edit-opt-triadic"> Triadic (–tri-a, –tri-b)</label>
+							<label class="wpids-option-check"><input type="checkbox" id="wpids-edit-opt-analogous"> Analogous (–ana-a, –ana-b)</label>
+							<label class="wpids-option-check"><input type="checkbox" id="wpids-edit-opt-split-comp"> Split-Complementary (–sc-a, –sc-b)</label>
+							<label class="wpids-option-check"><input type="checkbox" id="wpids-edit-opt-dark"> Auto Dark Counterpart</label>
+						</div>
+					</div>
+
+					<!-- Live Preview / Variables List -->
+					<div class="wpids-editor-preview-wrap" style="margin-top:16px;">
+						<label class="wpids-ci-label">Generated Variables (Click to copy CSS)</label>
+						<div id="wpids-editor-preview-list" class="wpids-editor-preview-list"></div>
+					</div>
+				</div>
+
+				<div class="wpids-modal-footer">
+					<span id="wpids-editor-status" style="font-size:11px;color:#00a32a;margin-right:auto;display:none;">Saved!</span>
+					<button type="button" id="wpids-editor-cancel" class="wpids-ci-btn wpids-ci-btn-ghost">Close</button>
+					<button type="button" id="wpids-editor-apply" class="wpids-ci-btn wpids-ci-btn-primary">Apply & Save</button>
+				</div>
 			</div>
 		</div>
 		<?php

@@ -78,14 +78,14 @@ class WPIDS_Color_Manager {
 		$accent   = isset( $color_map['accent'] )     ? $color_map['accent']     : '#60a5fa';
 
 		?>
-		<!-- WPIDS Dark Mode CSS | <?php echo $color_count; ?> colors loaded | priority 9999 -->
+		<!-- WPIDS Dark Mode CSS | <?php echo (int) $color_count; ?> colors loaded | priority 9999 -->
 		<style id="wpids-dark-mode-vars">
 			/*
 			 * Layer 1: CSS Variable Override
 			 * Menimpa variabel :root GP agar semua elemen yang menggunakan var() ikut berubah.
 			 */
 			body.dark {
-<?php echo $var_css; ?>
+<?php echo wp_strip_all_tags( $var_css ); ?>
 			}
 
 			/*

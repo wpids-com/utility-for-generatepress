@@ -76,7 +76,7 @@ class WPIDS_Typography {
 			array(
 				'title'    => 'Fluid Typography',
 				'panel'    => 'wpids_utility_panel',
-				'priority' => 40,
+				'priority' => 30,
 			)
 		);
 
@@ -398,7 +398,12 @@ if ( class_exists( 'WP_Customize_Control' ) ) {
 					</div>
 
 					<div class="wpids-grid-description">
-						<?php _e( 'Uses the CSS <code>clamp()</code> property to dynamically control font growth between viewports.', 'generatepress-utility' ); ?>
+						<?php 
+						echo wp_kses( 
+							__( 'Uses the CSS <code>clamp()</code> property to dynamically control font growth between viewports.', 'generatepress-utility' ), 
+							array( 'code' => array() ) 
+						); 
+						?>
 					</div>
 				</div>
 			</div>

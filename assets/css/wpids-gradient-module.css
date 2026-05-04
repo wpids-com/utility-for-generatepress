@@ -1,271 +1,499 @@
-/* ===================================================
-   WPIDS Gradient Module — Customizer Styles
-   =================================================== */
+/* =====================================================
+   WPIDS Gradient Control — GP React Color Style
+   ===================================================== */
 
-/* ── Wrap ─────────────────────────────────────────── */
-.wpids-grad-wrap {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 13px;
-    color: #1e1e1e;
-}
-.wpids-grad-header {
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #ddd;
+.wpids-gc-wrap {
+	font-size: 12px;
+	color: #1d2327;
 }
 
-/* ── Saved Gradient Row ───────────────────────────── */
-.wpids-grad-saved-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border: 1px solid #e2e4e7;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    background: #fff;
-    transition: box-shadow 0.15s ease;
-}
-.wpids-grad-saved-row:hover { box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
-.wpids-grad-swatch {
-    width: 48px;
-    height: 28px;
-    border-radius: 4px;
-    border: 1px solid rgba(0,0,0,0.1);
-    flex-shrink: 0;
-}
-.wpids-grad-edit {
-    background: none;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s;
-}
-.wpids-grad-edit:hover { background: #e8f4fc; }
-
-/* ── Gradient Shortcut Button (in GP colors panel) ── */
-.wpids-grad-shortcut {
-    font-size: 12px;
-    gap: 6px;
+/* ── Palette Grid ── */
+.wpids-gc-palette {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 8px 0 4px;
+	min-height: 34px;
 }
 
-/* ── Modal Box (wider for builder) ───────────────────*/
-.wpids-grad-modal-box {
-    max-width: 820px !important;
+/* Each gradient swatch */
+.wpids-gc-swatch {
+	position: relative;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	cursor: pointer;
+	border: 1px solid rgba(0,0,0,0.12);
+	overflow: hidden;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	flex-shrink: 0;
 }
 
-/* ── Builder Layout ───────────────────────────────── */
-.wpids-grad-body {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 24px;
-    padding: 20px !important;
+.wpids-gc-swatch:hover,
+.wpids-gc-swatch.is-active {
+	transform: scale(1.15);
+	box-shadow: 0 0 0 2px #2271b1;
 }
 
-/* ── Controls ─────────────────────────────────────── */
-.wpids-grad-controls { display: flex; flex-direction: column; gap: 16px; }
-.wpids-grad-field-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.wpids-grad-field {
-    flex: 1;
-    min-width: 120px;
-}
-.wpids-grad-field label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #555;
-    margin-bottom: 6px;
-}
-.wpids-grad-field input[type="text"],
-.wpids-grad-field input[type="number"],
-.wpids-grad-field select {
-    width: 100%;
-    padding: 6px 8px;
-    border: 1px solid #c3c4c7;
-    border-radius: 4px;
-    font-size: 12px;
-    box-sizing: border-box;
+/* The "+" add button — same circle style as GP color swatches */
+.wpids-gc-swatch-add {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 1px dashed #b2b9c4;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	line-height: 1;
+	color: #8c8f94;
+	background: #fff;
+	transition: all 0.15s;
+	flex-shrink: 0;
 }
 
-/* Slug with prefix */
-.wpids-slug-wrap {
-    display: flex;
-    align-items: center;
-    border: 1px solid #c3c4c7;
-    border-radius: 4px;
-    overflow: hidden;
-}
-.wpids-slug-prefix {
-    padding: 6px 8px;
-    background: #f0f0f1;
-    color: #555;
-    font-family: monospace;
-    font-size: 12px;
-    border-right: 1px solid #c3c4c7;
-    flex-shrink: 0;
-}
-.wpids-slug-wrap input {
-    border: none !important;
-    outline: none;
-    flex: 1;
-    padding: 6px 8px;
-    font-family: monospace;
+.wpids-gc-swatch-add:hover {
+	border-color: #2271b1;
+	color: #2271b1;
+	background: #f0f6fc;
 }
 
-/* Angle row */
-.wpids-angle-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.wpids-angle-row input[type="range"] { flex: 1; }
-.wpids-angle-row input[type="number"] { width: 60px; flex-shrink: 0; }
-
-/* ── Color Stops ──────────────────────────────────── */
-.wpids-grad-stops-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
-.wpids-stop-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    background: #f8f9fa;
-    border: 1px solid #e2e4e7;
-    border-radius: 6px;
-}
-.wpids-stop-color {
-    width: 36px;
-    height: 30px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    padding: 2px;
-    flex-shrink: 0;
-}
-.wpids-stop-pos-wrap {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: 1;
-}
-.wpids-stop-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
-/* GP Color Palette row inside each stop */
-.wpids-pal-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding-top: 6px;
-    border-top: 1px solid #eee;
-    margin-top: 4px;
-}
-.wpids-pal-swatch {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border-radius: 3px;
-    border: 1px solid rgba(0,0,0,0.15);
-    cursor: pointer;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-.wpids-pal-swatch:hover {
-    transform: scale(1.25);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    z-index: 1;
-}
-.wpids-stop-num { width: 52px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
-.wpids-stop-pct { font-size: 11px; color: #888; }
-.wpids-stop-del {
-    background: none;
-    border: 1px solid #fca5a5;
-    border-radius: 4px;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    color: #dc2626;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.wpids-stop-del:hover { background: #fef2f2; }
-.wpids-grad-add-stop-btn { font-size: 11px; padding: 4px 10px; }
-
-/* ── Dark Mode Section ────────────────────────────── */
-.wpids-grad-dark-section {
-    padding: 12px;
-    background: #f0f4ff;
-    border: 1px solid #c7d5f0;
-    border-radius: 6px;
-}
-.wpids-grad-dark-label {
-    font-size: 11px;
-    color: #555;
-    margin-bottom: 6px;
-    font-weight: 600;
+/* Empty state */
+.wpids-gc-empty {
+	font-size: 11px;
+	color: #8c8f94;
+	font-style: italic;
+	padding: 4px 0;
 }
 
-/* ── Preview Panel ────────────────────────────────── */
-.wpids-grad-preview-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: sticky;
-    top: 0;
+/* ── Editor Panel ── */
+.wpids-gc-editor {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+	padding: 12px;
+	margin-top: 12px;
+	position: relative;
 }
-.wpids-grad-preview-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #555;
+
+.wpids-gc-editor-caret {
+	position: absolute;
+	top: -6px;
+	width: 10px;
+	height: 10px;
+	background: #fff;
+	border-top: 1px solid #dcdcde;
+	border-left: 1px solid #dcdcde;
+	transform: translateX(-50%) rotate(45deg);
+	transition: left 0.3s ease;
 }
-.wpids-grad-preview-strip {
-    border-radius: 8px;
-    border: 1px solid rgba(0,0,0,0.08);
-    transition: background 0.3s ease;
+
+/* Header: back / name / delete */
+.wpids-gc-editor-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 10px;
 }
-.wpids-grad-preview-large {
-    height: 160px;
-    width: 100%;
+
+.wpids-gc-back-btn,
+.wpids-gc-delete-btn {
+	background: none;
+	border: none;
+	padding: 2px 4px;
+	cursor: pointer;
+	color: #646970;
+	border-radius: 2px;
+	transition: color 0.15s, background 0.15s;
+	line-height: 1;
 }
-#wpids-grad-dark-preview {
-    height: 50px;
+
+.wpids-gc-back-btn:hover { color: #2271b1; background: #f0f6fc; }
+.wpids-gc-delete-btn { color: #b32d2e; margin-left: auto; }
+.wpids-gc-delete-btn:hover { background: #fbeaea; }
+
+.wpids-gc-name-input {
+	flex: 1;
+	height: 28px;
+	padding: 0 8px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	color: #1d2327;
 }
-.wpids-grad-preview-css-wrap label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #555;
-    margin-bottom: 6px;
+
+.wpids-gc-name-input:focus {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: none;
 }
-.wpids-grad-css-output {
-    display: block;
-    padding: 8px 10px;
-    background: #1e1e2e;
-    color: #cba6f7;
-    border-radius: 6px;
-    font-size: 11px;
-    font-family: 'Courier New', monospace;
-    word-break: break-all;
-    white-space: pre-wrap;
-    line-height: 1.6;
+
+/* Gradient preview bar (like GB) */
+.wpids-gc-preview-bar {
+	height: 24px;
+	border-radius: 3px;
+	border: 1px solid rgba(0,0,0,0.1);
+	margin-bottom: 12px;
+	background: linear-gradient(135deg, #e0e0e0, #fff);
+}
+
+/* Type + Angle row */
+.wpids-gc-row {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.wpids-gc-field {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	flex: 1;
+}
+
+.wpids-gc-field label {
+	font-size: 11px;
+	font-weight: 500;
+	color: #646970;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.wpids-gc-select,
+.wpids-gc-num {
+	height: 28px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	padding: 0 6px;
+	color: #1d2327;
+	background: #fff;
+}
+
+.wpids-gc-select:focus,
+.wpids-gc-num:focus {
+	border-color: #2271b1;
+	outline: none;
+}
+
+.wpids-gc-angle-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.wpids-gc-angle-group .wpids-gc-num {
+	width: 56px;
+}
+
+/* ── Color Stops ── */
+.wpids-gc-stops {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.wpids-gc-stop-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* The color circle swatch (like GB's stop dot) */
+.wpids-gc-stop-swatch {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	border: 1px solid rgba(0,0,0,0.15);
+	cursor: pointer;
+	flex-shrink: 0;
+	position: relative;
+}
+
+.wpids-gc-stop-swatch:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px #2271b1;
+}
+
+/* Position slider */
+.wpids-gc-stop-slider {
+	flex: 1;
+	height: 3px;
+	-webkit-appearance: none;
+	appearance: none;
+	background: #dcdcde;
+	border-radius: 2px;
+	cursor: pointer;
+}
+
+.wpids-gc-stop-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #2271b1;
+	cursor: pointer;
+	border: 2px solid #fff;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Position number input */
+.wpids-gc-stop-pos {
+	width: 42px;
+	height: 26px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	padding: 0 4px;
+	text-align: center;
+	color: #1d2327;
+}
+
+/* Remove stop button */
+.wpids-gc-stop-remove {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: #b32d2e;
+	padding: 2px;
+	font-size: 14px;
+	line-height: 1;
+	border-radius: 2px;
+	flex-shrink: 0;
+	transition: background 0.15s;
+}
+
+.wpids-gc-stop-remove:hover { background: #fbeaea; }
+
+/* Add stop button */
+.wpids-gc-add-stop {
+	font-size: 11px !important;
+	height: 26px !important;
+	line-height: 24px !important;
+	padding: 0 8px !important;
+	margin-bottom: 10px;
+}
+
+/* Utility class hint */
+.wpids-gc-utility-hint {
+	display: flex;
+	align-items: flex-start;
+	gap: 4px;
+	background: #f0f6fc;
+	border: 1px solid #c2d4ee;
+	border-radius: 2px;
+	padding: 6px 8px;
+	margin-bottom: 10px;
+	font-size: 11px;
+	color: #2271b1;
+	word-break: break-all;
+}
+
+.wpids-gc-utility-hint .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+/* Actions */
+.wpids-gc-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.wpids-gc-save-status {
+	font-size: 11px;
+	color: #00a32a;
+	font-weight: 500;
+}
+
+/* ── Border Settings Section ── */
+.wpids-gb-settings {
+	margin-top: 16px;
+	padding-top: 14px;
+	border-top: 1px solid #dcdcde;
+}
+
+.wpids-gb-settings-title {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #646970;
+	margin-bottom: 10px;
+}
+
+.wpids-gb-custom-radius { margin-top: 8px; }
+
+.wpids-gb-radius-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
+.wpids-gb-radius-header label {
+	font-size: 11px;
+	font-weight: 500;
+	color: #646970;
+	text-transform: uppercase;
+	flex: 1;
+}
+
+.wpids-gb-radius-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.wpids-gb-unit-select {
+	height: 24px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 11px;
+	padding: 0 4px;
+	color: #1d2327;
+	background: #fff;
+}
+
+.wpids-gb-link-btn {
+	background: none;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #8c8f94;
+	transition: all 0.15s;
+	padding: 0;
+}
+
+.wpids-gb-link-btn.is-linked {
+	background: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+}
+
+.wpids-gb-link-btn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+.wpids-gb-radius-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+}
+
+.wpids-gb-radius-field {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.wpids-gb-radius-field label {
+	font-size: 10px;
+	color: #8c8f94;
+}
+
+.wpids-gb-r-input {
+	height: 28px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	padding: 0 6px;
+	text-align: center;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.wpids-gb-r-input:focus {
+	border-color: #2271b1;
+	outline: none;
+}
+
+/* Usage / class list */
+.wpids-gb-usage {
+	margin: 12px 0 10px;
+	padding: 8px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+}
+
+.wpids-gb-usage-title {
+	font-weight: 600;
+	font-size: 11px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin: 0 0 4px;
+	color: #1d2327;
+}
+
+.wpids-gb-usage p {
+	font-size: 11px;
+	color: #646970;
+	margin: 0 0 6px;
+}
+
+.wpids-gb-class-item {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	margin-bottom: 6px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+}
+
+.wpids-gb-class-item code {
+	flex: 1;
+	border: none;
+	background: none;
+	padding: 4px 8px;
+	font-size: 10px;
+	color: #2271b1;
+	word-break: break-all;
+	display: flex;
+	align-items: center;
+}
+
+.wpids-gb-copy-btn {
+	background: none;
+	border: none;
+	border-left: 1px solid #dcdcde;
+	cursor: pointer;
+	color: #8c8f94;
+	padding: 0 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.15s;
+}
+
+.wpids-gb-copy-btn:hover {
+	color: #2271b1;
+	background: #f6f7f7;
+}
+
+.wpids-gb-copy-btn.is-copied {
+	color: #00a32a;
+	background: #edfaef;
+}
+
+.wpids-gb-copy-btn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
 }

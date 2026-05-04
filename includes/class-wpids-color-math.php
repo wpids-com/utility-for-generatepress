@@ -19,20 +19,45 @@ class WPIDS_Color_Math {
 	// ─────────────────────────────────────────────
 
 	/**
-	 * Convert hex color to HSL array.
+	 * Parse color string (hex, hex8, or rgba) into HSL array + alpha.
 	 *
-	 * @param string $hex e.g. '#238b65' or '238b65'
-	 * @return array|null [h(0-360), s(0-100), l(0-100)] or null on invalid input
+	 * @param string $color
+	 * @return array|null [h(0-360), s(0-100), l(0-100), a(0-1)] or null on invalid input
 	 */
-	public static function hex_to_hsl( $hex ) {
-		$hex = ltrim( $hex, '#' );
+	public static function parse_color( $color ) {
+		$color = strtolower( trim( $color ) );
+		$alpha = 1.0;
+		$hex   = '';
 
-		// Support 3-char shorthand
-		if ( strlen( $hex ) === 3 ) {
-			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		// 1. rgba(r,g,b,a)
+		if ( preg_match( '/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([0-9.]+))?\s*\)$/i', $color, $m ) ) {
+			$r = max( 0, min( 255, (int) $m[1] ) );
+			$g = max( 0, min( 255, (int) $m[2] ) );
+			$b = max( 0, min( 255, (int) $m[3] ) );
+			if ( isset( $m[4] ) ) {
+				$alpha = max( 0, min( 1, (float) $m[4] ) );
+			}
+			$hex = sprintf( "%02x%02x%02x", $r, $g, $b );
+		}
+		// 2. Hex formats (#RGB, #RGBA, #RRGGBB, #RRGGBBAA)
+		else {
+			$raw = ltrim( $color, '#' );
+			if ( strlen( $raw ) === 3 ) {
+				$hex = $raw[0].$raw[0].$raw[1].$raw[1].$raw[2].$raw[2];
+			} elseif ( strlen( $raw ) === 4 ) {
+				$hex = $raw[0].$raw[0].$raw[1].$raw[1].$raw[2].$raw[2];
+				$alpha = round( hexdec( $raw[3].$raw[3] ) / 255, 2 );
+			} elseif ( strlen( $raw ) === 6 ) {
+				$hex = $raw;
+			} elseif ( strlen( $raw ) === 8 ) {
+				$hex = substr( $raw, 0, 6 );
+				$alpha = round( hexdec( substr( $raw, 6, 2 ) ) / 255, 2 );
+			} else {
+				return null;
+			}
 		}
 
-		if ( strlen( $hex ) !== 6 || ! ctype_xdigit( $hex ) ) {
+		if ( ! ctype_xdigit( $hex ) ) {
 			return null;
 		}
 
@@ -44,17 +69,13 @@ class WPIDS_Color_Math {
 		$min  = min( $r, $g, $b );
 		$delta = $max - $min;
 
-		// Lightness
 		$l = ( $max + $min ) / 2;
 
-		// Saturation
 		if ( $delta == 0 ) {
 			$h = 0;
 			$s = 0;
 		} else {
 			$s = $delta / ( 1 - abs( 2 * $l - 1 ) );
-
-			// Hue
 			if ( $max === $r ) {
 				$h = 60 * fmod( ( $g - $b ) / $delta, 6 );
 			} elseif ( $max === $g ) {
@@ -64,26 +85,26 @@ class WPIDS_Color_Math {
 			}
 		}
 
-		if ( $h < 0 ) {
-			$h += 360;
-		}
+		if ( $h < 0 ) $h += 360;
 
 		return array(
 			'h' => round( $h, 2 ),
 			's' => round( $s * 100, 2 ),
 			'l' => round( $l * 100, 2 ),
+			'a' => $alpha,
 		);
 	}
 
 	/**
-	 * Convert HSL values to hex string.
+	 * Format HSL + Alpha back to CSS string (#RRGGBB or rgba).
 	 *
 	 * @param float $h 0-360
 	 * @param float $s 0-100
 	 * @param float $l 0-100
-	 * @return string e.g. '#238b65'
+	 * @param float $a 0-1.0
+	 * @return string
 	 */
-	public static function hsl_to_hex( $h, $s, $l ) {
+	public static function format_color( $h, $s, $l, $a = 1.0 ) {
 		$h = fmod( $h, 360 );
 		if ( $h < 0 ) $h += 360;
 
@@ -104,6 +125,10 @@ class WPIDS_Color_Math {
 		$r = round( ( $r + $m ) * 255 );
 		$g = round( ( $g + $m ) * 255 );
 		$b = round( ( $b + $m ) * 255 );
+
+		if ( $a < 1.0 ) {
+			return "rgba({$r}, {$g}, {$b}, " . round( $a, 3 ) . ")";
+		}
 
 		return sprintf( '#%02x%02x%02x', $r, $g, $b );
 	}
@@ -132,33 +157,28 @@ class WPIDS_Color_Math {
 
 	/**
 	 * Calculate perceived brightness (0-255).
-	 * Uses ITU-R BT.601 formula.
 	 *
-	 * @param string $hex
+	 * @param string $color
 	 * @return float
 	 */
-	public static function brightness( $hex ) {
-		$hex = ltrim( $hex, '#' );
-		if ( strlen( $hex ) === 3 ) {
-			$hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
-		}
-		if ( strlen( $hex ) !== 6 ) return 128;
-
-		$r = hexdec( substr( $hex, 0, 2 ) );
-		$g = hexdec( substr( $hex, 2, 2 ) );
-		$b = hexdec( substr( $hex, 4, 2 ) );
-
-		return ( $r * 299 + $g * 587 + $b * 114 ) / 1000;
+	public static function brightness( $color ) {
+		$hsl = self::parse_color( $color );
+		if ( ! $hsl ) return 128;
+		
+		// Approximate brightness from Lightness for fallback,
+		// or ideally convert back to RGB.
+		// For simplicity, we just use L (0-100) scaled to (0-255)
+		return ( $hsl['l'] / 100 ) * 255;
 	}
 
 	/**
 	 * Is a color considered "light"?
 	 *
-	 * @param string $hex
+	 * @param string $color
 	 * @return bool
 	 */
-	public static function is_light( $hex ) {
-		return self::brightness( $hex ) > 128;
+	public static function is_light( $color ) {
+		return self::brightness( $color ) > 128;
 	}
 
 	// ─────────────────────────────────────────────
@@ -177,13 +197,13 @@ class WPIDS_Color_Math {
 	 * @param string $hex Base hex color
 	 * @return array  [ '10' => '#hex', '20' => '#hex', ... '90' => '#hex' ]
 	 */
-	public static function lightness_scale( $hex ) {
-		$hsl = self::hex_to_hsl( $hex );
+	public static function lightness_scale( $color ) {
+		$hsl = self::parse_color( $color );
 		if ( ! $hsl ) return array();
 
 		$scale = array();
 		for ( $step = 10; $step <= 90; $step += 10 ) {
-			$scale[ (string) $step ] = self::hsl_to_hex( $hsl['h'], $hsl['s'], $step );
+			$scale[ (string) $step ] = self::format_color( $hsl['h'], $hsl['s'], $step, $hsl['a'] );
 		}
 
 		return $scale;
@@ -193,64 +213,39 @@ class WPIDS_Color_Math {
 	// SECTION 3: Color Theory Variants
 	// ─────────────────────────────────────────────
 
-	/**
-	 * Complementary color (hue + 180°).
-	 *
-	 * @param string $hex
-	 * @return string hex
-	 */
-	public static function complementary( $hex ) {
-		$hsl = self::hex_to_hsl( $hex );
-		if ( ! $hsl ) return $hex;
-
-		return self::hsl_to_hex( $hsl['h'] + 180, $hsl['s'], $hsl['l'] );
+	public static function complementary( $color ) {
+		$hsl = self::parse_color( $color );
+		if ( ! $hsl ) return $color;
+		return self::format_color( $hsl['h'] + 180, $hsl['s'], $hsl['l'], $hsl['a'] );
 	}
 
-	/**
-	 * Triadic colors (hue ±120°).
-	 *
-	 * @param string $hex
-	 * @return array ['a' => '#hex', 'b' => '#hex']
-	 */
-	public static function triadic( $hex ) {
-		$hsl = self::hex_to_hsl( $hex );
-		if ( ! $hsl ) return array( 'a' => $hex, 'b' => $hex );
+	public static function triadic( $color ) {
+		$hsl = self::parse_color( $color );
+		if ( ! $hsl ) return array( 'a' => $color, 'b' => $color );
 
 		return array(
-			'a' => self::hsl_to_hex( $hsl['h'] + 120, $hsl['s'], $hsl['l'] ),
-			'b' => self::hsl_to_hex( $hsl['h'] + 240, $hsl['s'], $hsl['l'] ),
+			'a' => self::format_color( $hsl['h'] + 120, $hsl['s'], $hsl['l'], $hsl['a'] ),
+			'b' => self::format_color( $hsl['h'] + 240, $hsl['s'], $hsl['l'], $hsl['a'] ),
 		);
 	}
 
-	/**
-	 * Analogous colors (hue ±30°).
-	 *
-	 * @param string $hex
-	 * @return array ['a' => '#hex', 'b' => '#hex']
-	 */
-	public static function analogous( $hex ) {
-		$hsl = self::hex_to_hsl( $hex );
-		if ( ! $hsl ) return array( 'a' => $hex, 'b' => $hex );
+	public static function analogous( $color ) {
+		$hsl = self::parse_color( $color );
+		if ( ! $hsl ) return array( 'a' => $color, 'b' => $color );
 
 		return array(
-			'a' => self::hsl_to_hex( $hsl['h'] + 30, $hsl['s'], $hsl['l'] ),
-			'b' => self::hsl_to_hex( $hsl['h'] - 30, $hsl['s'], $hsl['l'] ),
+			'a' => self::format_color( $hsl['h'] + 30, $hsl['s'], $hsl['l'], $hsl['a'] ),
+			'b' => self::format_color( $hsl['h'] - 30, $hsl['s'], $hsl['l'], $hsl['a'] ),
 		);
 	}
 
-	/**
-	 * Split-complementary colors (hue +150° and hue +210°).
-	 *
-	 * @param string $hex
-	 * @return array ['a' => '#hex', 'b' => '#hex']
-	 */
-	public static function split_complementary( $hex ) {
-		$hsl = self::hex_to_hsl( $hex );
-		if ( ! $hsl ) return array( 'a' => $hex, 'b' => $hex );
+	public static function split_complementary( $color ) {
+		$hsl = self::parse_color( $color );
+		if ( ! $hsl ) return array( 'a' => $color, 'b' => $color );
 
 		return array(
-			'a' => self::hsl_to_hex( $hsl['h'] + 150, $hsl['s'], $hsl['l'] ),
-			'b' => self::hsl_to_hex( $hsl['h'] + 210, $hsl['s'], $hsl['l'] ),
+			'a' => self::format_color( $hsl['h'] + 150, $hsl['s'], $hsl['l'], $hsl['a'] ),
+			'b' => self::format_color( $hsl['h'] + 210, $hsl['s'], $hsl['l'], $hsl['a'] ),
 		);
 	}
 
@@ -262,25 +257,38 @@ class WPIDS_Color_Math {
 	 * Compute the dark mode counterpart of a light color.
 	 *
 	 * Algorithm:
-	 *   L_dark = clamp(15, 95 - L_light, 85)
-	 *   S_dark = max(0, S - 5)   ← slightly desaturate to reduce harshness
+	 *   1. Invert lightness (100 - L)
+	 *   2. Contrast Boosting: Shift colors +/- 15% away from 50%
+	 *   3. S_dark = max(0, S - 10) ← desaturate for comfort
 	 *
 	 * This ensures:
-	 *   - Very dark colors (L<15) stay at min 15% lightness
-	 *   - Very light colors (L>80) don't go above 85%
-	 *   - Mid-range colors are naturally inverted
+	 *   - High contrast in dark mode (black -> white-ish, white -> black-ish)
+	 *   - Mid-range colors are pushed away from the "muddy" 50% range
+	 *   - Perceptual comfort via desaturation
 	 *
 	 * @param string $hex Light mode hex color
 	 * @return string Dark mode hex color
 	 */
-	public static function dark_counterpart( $hex ) {
-		$hsl = self::hex_to_hsl( $hex );
-		if ( ! $hsl ) return $hex;
+	public static function dark_counterpart( $color ) {
+		$hsl = self::parse_color( $color );
+		if ( ! $hsl ) return $color;
 
-		$l_dark = max( 15, min( 85, 95 - $hsl['l'] ) );
-		$s_dark = max( 0, $hsl['s'] - 5 );
+		// 1. Invert lightness
+		$l_inv = 100 - $hsl['l'];
 
-		return self::hsl_to_hex( $hsl['h'], $s_dark, $l_dark );
+		// 2. Push for higher contrast (avoid the 'muddy middle')
+		if ( $l_inv < 50 ) {
+			// If it would be dark-ish, make it darker
+			$l_dark = max( 12, $l_inv - 15 );
+		} else {
+			// If it would be light-ish, make it lighter
+			$l_dark = min( 92, $l_inv + 15 );
+		}
+
+		// 3. Slightly desaturate to avoid 'neon' look in dark mode
+		$s_dark = max( 0, $hsl['s'] - 10 );
+
+		return self::format_color( $hsl['h'], $s_dark, $l_dark, $hsl['a'] );
 	}
 
 	// ─────────────────────────────────────────────
@@ -379,8 +387,9 @@ class WPIDS_Color_Math {
 		$input   = trim( $input );
 		$colors  = array();
 
-		// 1. Try CSS custom properties: --slug: #hex;
-		if ( preg_match_all( '/--([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,6})/i', $input, $matches, PREG_SET_ORDER ) ) {
+		// 1. Try CSS custom properties: --slug: #hex or rgba(...)
+		// Match `#...` or `rgba(...)`
+		if ( preg_match_all( '/--([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))/i', $input, $matches, PREG_SET_ORDER ) ) {
 			foreach ( $matches as $m ) {
 				$colors[ sanitize_key( $m[1] ) ] = strtolower( $m[2] );
 			}
@@ -391,7 +400,7 @@ class WPIDS_Color_Math {
 		$decoded = json_decode( $input, true );
 		if ( is_array( $decoded ) ) {
 			foreach ( $decoded as $key => $value ) {
-				if ( is_string( $value ) && preg_match( '/^#[0-9a-fA-F]{3,6}$/', trim( $value ) ) ) {
+				if ( is_string( $value ) && preg_match( '/^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))$/i', trim( $value ) ) ) {
 					$colors[ sanitize_key( $key ) ] = strtolower( trim( $value ) );
 				}
 			}
@@ -399,7 +408,7 @@ class WPIDS_Color_Math {
 		}
 
 		// 3. Try plain hex list (comma or newline separated)
-		preg_match_all( '/#([0-9a-fA-F]{3,6})\b/', $input, $hex_matches );
+		preg_match_all( '/#([0-9a-fA-F]{3,8})\b/', $input, $hex_matches );
 		if ( ! empty( $hex_matches[0] ) ) {
 			$i = 1;
 			foreach ( $hex_matches[0] as $hex ) {

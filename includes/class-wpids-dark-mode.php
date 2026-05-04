@@ -100,66 +100,69 @@ class WPIDS_Dark_Mode {
 			return;
 		}
 
-		$dark_colors = get_theme_mod( 'wpids_dark_global_colors' );
+		$dark_colors = array();
 
-		// Cek apakah data sudah tersimpan di DB (bukan hanya default dari sync filter)
-		$theme_mods_raw = get_option( 'theme_mods_' . get_option( 'stylesheet' ), array() );
-		$db_saved       = isset( $theme_mods_raw['wpids_dark_global_colors'] ) ? $theme_mods_raw['wpids_dark_global_colors'] : null;
-
-		if ( is_array( $db_saved ) && ! empty( $db_saved ) ) {
-			// Gunakan data yang tersimpan di DB (Publish dari Customizer)
-			$dark_colors = $db_saved;
-			$source = 'DB(' . count( $db_saved ) . ')';
-		} elseif ( is_array( $dark_colors ) && ! empty( $dark_colors ) ) {
-			// get_theme_mod mengembalikan data (dari sync filter)
-			// Validasi: jika base-3 terlihat seperti warna TERANG, gunakan fallback
-			$has_light_base = false;
-			foreach ( $dark_colors as $c ) {
-				if ( isset( $c['slug'] ) && $c['slug'] === 'base-3' && isset( $c['color'] ) ) {
-					// Konversi hex ke brightness — jika > 128, ini warna terang
-					$hex = ltrim( $c['color'], '#' );
-					if ( strlen( $hex ) === 6 ) {
-						$r = hexdec( substr( $hex, 0, 2 ) );
-						$g = hexdec( substr( $hex, 2, 2 ) );
-						$b = hexdec( substr( $hex, 4, 2 ) );
-						$brightness = ( $r * 299 + $g * 587 + $b * 114 ) / 1000;
-						if ( $brightness > 128 ) {
-							$has_light_base = true;
-						}
+		// ── Priority 1: Math-derived dark counterparts (Color Module active) ──
+		// These are computed mathematically and always most accurate.
+		// Only applied when both Color Management module is active.
+		if ( class_exists( 'WPIDS_Color_Module' ) ) {
+			$expanded = get_option( 'wpids_expanded_colors', array() );
+			if ( ! empty( $expanded ) && is_array( $expanded ) ) {
+				foreach ( $expanded as $set ) {
+					if ( empty( $set['dark_counterparts'] ) ) continue;
+					foreach ( $set['dark_counterparts'] as $slug => $hex ) {
+						// dark_counterparts keyed by slug (e.g. 'accent' not '--accent')
+						$dark_colors[ $slug ] = array(
+							'slug'  => $slug,
+							'color' => $hex,
+						);
 					}
 				}
 			}
-			$source = $has_light_base ? 'sync-but-light' : 'sync-dark';
-		} else {
-			$has_light_base = true; // pastikan kita pakai fallback
-			$source = 'empty';
 		}
 
-		// Jika warna base masih terang (sync dari GP light), paksa pakai fallback gelap
-		if ( ! isset( $db_saved ) || empty( $db_saved ) ) {
-			if ( ! isset( $has_light_base ) || $has_light_base ) {
-				$dark_colors = array(
-					array( 'slug' => 'contrast',   'color' => '#f9fafb' ),
-					array( 'slug' => 'contrast-2', 'color' => '#e5e7eb' ),
-					array( 'slug' => 'contrast-3', 'color' => '#9ca3af' ),
-					array( 'slug' => 'base',       'color' => '#374151' ),
-					array( 'slug' => 'base-2',     'color' => '#1f2937' ),
-					array( 'slug' => 'base-3',     'color' => '#111827' ),
-					array( 'slug' => 'accent',     'color' => '#60a5fa' ),
-				);
-				$source = 'dark-fallback';
+		// ── Priority 2: User-saved dark colors from Customizer (manual overrides) ──
+		// Any slug manually saved by user overrides the math-derived value.
+		$theme_mods_raw = get_option( 'theme_mods_' . get_option( 'stylesheet' ), array() );
+		$db_saved       = isset( $theme_mods_raw['wpids_dark_global_colors'] ) ? $theme_mods_raw['wpids_dark_global_colors'] : array();
+		if ( is_array( $db_saved ) && ! empty( $db_saved ) ) {
+			foreach ( $db_saved as $dc ) {
+				if ( empty( $dc['slug'] ) || empty( $dc['color'] ) ) continue;
+				// Mark as manually overridden — won't be touched by auto-sync
+				if ( ! isset( $dark_colors[ $dc['slug'] ] ) ) {
+					$dark_colors[ $dc['slug'] ] = $dc;
+				}
 			}
 		}
 
-		// Build color map
+		// ── Priority 3: Hardcoded defaults for the 7 standard GP colors ──
+		// Only applied if Color Module is NOT active or a slug has no math value.
+		if ( ! class_exists( 'WPIDS_Color_Module' ) || empty( $dark_colors ) ) {
+			$defaults = array(
+				'contrast'   => '#f9fafb',
+				'contrast-2' => '#e5e7eb',
+				'contrast-3' => '#9ca3af',
+				'base'       => '#374151',
+				'base-2'     => '#1f2937',
+				'base-3'     => '#111827',
+				'accent'     => '#60a5fa',
+			);
+			foreach ( $defaults as $slug => $hex ) {
+				if ( ! isset( $dark_colors[ $slug ] ) ) {
+					$dark_colors[ $slug ] = array( 'slug' => $slug, 'color' => $hex );
+				}
+			}
+		}
+
+		// Build final flat color map from priority stack
 		$map = array();
-		foreach ( $dark_colors as $c ) {
-			if ( ! empty( $c['slug'] ) && ! empty( $c['color'] ) ) {
-				$map[ $c['slug'] ] = $c['color'];
+		foreach ( $dark_colors as $slug => $entry ) {
+			if ( ! empty( $entry['color'] ) ) {
+				$map[ $slug ] = $entry['color'];
 			}
 		}
 
-		// Ambil nilai (dengan hardcoded fallback akhir)
+		// Extract structural variables from the final priority-resolved map
 		$base3     = isset( $map['base-3'] )     ? $map['base-3']     : '#111827';
 		$base2     = isset( $map['base-2'] )     ? $map['base-2']     : '#1f2937';
 		$base      = isset( $map['base'] )       ? $map['base']       : '#374151';
@@ -168,7 +171,7 @@ class WPIDS_Dark_Mode {
 		$contrast3 = isset( $map['contrast-3'] ) ? $map['contrast-3'] : '#9ca3af';
 		$accent    = isset( $map['accent'] )     ? $map['accent']     : '#60a5fa';
 
-		// Build variable override string (Layer 1)
+		// Build variable override string (Layer 1) — all colors in map get injected
 		$var_css = '';
 		foreach ( $map as $slug => $hex ) {
 			$var_css .= "\t\t\t--" . esc_attr( $slug ) . ": " . esc_attr( $hex ) . " !important;\n";
@@ -375,26 +378,19 @@ class WPIDS_Dark_Mode {
 	}
 
 	public static function render_toggle_hook() {
-		echo WPIDS_Dark_Mode::render_toggle();
+		echo wp_kses_post( WPIDS_Dark_Mode::render_toggle() );
 	}
 
 	public function register_customizer( $wp_customize ) {
-		// 1. Add dedicated 'Utility' Panel
-		$wp_customize->add_panel(
-			'wpids_utility_panel',
-			array(
-				'title'    => 'Utility',
-				'priority' => 30, // Posisi menengah, aman tanpa konflik
-			)
-		);
+		// Note: 'wpids_utility_panel' is registered by WPIDS_Utility_Core::register_customizer_panel()
 
-		// 2. Add Section inside 'Utility' panel
+		// Add Section inside 'Utility' panel
 		$wp_customize->add_section(
 			'wpids_dark_mode_section',
 			array(
 				'title'    => 'Dark Mode',
 				'panel'    => 'wpids_utility_panel',
-				'priority' => 10, 
+				'priority' => 40,
 			)
 		);
 

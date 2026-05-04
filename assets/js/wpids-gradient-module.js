@@ -1,497 +1,440 @@
 /**
- * WPIDS Gradient Module — Customizer JS
- * Handles: Gradient builder, live preview, stop management, dark auto-compute, save/edit/delete.
- * Also injects an "Add Gradient" shortcut near GP Global Colors panel via MutationObserver.
+ * WPIDS Gradient Module — Customizer Control JS
  */
-(function ($, wp) {
-    'use strict';
+( function( $ ) {
+	'use strict';
 
-    var cfg       = window.wpidsGradientModule || {};
-    var savedList = cfg.saved || [];      // persisted from DB
-    var editIndex = -1;                   // -1 = new, N = editing index N
+	if ( typeof wpidsGradientModule === 'undefined' ) return;
 
-    // Current builder state
-    var state = {
-        name:  '',
-        slug:  '',
-        type:  'linear',
-        angle: 135,
-        shape: 'ellipse',
-        at:    'center',
-        stops: [
-            { color: '#667eea', position: 0 },
-            { color: '#764ba2', position: 100 }
-        ],
-        darkStops: []
-    };
+	var data        = wpidsGradientModule;
+	var gradients   = data.saved ? JSON.parse( JSON.stringify( data.saved ) ) : [];
+	var editIndex   = -1;
+	var pickers     = {};
+	var initialized = false;
 
-    // ─── Bootstrap ────────────────────────────────────────────────
-    $(document).ready(function () {
-        injectGPShortcut();
-        renderSavedList();
-    });
+	// ─────────────────────────────────────────
+	// HELPERS
+	// ─────────────────────────────────────────
 
-    // ─── GP Shortcut Injection (MutationObserver) ─────────────────
-    /**
-     * Watch for the GP Global Colors customizer section to appear,
-     * then inject a shortcut button below the color list.
-     */
-    function injectGPShortcut() {
-        var observer = new MutationObserver(function () {
-            // GP's Global Color section wrapper — adjust selector if GP changes
-            var $target = $('#customize-control-generate_settings\\[global_colors\\]');
-            if ($target.length && !$target.find('.wpids-grad-shortcut').length) {
-                var $btn = $('<button>', {
-                    type:  'button',
-                    class: 'wpids-ci-btn wpids-ci-btn-ghost wpids-grad-shortcut',
-                    html:  '&#127752; Gradient Variables &rarr;',
-                    css:   { marginTop: '10px', width: '100%', justifyContent: 'center' }
-                });
-                $btn.on('click', function () {
-                    // Navigate to Gradient Variables section in Customizer
-                    if (wp && wp.customize) {
-                        wp.customize.section('wpids_gradient_variables').expand();
-                    }
-                });
-                $target.append($btn);
-            }
-        });
+	function buildGradientCSS( g ) {
+		if ( ! g.stops || g.stops.length < 2 ) return '';
+		var stops = g.stops.map( function( s ) { return s.color + ' ' + s.position + '%'; } ).join( ', ' );
+		if ( g.type === 'radial' ) return 'radial-gradient(' + ( g.shape || 'ellipse' ) + ' at ' + ( g.at || 'center' ) + ', ' + stops + ')';
+		if ( g.type === 'conic' ) return 'conic-gradient(from ' + ( parseInt( g.angle ) || 0 ) + 'deg, ' + stops + ')';
+		return 'linear-gradient(' + ( parseInt( g.angle ) || 135 ) + 'deg, ' + stops + ')';
+	}
 
-        observer.observe(document.body, { childList: true, subtree: true });
-    }
+	function sendPreview() {
+		if ( typeof wp !== 'undefined' && typeof wp.customize !== 'undefined' && wp.customize.previewer ) {
+			wp.customize.previewer.send( 'wpids-gradient-preview', { gradients: gradients } );
+		}
+	}
 
-    // ─── Open builder (new) ───────────────────────────────────────
-    $(document).on('click', '#wpids-grad-add-btn', function () {
-        editIndex = -1;
-        resetState();
-        openBuilder();
-    });
+	function slugify( name ) {
+		return name.toLowerCase().replace( /[^a-z0-9]+/g, '-' ).replace( /(^-|-$)/g, '' );
+	}
 
-    // ─── Open builder (edit) ──────────────────────────────────────
-    $(document).on('click', '.wpids-grad-edit', function () {
-        var idx = parseInt($(this).data('index'));
-        var g   = savedList[idx];
-        if (!g) return;
+	// ─────────────────────────────────────────
+	// PALETTE
+	// ─────────────────────────────────────────
 
-        editIndex      = idx;
-        state.name     = g.name     || '';
-        state.slug     = g.slug     || '';
-        state.type     = g.type     || 'linear';
-        state.angle    = g.angle    || 135;
-        state.shape    = g.shape    || 'ellipse';
-        state.at       = g.at       || 'center';
-        state.stops    = JSON.parse(JSON.stringify(g.stops || []));
-        state.darkStops = JSON.parse(JSON.stringify(g.dark_stops || []));
+	function renderPalette() {
+		var $palette = $( '#wpids-gc-palette' );
+		if ( ! $palette.length ) return;
+		$palette.empty();
 
-        openBuilder();
-    });
+		if ( gradients.length === 0 ) {
+			$palette.append( '<span class="wpids-gc-empty">' + data.i18n.noGradients + '</span>' );
+		}
 
-    function openBuilder() {
-        syncStateToUI();
-        renderStops();
-        updatePreview();
-        $('#wpids-grad-modal').fadeIn(200);
-    }
+		gradients.forEach( function( g, i ) {
+			var css     = buildGradientCSS( g );
+			var $swatch = $( '<button type="button" class="wpids-gc-swatch"></button>' );
+			$swatch.attr( 'title', g.name ).attr( 'data-index', i ).css( 'background', css || '#e0e0e0' );
+			$swatch.on( 'click', function( e ) { openEditor( i, e.currentTarget ); } );
+			if ( i === editIndex && $( '#wpids-gc-editor' ).is( ':visible' ) ) {
+				$swatch.addClass( 'is-active' );
+			}
+			$palette.append( $swatch );
+		} );
 
-    function resetState() {
-        state = {
-            name:  '',
-            slug:  '',
-            type:  'linear',
-            angle: 135,
-            shape: 'ellipse',
-            at:    'center',
-            stops: [
-                { color: '#667eea', position: 0 },
-                { color: '#764ba2', position: 100 }
-            ],
-            darkStops: []
-        };
-    }
+		var $add = $( '<button type="button" class="wpids-gc-swatch-add">+</button>' );
+		$add.attr( 'title', data.i18n.addGradient ).on( 'click', function( e ) { openEditor( -1, e.currentTarget ); } );
+		if ( editIndex === -1 && $( '#wpids-gc-editor' ).is( ':visible' ) ) {
+			$add.addClass( 'is-active' );
+		}
+		$palette.append( $add );
 
-    function syncStateToUI() {
-        $('#wpids-grad-name').val(state.name);
-        $('#wpids-grad-slug').val(state.slug);
-        $('#wpids-grad-type').val(state.type);
-        $('#wpids-grad-angle-range').val(state.angle);
-        $('#wpids-grad-angle-num').val(state.angle);
-        $('#wpids-grad-shape').val(state.shape);
-        $('#wpids-grad-at').val(state.at);
-        toggleTypeControls(state.type);
-    }
+		renderClassList();
+	}
 
-    // ─── Close ────────────────────────────────────────────────────
-    $(document).on('click', '#wpids-grad-modal-close, #wpids-grad-cancel', function () {
-        $('#wpids-grad-modal').fadeOut(200);
-    });
+	// ─────────────────────────────────────────
+	// EDITOR
+	// ─────────────────────────────────────────
 
-    // ─── Type change ──────────────────────────────────────────────
-    $(document).on('change', '#wpids-grad-type', function () {
-        state.type = $(this).val();
-        toggleTypeControls(state.type);
-        updatePreview();
-    });
+	function openEditor( index, targetEl ) {
+		// Toggle if clicking the same active swatch
+		if ( editIndex === index && $( '#wpids-gc-editor' ).is( ':visible' ) ) {
+			closeEditor();
+			return;
+		}
 
-    function toggleTypeControls(type) {
-        $('#wpids-grad-angle-wrap').toggle(type !== 'radial');
-        $('#wpids-grad-radial-wrap, #wpids-grad-at-wrap').toggle(type === 'radial');
-    }
+		editIndex = index;
+		destroyPickers();
 
-    // ─── Angle ────────────────────────────────────────────────────
-    $(document).on('input', '#wpids-grad-angle-range', function () {
-        state.angle = parseInt($(this).val());
-        $('#wpids-grad-angle-num').val(state.angle);
-        updatePreview();
-    });
-    $(document).on('input', '#wpids-grad-angle-num', function () {
-        state.angle = Math.max(0, Math.min(360, parseInt($(this).val()) || 0));
-        $('#wpids-grad-angle-range').val(state.angle);
-        updatePreview();
-    });
+		// Update active state on swatches
+		$( '.wpids-gc-swatch, .wpids-gc-swatch-add' ).removeClass( 'is-active' );
+		if ( targetEl ) {
+			$( targetEl ).addClass( 'is-active' );
+			
+			// Calculate triangle position
+			var $target = $( targetEl );
+			var $palette = $( '#wpids-gc-palette' );
+			var targetCenter = $target.position().left + ( $target.outerWidth() / 2 );
+			// Create or update triangle
+			var $caret = $( '#wpids-gc-editor-caret' );
+			if ( ! $caret.length ) {
+				$caret = $( '<div id="wpids-gc-editor-caret" class="wpids-gc-editor-caret"></div>' );
+				$( '#wpids-gc-editor' ).prepend( $caret );
+			}
+			$caret.css( 'left', targetCenter + 'px' );
+		}
 
-    // ─── Shape / At ───────────────────────────────────────────────
-    $(document).on('change', '#wpids-grad-shape', function () {
-        state.shape = $(this).val();
-        updatePreview();
-    });
-    $(document).on('change', '#wpids-grad-at', function () {
-        state.at = $(this).val();
-        updatePreview();
-    });
+		var g = ( index === -1 ) ? {
+			slug: '', name: '', type: 'linear', angle: 135, shape: 'ellipse', at: 'center',
+			stops: [ { color: '#667eea', position: 0 }, { color: '#764ba2', position: 100 } ],
+			dark_stops: []
+		} : JSON.parse( JSON.stringify( gradients[ index ] ) );
 
-    // ─── Auto slug from name ───────────────────────────────────────
-    $(document).on('input', '#wpids-grad-name', function () {
-        state.name = $(this).val();
-        if (editIndex === -1) {
-            var auto = state.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            $('#wpids-grad-slug').val(auto);
-            state.slug = auto;
-        }
-    });
-    $(document).on('input', '#wpids-grad-slug', function () {
-        state.slug = $(this).val().toLowerCase().replace(/[^a-z0-9-]/g, '');
-        $(this).val(state.slug);
-    });
+		$( '#wpids-gc-name' ).val( g.name );
+		$( '#wpids-gc-type' ).val( g.type || 'linear' );
+		$( '#wpids-gc-angle' ).val( g.angle || 135 );
+		toggleAngleField( g.type || 'linear' );
+		renderStops( g.stops );
 
-    // ─── Stop Management ──────────────────────────────────────────
+		if ( index !== -1 && g.slug ) {
+			$( '#wpids-gc-hint-text' ).text( '.has-' + g.slug + '-gradient-text | .has-' + g.slug + '-gradient-border' );
+			$( '#wpids-gc-utility-hint' ).show();
+		} else {
+			$( '#wpids-gc-utility-hint' ).hide();
+		}
 
-    // Combined palette: GP colors + expanded solid colors (no gradients)
-    var palette = [].concat(cfg.gpColors || [], cfg.expandedColors || []);
+		$( '#wpids-gb-settings, #wpids-gt-settings' ).slideUp( 200 );
+		$( '#wpids-gc-editor' ).slideDown( 250 );
+	}
 
-    function renderStops() {
-        var $list = $('#wpids-grad-stops').empty();
+	function closeEditor() {
+		destroyPickers();
+		editIndex = -2; // Reset active
+		$( '.wpids-gc-swatch, .wpids-gc-swatch-add' ).removeClass( 'is-active' );
+		$( '#wpids-gc-editor' ).slideUp( 200 );
+		$( '#wpids-gb-settings, #wpids-gt-settings' ).slideDown( 250 );
+		$( '#wpids-gc-status' ).text( '' );
+	}
 
-        state.stops.forEach(function (stop, i) {
-            var $row = $([
-                '<div class="wpids-stop-row" data-index="' + i + '">',
-                    '<div class="wpids-stop-top">',
-                        '<input type="color" class="wpids-stop-color" value="' + escHtml(stop.color) + '" />',
-                        '<div class="wpids-stop-pos-wrap">',
-                            '<input type="range" class="wpids-stop-range" min="0" max="100" value="' + stop.position + '" />',
-                            '<input type="number" class="wpids-stop-num" min="0" max="100" value="' + stop.position + '" />',
-                            '<span class="wpids-stop-pct">%</span>',
-                        '</div>',
-                        (state.stops.length > 2 ? '<button type="button" class="wpids-stop-del">&times;</button>' : ''),
-                    '</div>',
-                    buildPaletteRow(i),
-                '</div>'
-            ].join(''));
-            $list.append($row);
-        });
-    }
+	function renderStops( stops ) {
+		var $wrap = $( '#wpids-gc-stops' );
+		$wrap.empty();
+		destroyPickers();
+		stops.forEach( function( stop, i ) { $wrap.append( buildStopRow( stop, i ) ); } );
+		stops.forEach( function( stop, i ) { initStopPicker( i, stop.color ); } );
+		updatePreviewBar();
+	}
 
-    function buildPaletteRow(stopIndex) {
-        if (!palette.length) return '';
-        var swatches = palette.map(function (c) {
-            return '<span class="wpids-pal-swatch" title="' + escHtml('--' + c.slug + ' ' + c.color) + '" '
-                 + 'style="background:' + escHtml(c.color) + ';" '
-                 + 'data-color="' + escHtml(c.color) + '" '
-                 + 'data-stop="' + stopIndex + '"></span>';
-        }).join('');
-        return '<div class="wpids-pal-row">' + swatches + '</div>';
-    }
+	function buildStopRow( stop, i ) {
+		var $row    = $( '<div class="wpids-gc-stop-row" data-stop="' + i + '">' );
+		var $input  = $( '<input type="text" class="wpids-gc-stop-color" data-stop="' + i + '">' ).val( stop.color );
+		var $slider = $( '<input type="range" class="wpids-gc-stop-slider" min="0" max="100" data-stop="' + i + '">' ).val( stop.position );
+		var $pos    = $( '<input type="number" class="wpids-gc-stop-pos" min="0" max="100" data-stop="' + i + '">' ).val( stop.position );
+		var $rm     = $( '<button type="button" class="wpids-gc-stop-remove">&times;</button>' );
 
-    // Palette swatch click → set stop color
-    $(document).on('click', '.wpids-pal-swatch', function () {
-        var color = $(this).data('color');
-        var idx   = parseInt($(this).data('stop'));
-        state.stops[idx].color = color;
-        $(this).closest('.wpids-stop-row').find('.wpids-stop-color').val(color);
-        updatePreview();
-    });
+		$slider.on( 'input', function() {
+			$pos.val( this.value );
+			getCurrentStops()[ i ].position = parseInt( this.value );
+			updatePreviewBar();
+		} );
+		$pos.on( 'input', function() {
+			var v = Math.min( 100, Math.max( 0, parseInt( this.value ) || 0 ) );
+			$slider.val( v );
+			getCurrentStops()[ i ].position = v;
+			updatePreviewBar();
+		} );
+		$rm.on( 'click', function() {
+			var s = getCurrentStops();
+			if ( s.length <= 2 ) return;
+			s.splice( i, 1 );
+			renderStops( s );
+		} );
 
-    // Stop color change
-    $(document).on('input change', '.wpids-stop-color', function () {
-        var idx = parseInt($(this).closest('.wpids-stop-row').data('index'));
-        state.stops[idx].color = $(this).val();
-        updatePreview();
-    });
+		return $row.append( $input, $slider, $pos, $rm );
+	}
 
-    // Stop position via range
-    $(document).on('input', '.wpids-stop-range', function () {
-        var idx = parseInt($(this).closest('.wpids-stop-row').data('index'));
-        var val = parseInt($(this).val());
-        state.stops[idx].position = val;
-        $(this).closest('.wpids-stop-row').find('.wpids-stop-num').val(val);
-        updatePreview();
-    });
+	function initStopPicker( i, color ) {
+		var $input = $( '#wpids-gc-stops .wpids-gc-stop-color[data-stop="' + i + '"]' );
+		if ( ! $input.length || ! $.fn.wpColorPicker ) return;
+		$input.wpColorPicker( {
+			defaultColor: color,
+			change: function( e, ui ) { getCurrentStops()[ i ].color = ui.color.toString(); updatePreviewBar(); },
+			clear: function() { getCurrentStops()[ i ].color = '#000000'; updatePreviewBar(); }
+		} );
+		pickers[ i ] = $input;
+	}
 
-    // Stop position via number
-    $(document).on('input', '.wpids-stop-num', function () {
-        var idx = parseInt($(this).closest('.wpids-stop-row').data('index'));
-        var val = Math.max(0, Math.min(100, parseInt($(this).val()) || 0));
-        state.stops[idx].position = val;
-        $(this).closest('.wpids-stop-row').find('.wpids-stop-range').val(val);
-        updatePreview();
-    });
+	function destroyPickers() {
+		$.each( pickers, function( i, $el ) { try { $el.iris( 'destroy' ); } catch( e ) {} } );
+		pickers = {};
+	}
 
-    // Delete stop
-    $(document).on('click', '.wpids-stop-del', function () {
-        var idx = parseInt($(this).closest('.wpids-stop-row').data('index'));
-        state.stops.splice(idx, 1);
-        renderStops();
-        updatePreview();
-    });
+	function getCurrentStops() {
+		var stops = [];
+		$( '#wpids-gc-stops .wpids-gc-stop-row' ).each( function() {
+			stops.push( {
+				color:    $( this ).find( '.wpids-gc-stop-color' ).val() || '#000000',
+				position: parseInt( $( this ).find( '.wpids-gc-stop-pos' ).val() ) || 0
+			} );
+		} );
+		return stops;
+	}
 
-    // Add stop
-    $(document).on('click', '#wpids-grad-add-stop', function () {
-        state.stops.push({ color: '#ffffff', position: 50 });
-        // Sort stops by position
-        state.stops.sort(function (a, b) { return a.position - b.position; });
-        renderStops();
-        updatePreview();
-    });
+	function getEditorGradient() {
+		var name = $( '#wpids-gc-name' ).val().trim() || 'gradient';
+		return {
+			slug: slugify( name ), name: name,
+			type: $( '#wpids-gc-type' ).val(),
+			angle: parseInt( $( '#wpids-gc-angle' ).val() ) || 135,
+			shape: 'ellipse', at: 'center',
+			stops: getCurrentStops(), dark_stops: []
+		};
+	}
 
-    // ─── Dark Mode ────────────────────────────────────────────────
-    $(document).on('change', '#wpids-grad-dark-auto', function () {
-        if ($(this).is(':checked')) {
-            computeDarkStops();
-        } else {
-            state.darkStops = [];
-            $('#wpids-grad-dark-preview-wrap').hide();
-        }
-    });
+	function updatePreviewBar() {
+		var css = buildGradientCSS( getEditorGradient() );
+		$( '#wpids-gc-preview-bar' ).css( 'background', css || 'linear-gradient(135deg,#e0e0e0,#fff)' );
+		sendPreview();
+	}
 
-    function computeDarkStops() {
-        if (!state.stops.length) return;
+	function toggleAngleField( type ) {
+		$( '#wpids-gc-angle-wrap' )[ type === 'radial' ? 'hide' : 'show' ]();
+	}
 
-        $.post(cfg.ajaxUrl, {
-            action: 'wpids_dark_gradient',
-            nonce:  cfg.nonce,
-            stops:  state.stops
-        })
-        .done(function (res) {
-            if (res.success) {
-                state.darkStops = res.data.dark_stops;
-                updateDarkPreview();
-            }
-        });
-    }
+	function saveGradients( callback ) {
+		$.post( data.ajaxUrl, { action: 'wpids_save_gradients', nonce: data.nonce, gradients: gradients },
+			function( r ) { if ( r.success && typeof callback === 'function' ) callback(); }
+		);
+	}
 
-    function updateDarkPreview() {
-        if (!state.darkStops.length) {
-            $('#wpids-grad-dark-preview-wrap').hide();
-            return;
-        }
+	// ─────────────────────────────────────────
+	// BORDER SETTINGS — uses WP Customizer setting (saves via Publish)
+	// ─────────────────────────────────────────
 
-        var css = buildGradientCSS(state.type, state.angle, state.shape, state.at, state.darkStops);
-        $('#wpids-grad-dark-preview').css('background', css);
-        $('#wpids-grad-dark-preview-wrap').show();
-    }
+	function getBorderData() {
+		var preset = $( '#wpids-gb-radius-preset' ).val() || 'sharp';
+		var unit   = $( '#wpids-gb-radius-unit' ).val() || 'px';
+		var linked = $( '#wpids-gb-link-sides' ).hasClass( 'is-linked' );
+		return {
+			radius_preset: preset,
+			radius_unit:   unit,
+			linked:        linked,
+			radius: {
+				tl: parseInt( $( '#wpids-gb-r-tl' ).val() ) || 0,
+				tr: parseInt( $( '#wpids-gb-r-tr' ).val() ) || 0,
+				bl: parseInt( $( '#wpids-gb-r-bl' ).val() ) || 0,
+				br: parseInt( $( '#wpids-gb-r-br' ).val() ) || 0,
+			}
+		};
+	}
 
-    // ─── Live Preview ─────────────────────────────────────────────
-    function updatePreview() {
-        var css = buildGradientCSS(state.type, state.angle, state.shape, state.at, state.stops);
-        $('#wpids-grad-preview').css('background', css);
-        $('#wpids-grad-css-output').text('--' + (state.slug || 'your-gradient') + ': ' + css + ';');
+	function updateBorderSetting() {
+		if ( typeof wp === 'undefined' || typeof wp.customize === 'undefined' ) return;
+		var setting = wp.customize( 'wpids_gradient_border_settings' );
+		if ( setting ) {
+			setting.set( JSON.stringify( getBorderData() ) );
+		}
+	}
 
-        // Recompute dark stops when preview updates
-        if ($('#wpids-grad-dark-auto').is(':checked')) {
-            computeDarkStops();
-        }
-    }
+	function initBorderSettings() {
+		var bs     = data.borderSettings || {};
+		var preset = bs.radius_preset || 'sharp';
 
-    /**
-     * Build gradient CSS value string (mirrors PHP build_gradient_css).
-     */
-    function buildGradientCSS(type, angle, shape, at, stops) {
-        var stopsStr = stops.map(function (s) {
-            return s.color + ' ' + s.position + '%';
-        }).join(', ');
+		$( '#wpids-gb-radius-preset' ).val( preset );
+		$( '#wpids-gb-radius-unit' ).val( bs.radius_unit || 'px' );
 
-        switch (type) {
-            case 'radial':
-                return 'radial-gradient(' + shape + ' at ' + at + ', ' + stopsStr + ')';
-            case 'conic':
-                return 'conic-gradient(from ' + angle + 'deg, ' + stopsStr + ')';
-            default:
-                return 'linear-gradient(' + angle + 'deg, ' + stopsStr + ')';
-        }
-    }
+		// Show/hide custom fields on load
+		if ( preset === 'custom' ) {
+			$( '#wpids-gb-custom-radius' ).show();
+		}
 
-    // ─── Save ─────────────────────────────────────────────────────
-    $(document).on('click', '#wpids-grad-save', function () {
-        state.name  = $('#wpids-grad-name').val().trim();
-        state.slug  = $('#wpids-grad-slug').val().trim();
-        state.angle = parseInt($('#wpids-grad-angle-num').val()) || 135;
+		// Load saved radius values
+		var r = bs.radius || {};
+		$( '#wpids-gb-r-tl' ).val( r.tl || 0 );
+		$( '#wpids-gb-r-tr' ).val( r.tr || 0 );
+		$( '#wpids-gb-r-bl' ).val( r.bl || 0 );
+		$( '#wpids-gb-r-br' ).val( r.br || 0 );
 
-        if (!state.slug) {
-            alert('Please enter a CSS variable name.');
-            return;
-        }
-        if (state.stops.length < 2) {
-            alert('Please add at least 2 color stops.');
-            return;
-        }
+		if ( ! bs.linked ) {
+			$( '#wpids-gb-link-sides' ).removeClass( 'is-linked' );
+		}
 
-        var entry = {
-            slug:       state.slug,
-            name:       state.name || state.slug,
-            type:       state.type,
-            angle:      state.angle,
-            shape:      state.shape,
-            at:         state.at,
-            stops:      JSON.parse(JSON.stringify(state.stops)),
-            dark_stops: JSON.parse(JSON.stringify(state.darkStops))
-        };
+		// Preset change → show/hide custom panel + update setting
+		$( document ).on( 'change', '#wpids-gb-radius-preset', function() {
+			if ( $( this ).val() === 'custom' ) {
+				$( '#wpids-gb-custom-radius' ).slideDown( 200 );
+			} else {
+				$( '#wpids-gb-custom-radius' ).slideUp( 200 );
+			}
+			updateBorderSetting();
+		} );
 
-        if (editIndex >= 0) {
-            savedList[editIndex] = entry;
-        } else {
-            // Check for slug collision
-            var collision = savedList.findIndex(function (g) { return g.slug === entry.slug; });
-            if (collision >= 0) {
-                if (!confirm('A gradient with slug "' + entry.slug + '" already exists. Replace it?')) return;
-                savedList[collision] = entry;
-            } else {
-                savedList.push(entry);
-            }
-        }
+		// Link-all-sides toggle
+		$( document ).on( 'click', '#wpids-gb-link-sides', function() {
+			$( this ).toggleClass( 'is-linked' );
+			updateBorderSetting();
+		} );
 
-        var $btn = $(this).prop('disabled', true).text('Saving...');
+		// Sync linked inputs
+		$( document ).on( 'input', '.wpids-gb-r-input', function() {
+			if ( $( '#wpids-gb-link-sides' ).hasClass( 'is-linked' ) ) {
+				var v = $( this ).val();
+				$( '.wpids-gb-r-input' ).not( this ).val( v );
+			}
+			updateBorderSetting();
+		} );
 
-        $.post(cfg.ajaxUrl, {
-            action:    'wpids_save_gradients',
-            nonce:     cfg.nonce,
-            gradients: savedList,
-            sync_dark: 0
-        })
-        .done(function (res) {
-            if (res.success) {
-                $('#wpids-grad-modal').fadeOut(200);
-                renderSavedList();
+		// Unit change
+		$( document ).on( 'change', '#wpids-gb-radius-unit', updateBorderSetting );
+	}
 
-                // Show reload notice — GP React Color reads from DB on page load
-                showGradStatus(res.data.message + ' Reload Customizer to see palette.');
-                showReloadNotice();
+	// ─────────────────────────────────────────
+	// CLASS LIST
+	// ─────────────────────────────────────────
 
-                // Refresh preview iframe so :root variables update immediately
-                if (wp && wp.customize && wp.customize.previewer) {
-                    wp.customize.previewer.refresh();
-                }
-            } else {
-                alert(res.data || 'Save failed.');
-            }
-        })
-        .fail(function () {
-            alert('Server error.');
-        })
-        .always(function () {
-            $btn.prop('disabled', false).text('Save Gradient');
-        });
-    });
+	function renderClassList() {
+		var $listBorder = $( '#wpids-gb-class-list-border' );
+		var $listText   = $( '#wpids-gb-class-list-text' );
 
-    // ─── Delete ───────────────────────────────────────────────────
-    $(document).on('click', '.wpids-grad-delete', function () {
-        var idx = parseInt($(this).data('index'));
-        if (!confirm('Delete this gradient variable?')) return;
+		if ( ! $listBorder.length || ! $listText.length ) return;
 
-        savedList.splice(idx, 1);
+		if ( gradients.length === 0 ) {
+			$listBorder.html( '<span class="wpids-gc-empty">' + data.i18n.noGradients + '</span>' );
+			$listText.html( '<span class="wpids-gc-empty">' + data.i18n.noGradients + '</span>' );
+			return;
+		}
 
-        $.post(cfg.ajaxUrl, {
-            action:    'wpids_save_gradients',
-            nonce:     cfg.nonce,
-            gradients: savedList
-        })
-        .done(function (res) {
-            if (res.success) {
-                renderSavedList();
-                showGradStatus('Gradient deleted.');
-            }
-        });
-    });
+		var htmlBorder = '';
+		var htmlText   = '';
 
-    // ─── Render saved list ────────────────────────────────────────
-    function renderSavedList() {
-        var $list = $('#wpids-grad-list').empty();
+		gradients.forEach( function( g ) {
+			var bClass = 'has-' + g.slug + '-gradient-border';
+			htmlBorder += '<div class="wpids-gb-class-item">';
+			htmlBorder += '<code>' + bClass + '</code>';
+			htmlBorder += '<button type="button" class="wpids-gb-copy-btn" data-clipboard="' + bClass + '" title="Copy class"><span class="dashicons dashicons-admin-page"></span></button>';
+			htmlBorder += '</div>';
 
-        if (!savedList.length) {
-            $list.append('<div class="wpids-ci-empty">No gradient variables yet. Click the button below to create one.</div>');
-            return;
-        }
+			var tClass = 'has-' + g.slug + '-gradient-text';
+			htmlText += '<div class="wpids-gb-class-item">';
+			htmlText += '<code>' + tClass + '</code>';
+			htmlText += '<button type="button" class="wpids-gb-copy-btn" data-clipboard="' + tClass + '" title="Copy class"><span class="dashicons dashicons-admin-page"></span></button>';
+			htmlText += '</div>';
+		} );
 
-        savedList.forEach(function (g, i) {
-            var css  = buildGradientCSS(g.type, g.angle, g.shape, g.at, g.stops);
-            var type = (g.type || 'linear').charAt(0).toUpperCase() + (g.type || 'linear').slice(1);
-            $list.append([
-                '<div class="wpids-grad-saved-row" data-index="' + i + '">',
-                    '<div class="wpids-grad-swatch" style="background:' + css + ';"></div>',
-                    '<div class="wpids-set-info">',
-                        '<span class="wpids-set-slug">--' + escHtml(g.slug) + '</span>',
-                        '<span class="wpids-set-count">' + escHtml(g.name || g.slug) + ' &middot; ' + type + '</span>',
-                    '</div>',
-                    '<div class="wpids-set-actions">',
-                        '<button type="button" class="wpids-grad-edit" data-index="' + i + '" title="Edit">&#9998;</button>',
-                        '<button type="button" class="wpids-grad-delete" data-index="' + i + '" title="Delete">&times;</button>',
-                    '</div>',
-                '</div>'
-            ].join(''));
-        });
-    }
+		$listBorder.html( htmlBorder );
+		$listText.html( htmlText );
+	}
 
-    // ─── ESC key ──────────────────────────────────────────────────
-    $(document).on('keydown', function (e) {
-        if (e.key === 'Escape') $('#wpids-grad-modal').fadeOut(200);
-    });
+	// Handle copy to clipboard
+	$( document ).on( 'click', '.wpids-gb-copy-btn', function() {
+		var $btn = $( this );
+		var text = $btn.attr( 'data-clipboard' );
+		navigator.clipboard.writeText( text ).then( function() {
+			var $icon = $btn.find( '.dashicons' );
+			$icon.removeClass( 'dashicons-admin-page' ).addClass( 'dashicons-yes-alt' );
+			$btn.addClass( 'is-copied' );
+			setTimeout( function() {
+				$icon.removeClass( 'dashicons-yes-alt' ).addClass( 'dashicons-admin-page' );
+				$btn.removeClass( 'is-copied' );
+			}, 1500 );
+		} );
+	} );
 
-    // ─── Reload Notice ────────────────────────────────────────────
-    /**
-     * Show a persistent reload banner.
-     * GP React Color reads from DB only at page load,
-     * so the palette only updates after Customizer reload.
-     */
-    function showReloadNotice() {
-        if ($('#wpids-grad-reload-notice').length) return; // already shown
+	// ─────────────────────────────────────────
+	// INIT
+	// ─────────────────────────────────────────
 
-        var $notice = $([
-            '<div id="wpids-grad-reload-notice" style="',
-                'background:#1d2327;color:#f0f0f1;padding:10px 14px;border-radius:6px;',
-                'margin-top:10px;font-size:12px;display:flex;align-items:center;gap:10px;">',
-                '<span>&#9432; Reload Customizer to see gradient in GP Color palette.</span>',
-                '<button id="wpids-grad-reload-btn" style="',
-                    'background:#2271b1;color:#fff;border:none;padding:5px 12px;',
-                    'border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap;">',
-                    'Reload Now',
-                '</button>',
-            '</div>'
-        ].join(''));
+	function initControl() {
+		if ( initialized ) { renderPalette(); return; }
+		initialized = true;
+		renderPalette();
+		initBorderSettings();
 
-        $('#wpids-grad-wrap').append($notice);
+		$( document )
+			.on( 'click', '#wpids-gc-back', closeEditor )
+			.on( 'click', '#wpids-gc-delete', function() {
+				if ( editIndex === -1 ) { closeEditor(); return; }
+				if ( ! confirm( data.i18n.delete ) ) return;
+				gradients.splice( editIndex, 1 );
+				saveGradients( function() { closeEditor(); sendPreview(); } );
+			} )
+			.on( 'change', '#wpids-gc-type', function() { toggleAngleField( $( this ).val() ); updatePreviewBar(); } )
+			.on( 'input', '#wpids-gc-angle, #wpids-gc-name', updatePreviewBar )
+			.on( 'click', '#wpids-gc-add-stop', function() {
+				var s = getCurrentStops(); s.push( { color: '#ffffff', position: 100 } ); renderStops( s );
+			} )
+			.on( 'click', '#wpids-gc-save', function() {
+				var g = getEditorGradient();
+				if ( g.stops.length < 2 ) { alert( data.i18n.needStops || 'Need at least 2 colour stops.' ); return; }
+				if ( editIndex === -1 ) { gradients.push( g ); } else { gradients[ editIndex ] = g; }
+				$( '#wpids-gc-hint-text' ).text( '.has-' + g.slug + '-gradient-text | .has-' + g.slug + '-gradient-border' );
+				$( '#wpids-gc-utility-hint' ).show();
+				var $btn = $( this ).prop( 'disabled', true );
+				saveGradients( function() {
+					sendPreview(); $btn.prop( 'disabled', false );
+					$( '#wpids-gc-status' ).text( data.i18n.saved );
+					setTimeout( function() { $( '#wpids-gc-status' ).text( '' ); }, 2000 );
+					renderClassList();
+				} );
+			} );
+	}
 
-        $('#wpids-grad-reload-btn').on('click', function () {
-            window.location.reload();
-        });
-    }
+	// ── Polling: run initControl when element is in DOM
+	var pollCount = 0;
+	var initPoll = setInterval( function() {
+		pollCount++;
+		if ( $( '#wpids-gc-palette' ).length ) {
+			clearInterval( initPoll );
+			initControl();
+		}
+		if ( pollCount > 150 ) { clearInterval( initPoll ); }
+	}, 200 );
 
-    // ─── Status ───────────────────────────────────────────────────
-    function showGradStatus(msg) {
-        $('#wpids-grad-status').text(msg).css('color', '#16a34a').show();
-        setTimeout(function () { $('#wpids-grad-status').fadeOut(); }, 4000);
-    }
+	// ─────────────────────────────────────────
+	// INJECT READ-ONLY PALETTE IN GP GLOBAL COLORS
+	// ─────────────────────────────────────────
+	setInterval( function() {
+		var $gpControl = $( '#customize-control-generate_settings-global_colors' );
+		if ( $gpControl.length && ! $( '#wpids-gp-readonly-palette' ).length ) {
+			var html = '<div id="wpids-gp-readonly-palette" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #dcdcde;">';
+			html += '<span class="customize-control-title" style="font-size:11px;font-weight:600;text-transform:uppercase;color:#646970;">Gradient Palette</span>';
+			html += '<div class="wpids-gc-palette">';
+			
+			gradients.forEach( function( g ) {
+				var css = buildGradientCSS( g );
+				html += '<button type="button" class="wpids-gc-swatch" title="' + g.name + '" style="background: ' + css + '; cursor: default; transform: none; box-shadow: none;"></button>';
+			} );
+			
+			html += '<button type="button" class="wpids-gc-swatch-add" title="Edit Gradients" id="wpids-goto-gradient-settings" style="cursor: pointer; border-color: #2271b1; color: #2271b1;"><span class="dashicons dashicons-admin-settings" style="font-size:16px;width:16px;height:16px;"></span></button>';
+			html += '</div></div>';
+			
+			// Append inside the React container if possible so it survives less aggressively
+			// Actually just append to the wrapper, React will wipe it when it re-renders,
+			// but our setInterval will put it right back.
+			$gpControl.append( html );
+		}
+	}, 1000 );
 
-    // ─── Helper ───────────────────────────────────────────────────
-    function escHtml(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
+	$( document ).on( 'click', '#wpids-goto-gradient-settings', function() {
+		if ( wp && wp.customize && wp.customize.section ) {
+			wp.customize.section( 'wpids_gradient_variables' ).focus();
+		}
+	} );
 
-})(jQuery, window.wp);
+} )( jQuery );

@@ -129,6 +129,30 @@
     font-weight: 500;
 }
 
+/* ── Dark Mode Auto-Sync Banner ───────────────────── */
+.wpids-dark-sync-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f6fc;
+    border: 1px solid #c8e1ff;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: #0366d6;
+    line-height: 1.4;
+}
+.wpids-dark-sync-banner.wpids-dark-sync-off {
+    background: #f6f8fa;
+    border-color: #d0d7de;
+    color: #57606a;
+}
+.wpids-dark-sync-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
 /* ── Empty State ──────────────────────────────────── */
 .wpids-ci-empty {
     color: #999;
@@ -137,81 +161,56 @@
     padding: 8px 0;
 }
 
-/* ── Saved Sets List ──────────────────────────────── */
-.wpids-saved-set {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border: 1px solid #e2e4e7;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    background: #fff;
-    transition: box-shadow 0.15s ease;
+/* ── Palette Grid (Fallback if Gradient Module off) ── */
+.wpids-gc-palette {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 8px 0 4px;
+	min-height: 34px;
 }
 
-.wpids-saved-set:hover {
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+.wpids-gc-swatch {
+	position: relative;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	cursor: pointer;
+	border: 1px solid rgba(0,0,0,0.12);
+	overflow: hidden;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	flex-shrink: 0;
+	padding: 0;
+	display: block;
 }
 
-.wpids-set-swatch {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    flex-shrink: 0;
+.wpids-gc-swatch:hover,
+.wpids-gc-swatch.is-active {
+	transform: scale(1.15);
+	box-shadow: 0 0 0 2px #2271b1;
 }
 
-.wpids-set-info {
-    flex: 1;
-    min-width: 0;
+.wpids-gc-swatch-add {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 1px dashed #b2b9c4;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	line-height: 1;
+	color: #8c8f94;
+	background: #fff;
+	transition: all 0.15s;
+	flex-shrink: 0;
 }
 
-.wpids-set-slug {
-    display: block;
-    font-family: monospace;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1d2327;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.wpids-set-count {
-    display: block;
-    font-size: 11px;
-    color: #888;
-}
-
-.wpids-set-actions {
-    display: flex;
-    gap: 4px;
-}
-
-.wpids-set-preview,
-.wpids-set-delete {
-    background: none;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    transition: background 0.15s ease;
-}
-
-.wpids-set-preview:hover {
-    background: #e8f4fc;
-}
-
-.wpids-set-delete:hover {
-    background: #fef2f2;
-    color: #dc2626;
-    border-color: #fca5a5;
+.wpids-gc-swatch-add:hover {
+	border-color: #2271b1;
+	color: #2271b1;
+	background: #f0f6fc;
 }
 
 /* ── Modal Overlay ────────────────────────────────── */
@@ -238,8 +237,43 @@
     overflow: hidden;
 }
 
-.wpids-preview-box {
-    max-width: 500px;
+.wpids-editor-box {
+    max-width: 550px;
+}
+
+/* ── Editor Form Fields ───────────────────────────── */
+.wpids-editor-row {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+}
+
+.wpids-editor-field {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.wpids-ci-input {
+	height: 28px;
+	padding: 0 8px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	color: #1d2327;
+}
+
+.wpids-ci-btn-danger {
+	background: transparent;
+	color: #b32d2e;
+	border-color: #b32d2e;
+	height: 28px;
+	margin: 0;
+}
+
+.wpids-ci-btn-danger:hover {
+	background: #b32d2e;
+	color: #fff;
 }
 
 /* ── Modal Header ─────────────────────────────────── */
@@ -406,36 +440,71 @@
     flex-shrink: 0;
 }
 
-/* ── Preview Content ──────────────────────────────── */
-.wpids-preview-content {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+/* ── Editor Preview List (Circle Swatch + Copy CSS) ─ */
+.wpids-editor-preview-list {
+    display: grid;
+	grid-template-columns: 1fr 1fr;
+    gap: 8px;
+	max-height: 200px;
+	overflow-y: auto;
+	padding-right: 4px;
 }
 
-.wpids-preview-row {
+.wpids-ep-item {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 2px;
+}
+
+.wpids-ep-swatch {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	flex-shrink: 0;
+	margin: auto 0 auto 6px;
+}
+
+.wpids-ep-item code {
+    flex: 1;
+    border: none;
+    background: none;
+    padding: 6px 8px;
+    font-size: 10px;
+    color: #2271b1;
+    word-break: break-all;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 4px 0;
 }
 
-.wpids-preview-swatch {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    flex-shrink: 0;
+.wpids-ep-copy-btn {
+    background: none;
+    border: none;
+    border-left: 1px solid #dcdcde;
+    cursor: pointer;
+    color: #8c8f94;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
 }
 
-.wpids-preview-var {
-    flex: 1;
-    font-size: 11px;
-    color: #0070c8;
+.wpids-ep-copy-btn:hover {
+    color: #2271b1;
+    background: #f6f7f7;
 }
 
-.wpids-preview-hex {
-    font-size: 11px;
-    color: #555;
-    font-family: monospace;
+.wpids-ep-copy-btn.is-copied {
+    color: #00a32a;
+    background: #edfaef;
+}
+
+.wpids-ep-copy-btn .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
 }

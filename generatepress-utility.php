@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       GeneratePress Utility
  * Plugin URI:        https://wpids.com/generatepress-utility
- * Description:       Dark Mode support, Advanced Fluid Typography, Color Management, and Editor Sync for GeneratePress.
- * Version:           1.0.0
+ * Description:       Color Management, Gradient Variables, Advanced Fluid Typography, Dark Mode support, and Editor Sync for GeneratePress.
+ * Version:           1.0.14
  * Author:            WPIDS
  * Author URI:        https://wpids.com
  * License:           GPL-2.0+
@@ -20,8 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Define Plugin Constants.
-define( 'WPIDS_UTILITY_VERSION', '1.0.0' );
+define( 'WPIDS_UTILITY_VERSION', '1.0.14' );
 define( 'WPIDS_UTILITY_FILE', __FILE__ );
 define( 'WPIDS_UTILITY_PLUGIN_DIR', plugin_dir_path( WPIDS_UTILITY_FILE ) );
 define( 'WPIDS_UTILITY_PLUGIN_URL', plugin_dir_url( WPIDS_UTILITY_FILE ) );
@@ -70,8 +69,8 @@ function wpids_utility_gp_missing_notice() {
 	<div class="notice notice-warning is-dismissible">
 		<p>
 			<?php 
-			/* translators: 1: Activation URL, 2: Link Label */
 			$message = sprintf( 
+				/* translators: 1: Activation URL, 2: Link Label */
 				esc_html__( 'GeneratePress Utility requires GeneratePress to be your active theme. <a href="%1$s">%2$s</a>', 'generatepress-utility' ),
 				esc_url( $url ),
 				$label

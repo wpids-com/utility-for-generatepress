@@ -28,6 +28,7 @@ class WPIDS_Color_Module {
 		add_action( 'wp_ajax_wpids_parse_colors', array( $this, 'ajax_parse_colors' ) );
 		add_action( 'wp_ajax_wpids_expand_colors', array( $this, 'ajax_expand_colors' ) );
 		add_action( 'wp_ajax_wpids_save_expanded', array( $this, 'ajax_save_expanded' ) );
+		add_action( 'wp_ajax_wpids_sync_dark_auto', array( $this, 'ajax_sync_all_dark' ) );
 
 		// CSS injection — priority 9997 (before Gradient: 9998, before Dark Mode: 9999)
 		add_action( 'wp_head', array( $this, 'inject_expanded_css' ), 9997 );
@@ -95,7 +96,7 @@ class WPIDS_Color_Module {
 				$slug = $set['slug'] ?? '';
 				$hex  = $set['hex']  ?? '';
 				$name = $set['name'] ?? $slug;
-				if ( ! $slug || ! preg_match( '/^#[0-9a-fA-F]{3,6}$/', $hex ) ) continue;
+				if ( ! $slug || ! preg_match( '/^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))$/i', $hex ) ) continue;
 
 				if ( isset( $color_map[ $slug ] ) ) {
 					// Update hex but preserve the original GP color name
@@ -112,32 +113,7 @@ class WPIDS_Color_Module {
 			}
 		}
 
-		// ── Merge 2: Gradient variables ──
-		// Register with first-stop color as visual representative.
-		// The real gradient value is overridden at wp_head priority 9998.
-		$gradients = get_option( 'wpids_gradient_variables', array() );
-		if ( is_array( $gradients ) ) {
-			foreach ( $gradients as $g ) {
-				$slug  = $g['slug'] ?? '';
-				$name  = $g['name'] ?? $slug;
-				$type  = ucfirst( $g['type'] ?? 'linear' );
-				$first = $g['stops'][0]['color'] ?? '#000000';
-				if ( ! $slug ) continue;
-
-				// Always update (gradient representative may change if stops change)
-				$color_map[ $slug ] = array(
-					'name'  => $name . ' (' . $type . ' Gradient)',
-					'slug'  => $slug,
-					'color' => $first,
-				);
-
-				if ( ! in_array( $slug, $slug_order, true ) ) {
-					$slug_order[] = $slug;
-				}
-			}
-		}
-
-		// ── Rebuild in original order + new entries appended ──
+		// ── Rebuild: solid colors first (original order) ──
 		$merged = array();
 		foreach ( $slug_order as $slug ) {
 			if ( isset( $color_map[ $slug ] ) ) {
@@ -162,7 +138,7 @@ class WPIDS_Color_Module {
 			array(
 				'title'    => 'Color Management',
 				'panel'    => 'wpids_utility_panel',
-				'priority' => 20,
+				'priority' => 10,
 			)
 		);
 
@@ -202,7 +178,7 @@ class WPIDS_Color_Module {
 		wp_enqueue_script(
 			'wpids-color-module',
 			WPIDS_UTILITY_PLUGIN_URL . 'assets/js/wpids-color-module.js',
-			array( 'jquery', 'customize-controls' ),
+			array( 'jquery', 'customize-controls', 'wp-element', 'wp-components' ),
 			WPIDS_UTILITY_VERSION,
 			true
 		);
@@ -298,7 +274,7 @@ class WPIDS_Color_Module {
 				'dark_counterpart' => ! empty( $item['options']['dark_counterpart'] ),
 			);
 
-			if ( empty( $slug ) || ! preg_match( '/^#[0-9a-fA-F]{3,6}$/', $hex ) ) {
+			if ( empty( $slug ) || ! preg_match( '/^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))$/i', $hex ) ) {
 				continue;
 			}
 
@@ -342,9 +318,13 @@ class WPIDS_Color_Module {
 		// Update GP Global Colors for items flagged as 'gp_replace'
 		$gp_replaced = $this->sync_gp_colors( $sanitized );
 
-		// Sync dark counterparts into Dark Mode panel
-		if ( ! empty( $_POST['sync_dark'] ) ) {
-			$this->sync_dark_counterparts( $sanitized );
+		// Auto-sync dark counterparts:
+		// Always run if Dark Mode module is active (both modules active = auto-managed).
+		// Falls back to manual flag check otherwise.
+		$dark_mode_active = ( class_exists( 'WPIDS_Dark_Mode' ) );
+		$updated_dark_colors = array();
+		if ( $dark_mode_active || ! empty( $_POST['sync_dark'] ) ) {
+			$updated_dark_colors = $this->sync_dark_counterparts( $sanitized );
 		}
 
 		$msg = count( $sanitized ) . ' color set(s) saved.';
@@ -357,10 +337,11 @@ class WPIDS_Color_Module {
 		$updated_gp_colors = isset( $gp_settings['global_colors'] ) ? $gp_settings['global_colors'] : array();
 
 		wp_send_json_success( array(
-			'saved'            => count( $sanitized ),
-			'gp_replaced'      => $gp_replaced,
-			'message'          => $msg,
-			'updated_gp_colors' => $updated_gp_colors, // for Customizer live sync
+			'saved'               => count( $sanitized ),
+			'gp_replaced'         => $gp_replaced,
+			'message'             => $msg,
+			'updated_gp_colors'   => $updated_gp_colors, // for Customizer live sync
+			'updated_dark_colors' => $updated_dark_colors,
 		) );
 	}
 
@@ -423,6 +404,31 @@ class WPIDS_Color_Module {
 	}
 
 	/**
+	 * AJAX: Bulk re-sync ALL existing dark counterparts from saved expanded colors.
+	 * Called by JS when user clicks "Re-sync All Dark Colors" button.
+	 * Only available when both Color + Dark Mode modules are active.
+	 */
+	public function ajax_sync_all_dark() {
+		check_ajax_referer( 'wpids_color_module', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Unauthorized' );
+		}
+
+		$expanded = get_option( 'wpids_expanded_colors', array() );
+		if ( empty( $expanded ) ) {
+			wp_send_json_error( 'No expanded colors found.' );
+		}
+
+		$updated_dark_colors = $this->sync_dark_counterparts( $expanded );
+
+		wp_send_json_success( array(
+			'message'             => count( $expanded ) . ' color set(s) dark counterparts synced.',
+			'updated_dark_colors' => $updated_dark_colors,
+		) );
+	}
+
+	/**
 	 * Push all dark counterparts from expanded colors into
 	 * wpids_dark_global_colors theme_mod (used by Dark Mode CSS injection).
 	 */
@@ -454,7 +460,10 @@ class WPIDS_Color_Module {
 		}
 
 		// Re-save as indexed array
-		set_theme_mod( 'wpids_dark_global_colors', array_values( $dark_map ) );
+		$final_dark_colors = array_values( $dark_map );
+		set_theme_mod( 'wpids_dark_global_colors', $final_dark_colors );
+		
+		return $final_dark_colors;
 	}
 
 	// ─────────────────────────────────────────
@@ -491,13 +500,13 @@ class WPIDS_Color_Module {
 			}
 		}
 
-		if ( empty( $lines ) ) return;
-
+		if ( ! empty( $lines ) ) {
 			echo "<style id='wpids-color-module-preview'>\n";
 			echo ":root {\n";
-			echo implode( "\n", $lines ) . "\n";
+			echo wp_kses_post( wp_strip_all_tags( implode( "\n", $lines ) ) ) . "\n";
 			echo "}\n";
 			echo "</style>\n";
+		}
 	}
 
 	// ─────────────────────────────────────────
@@ -514,7 +523,7 @@ class WPIDS_Color_Module {
 			$slug       = sanitize_key( $set['slug'] );
 			$hex        = sanitize_text_field( $set['hex'] );
 			$gp_replace = ! empty( $set['gp_replace'] );
-			if ( ! preg_match( '/^#[0-9a-fA-F]{3,6}$/', $hex ) ) continue;
+			if ( ! preg_match( '/^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))$/i', $hex ) ) continue;
 
 			// Sanitize variables map
 			$vars = array();
@@ -522,7 +531,7 @@ class WPIDS_Color_Module {
 				foreach ( $set['variables'] as $var => $val ) {
 					$var = sanitize_text_field( $var );
 					$val = sanitize_text_field( $val );
-					if ( preg_match( '/^--[a-z0-9-]+$/', $var ) && preg_match( '/^#[0-9a-fA-F]{3,6}$/', $val ) ) {
+					if ( preg_match( '/^--[a-z0-9-]+$/', $var ) && preg_match( '/^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))$/i', $val ) ) {
 						$vars[ $var ] = $val;
 					}
 				}
@@ -534,7 +543,7 @@ class WPIDS_Color_Module {
 				foreach ( $set['dark_counterparts'] as $dslug => $dhex ) {
 					$dslug = sanitize_key( $dslug );
 					$dhex  = sanitize_text_field( $dhex );
-					if ( preg_match( '/^#[0-9a-fA-F]{3,6}$/', $dhex ) ) {
+					if ( preg_match( '/^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))$/i', $dhex ) ) {
 						$dark[ $dslug ] = $dhex;
 					}
 				}
