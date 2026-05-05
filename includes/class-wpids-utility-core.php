@@ -90,7 +90,12 @@ class WPIDS_Utility_Core {
 	/**
 	 * Enqueue Admin & Customizer Assets.
 	 */
-	public function enqueue_admin_assets() {
+	public function enqueue_admin_assets( $hook = '' ) {
+		// Only load on our settings page to prevent breaking other GP dashboards
+		if ( 'appearance_page_wpids-utility' !== $hook ) {
+			return;
+		}
+
 		wp_enqueue_style(
 			'wpids-admin-common',
 			WPIDS_UTILITY_PLUGIN_URL . 'assets/css/wpids-admin-common.css',
