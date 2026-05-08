@@ -1,9 +1,22 @@
 # Changelog
 
-All notable changes to the **GeneratePress Utility** plugin will be documented in this file.
+All notable changes to the **Utility for GeneratePress** plugin will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.16] - 2026-05-08
+### Added
+- **Rebranding:** Renamed plugin to **Utility for GeneratePress** to comply with trademark guidelines.
+- **Modern Asset Loading:** Switched from direct `wp_head` injection to proper WordPress enqueuing APIs (`wp_add_inline_style` and `wp_add_inline_script`).
+- **FOUC Prevention Script:** Dedicated JS asset for Dark Mode theme-switching to ensure high-performance execution.
+
+### Changed
+- **Standardization:** Updated all slugs, text domains, and internal prefixes to `utility-for-generatepress` and `wpids_`.
+- **Folder Structure:** Renamed plugin directory to match the official slug.
+
+### Removed
+- **Security:** Completely removed the "Advanced Raw CSS" injection feature to eliminate arbitrary code risks and meet WordPress.org security standards.
 
 ## [1.0.15] - 2026-05-05
 ### Added

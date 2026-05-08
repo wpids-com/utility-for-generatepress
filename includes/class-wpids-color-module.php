@@ -30,14 +30,51 @@ class WPIDS_Color_Module {
 		add_action( 'wp_ajax_wpids_save_expanded', array( $this, 'ajax_save_expanded' ) );
 		add_action( 'wp_ajax_wpids_sync_dark_auto', array( $this, 'ajax_sync_all_dark' ) );
 
-		// CSS injection — priority 9997 (before Gradient: 9998, before Dark Mode: 9999)
-		add_action( 'wp_head', array( $this, 'inject_expanded_css' ), 9997 );
+		// CSS injection
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_styles' ), 15 );
 
 		// ── Core filter: merge WPIDS colors into GP Global Colors on every read ──
 		// This ensures GP React Color picker, Customizer, and GB editor ALWAYS see
 		// our expanded + gradient colors without needing a page reload or DB patch.
 		// Priority 20 = after GP's own filters (default priority 10).
 		add_filter( 'option_generate_settings', array( $this, 'filter_gp_global_colors' ), 20 );
+	}
+
+	public function enqueue_frontend_styles() {
+		$css = $this->get_expanded_css();
+		if ( ! empty( $css ) ) {
+			wp_add_inline_style( 'wpids-utility-frontend', $css );
+		}
+	}
+
+	/**
+	 * Build expanded color variables CSS.
+	 */
+	private function get_expanded_css() {
+		$expanded = get_option( 'wpids_expanded_colors', array() );
+
+		if ( empty( $expanded ) || ! is_array( $expanded ) ) {
+			return '';
+		}
+
+		$lines = array();
+		foreach ( $expanded as $set ) {
+			if ( empty( $set['variables'] ) ) continue;
+
+			$is_gp = ! empty( $set['gp_replace'] );
+			$lines[] = "/* " . esc_html( $set['slug'] ) . ( $is_gp ? ' (GP override)' : ' (custom)' ) . ' */';
+
+			foreach ( $set['variables'] as $var => $hex ) {
+				if ( $is_gp && $var === "--{$set['slug']}" ) continue;
+
+				$important = $is_gp ? ' !important' : '';
+				$lines[]   = esc_html( $var ) . ': ' . esc_html( $hex ) . $important . ';';
+			}
+		}
+
+		if ( empty( $lines ) ) return '';
+
+		return ":root {\n" . implode( "\n", $lines ) . "\n}";
 	}
 
 	// ─────────────────────────────────────────
@@ -464,49 +501,6 @@ class WPIDS_Color_Module {
 		set_theme_mod( 'wpids_dark_global_colors', $final_dark_colors );
 		
 		return $final_dark_colors;
-	}
-
-	// ─────────────────────────────────────────
-	// CSS INJECTION
-	// ─────────────────────────────────────────
-
-	/**
-	 * Inject expanded color variables to :root.
-	 * - Colors flagged as gp_replace: their derivatives (--slug-10, etc.) injected with !important
-	 *   The base --slug itself is already handled by GP natively, no need to duplicate
-	 * - New colors: injected as normal CSS variables
-	 */
-	public function inject_expanded_css() {
-		$expanded = get_option( 'wpids_expanded_colors', array() );
-
-		if ( empty( $expanded ) || ! is_array( $expanded ) ) {
-			return;
-		}
-
-		$lines = array();
-		foreach ( $expanded as $set ) {
-			if ( empty( $set['variables'] ) ) continue;
-
-			$is_gp = ! empty( $set['gp_replace'] );
-			$lines[] = "\t/* " . esc_html( $set['slug'] ) . ( $is_gp ? ' (GP override)' : ' (custom)' ) . ' */';
-
-			foreach ( $set['variables'] as $var => $hex ) {
-				// For GP-replaced base slug, skip — GP already injects it natively.
-				// Only inject derivatives (--slug-10, --slug-comp etc.) with !important.
-				if ( $is_gp && $var === "--{$set['slug']}" ) continue;
-
-				$important = $is_gp ? ' !important' : '';
-				$lines[]   = "\t" . esc_html( $var ) . ': ' . esc_html( $hex ) . $important . ';';
-			}
-		}
-
-		if ( ! empty( $lines ) ) {
-			echo "<style id='wpids-color-module-preview'>\n";
-			echo ":root {\n";
-			echo wp_kses_post( wp_strip_all_tags( implode( "\n", $lines ) ) ) . "\n";
-			echo "}\n";
-			echo "</style>\n";
-		}
 	}
 
 	// ─────────────────────────────────────────

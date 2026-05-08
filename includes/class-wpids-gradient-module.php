@@ -31,12 +31,19 @@ class WPIDS_Gradient_Module {
 		add_filter( 'wp_theme_json_data_theme', array( $this, 'inject_theme_json_gradients' ) );
 
 		// Frontend utility classes
-		add_action( 'wp_head', array( $this, 'inject_gradient_css' ), 9998 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_styles' ), 20 );
 
 		// AJAX
 		add_action( 'wp_ajax_wpids_save_gradients', array( $this, 'ajax_save_gradients' ) );
 		add_action( 'wp_ajax_wpids_dark_gradient', array( $this, 'ajax_dark_gradient' ) );
 		add_action( 'wp_ajax_wpids_save_border_settings', array( $this, 'ajax_save_border_settings' ) );
+	}
+
+	public function enqueue_frontend_styles() {
+		$css = self::build_utility_css( 'frontend' );
+		if ( ! empty( $css ) ) {
+			wp_add_inline_style( 'wpids-utility-frontend', $css );
+		}
 	}
 
 	// ─────────────────────────────────────────
@@ -133,15 +140,6 @@ class WPIDS_Gradient_Module {
 		return $css;
 	}
 
-	/** Output utility CSS to wp_head (frontend). */
-	public function inject_gradient_css() {
-		$css = self::build_utility_css( 'frontend' );
-		if ( empty( $css ) ) return;
-		echo "<style id=\"wpids-gradient-utilities\">\n";
-		echo wp_kses_post( wp_strip_all_tags( $css ) );
-		echo "</style>\n";
-	}
-
 	// ─────────────────────────────────────────
 	// CUSTOMIZER
 	// ─────────────────────────────────────────
@@ -150,7 +148,7 @@ class WPIDS_Gradient_Module {
 		$wp_customize->add_section(
 			'wpids_gradient_variables',
 			array(
-				'title'    => __( 'Gradient Variables', 'generatepress-utility' ),
+				'title'    => __( 'Gradients & Borders', 'utility-for-generatepress' ),
 				'panel'    => 'wpids_utility_panel',
 				'priority' => 20,
 			)
@@ -188,7 +186,7 @@ class WPIDS_Gradient_Module {
 				$wp_customize,
 				'wpids_gradient_variables',
 				array(
-					'label'   => __( 'Gradient Palette', 'generatepress-utility' ),
+					'label'   => __( 'Gradient Palette', 'utility-for-generatepress' ),
 					'section' => 'wpids_gradient_variables',
 				)
 			)
@@ -245,20 +243,20 @@ class WPIDS_Gradient_Module {
 				'borderSettings' => $border,
 				'gpColors'      => $gp_colors,
 				'i18n'     => array(
-					'addGradient'  => __( 'Add Gradient', 'generatepress-utility' ),
-					'editGradient' => __( 'Edit Gradient', 'generatepress-utility' ),
-					'name'         => __( 'Name', 'generatepress-utility' ),
-					'type'         => __( 'Type', 'generatepress-utility' ),
-					'angle'        => __( 'Angle', 'generatepress-utility' ),
-					'addColor'     => __( '+ Add Color Stop', 'generatepress-utility' ),
-					'save'         => __( 'Save', 'generatepress-utility' ),
-					'saved'        => __( 'Saved!', 'generatepress-utility' ),
-					'delete'       => __( 'Delete Gradient', 'generatepress-utility' ),
-					'linear'       => __( 'Linear', 'generatepress-utility' ),
-					'radial'       => __( 'Radial', 'generatepress-utility' ),
-					'conic'        => __( 'Conic', 'generatepress-utility' ),
-					'noGradients'  => __( 'No gradients yet. Click + to add.', 'generatepress-utility' ),
-					'utilityInfo'  => __( 'Use class: has-[name]-gradient-text or has-[name]-gradient-border', 'generatepress-utility' ),
+					'addGradient'  => __( 'Add Gradient', 'utility-for-generatepress' ),
+					'editGradient' => __( 'Edit Gradient', 'utility-for-generatepress' ),
+					'name'         => __( 'Name', 'utility-for-generatepress' ),
+					'type'         => __( 'Type', 'utility-for-generatepress' ),
+					'angle'        => __( 'Angle', 'utility-for-generatepress' ),
+					'addColor'     => __( '+ Add Color Stop', 'utility-for-generatepress' ),
+					'save'         => __( 'Save', 'utility-for-generatepress' ),
+					'saved'        => __( 'Saved!', 'utility-for-generatepress' ),
+					'delete'       => __( 'Delete Gradient', 'utility-for-generatepress' ),
+					'linear'       => __( 'Linear', 'utility-for-generatepress' ),
+					'radial'       => __( 'Radial', 'utility-for-generatepress' ),
+					'conic'        => __( 'Conic', 'utility-for-generatepress' ),
+					'noGradients'  => __( 'No gradients yet. Click + to add.', 'utility-for-generatepress' ),
+					'utilityInfo'  => __( 'Use class: has-[name]-gradient-text or has-[name]-gradient-border', 'utility-for-generatepress' ),
 				),
 			)
 		);

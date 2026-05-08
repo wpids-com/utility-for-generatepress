@@ -1,9 +1,10 @@
-# GeneratePress Utility
+# Utility for GeneratePress
 
-**GeneratePress Utility** is a powerful WordPress plugin designed to enhance the [GeneratePress](https://generatepress.com) ecosystem with advanced design tools and performance-oriented utilities.
+**Utility for GeneratePress** is a powerful WordPress plugin designed to enhance the [GeneratePress](https://generatepress.com) ecosystem with advanced design tools and performance-oriented utilities. It is built to be secure, compliant with WordPress.org standards, and lightweight.
 
 ## ✨ Key Features
 
+- **Dark Mode**: High-performance dark mode switching with automatic contrast adjustment.
 - **Fluid Typography**: A dynamic scaling system using CSS `clamp()` with a real-time visualization wizard.
 - **Editor CSS Sync**: Seamlessly synchronize your Customizer and Child Theme CSS to the Gutenberg editor for a true WYSIWYG experience.
 - **Color Management**: Advanced CSS variable system for colors and gradients.
@@ -11,8 +12,8 @@
 
 ## 🚀 Installation
 
-1. Download the [latest release](https://github.com/yourusername/generatepress-utility/releases).
-2. Upload the `generatepress-utility` folder to your `/wp-content/plugins/` directory.
+1. Download the [latest release](https://github.com/wpids/utility-for-generatepress/releases).
+2. Upload the `utility-for-generatepress` folder to your `/wp-content/plugins/` directory.
 3. Activate the plugin in the WordPress Admin.
 
 ## 🛠 Requirements
@@ -24,3 +25,6 @@
 ## 📄 License
 
 This project is licensed under the GPL-2.0 License.
+
+---
+*Created and maintained by [WPIDS](https://wpids.com).*

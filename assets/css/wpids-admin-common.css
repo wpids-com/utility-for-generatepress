@@ -11,7 +11,7 @@
     display: flex;
     justify-content: space-between;
     padding: 0 20px;
-    margin: 0px -20px 40px -20px;
+    margin: 0px 0px 40px -20px;
 }
 
 .gpu-dashboard-header h1 {
@@ -252,15 +252,133 @@
     margin-top: 20px;
 }
 
+/* Main Content Layout */
+.gpu-dashboard-content {
+    margin: 40px auto;
+    max-width: 1000px;
+    /* Slimmer for single column */
+    padding: 0 30px;
+}
+
+/* License Box */
+.gpu-license-box {
+    background: #fff;
+    padding: 25px;
+    margin-bottom: 40px;
+}
+
+.gpu-notice-success {
+    background-color: #f0f6f0;
+    border-left: 4px solid #4ab866;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+}
+
+.gpu-notice-warning {
+    background-color: #fcf9f1;
+    border-left: 4px solid #dba617;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+}
+
+.gpu-notice-success p,
+.gpu-notice-warning p {
+    margin: 0;
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.gpu-license-input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.gpu-license-input-group input {
+    flex: 1;
+    border: 1px solid #8c8f94;
+    padding: 0 10px;
+    height: 32px;
+    font-family: monospace;
+}
+
+/* Toggle Switch (Gutenberg Style) */
+.gpu-toggle-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.gpu-toggle-control {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.gpu-toggle-control input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.gpu-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #757575;
+    transition: .2s;
+    border-radius: 99px;
+}
+
+.gpu-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+}
+
+input:checked+.gpu-toggle-slider {
+    background-color: #007cba;
+}
+
+input:checked+.gpu-toggle-slider:before {
+    transform: translateX(18px);
+}
+
+.gpu-toggle-label-text {
+    font-size: 13px;
+}
+
+.gpu-toggle-label-text strong {
+    display: block;
+    font-weight: 400;
+    color: #1d2327;
+    margin-bottom: 4px;
+}
+
+.gpu-toggle-label-text span {
+    color: #646970;
+    font-size: 12px;
+}
+
 /* Responsive */
-@media (max-width: 768px) {
-    .gpu-dashboard-header {
+@media (max-width: 1100px) {
+    .gpu-dashboard-content {
         flex-direction: column;
-        align-items: center;
     }
 
-    .gpu-dashboard-content {
-        padding-left: 20px;
-        padding-right: 20px;
+    .gpu-sidebar {
+        width: 100%;
     }
 }
