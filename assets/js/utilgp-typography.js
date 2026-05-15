@@ -2,18 +2,18 @@
     'use strict';
 
     wp.customize.bind('ready', function() {
-        var $section = $('#sub-section-wpids_typography_section');
+        var $section = $('#sub-section-utilgp_typography_section');
         
         // 1. Inject Launch Button at the bottom
-        var $btnContainer = $('<div class="wpids-wizard-launcher" style="padding: 10px 0; margin-top: 15px;"></div>');
-        var $btn = $('<button type="button" class="wpids-btn-primary" style="width:100%;">Launch Preview Scale</button>');
+        var $btnContainer = $('<div class="utilgp-wizard-launcher" style="padding: 10px 0; margin-top: 15px;"></div>');
+        var $btn = $('<button type="button" class="utilgp-btn-primary" style="width:100%;">Launch Preview Scale</button>');
         
         $btnContainer.append($btn);
-        $('#customize-control-wpids_typo_preview_text').after($btnContainer);
+        $('#customize-control-utilgp_typo_preview_text').after($btnContainer);
 
         // 2. Create Modal Structure
         var $modal = $([
-            '<div id="wpids-typo-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;">',
+            '<div id="utilgp-typo-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;">',
                 '<div style="background:#fff; width:90%; max-width:1000px; height:85vh; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.3);">',
                     // Header
                     '<div style="padding:20px 30px; background:#f8f9fa; border-bottom:1px solid #e5e5e5; display:flex; justify-content:space-between; align-items:center;">',
@@ -21,24 +21,24 @@
                             '<h2 style="margin:0; font-size:20px; font-weight:700; color:#1d2327;">Typography Scale Wizard</h2>',
                             '<p style="margin:5px 0 0 0; font-size:13px; color:#646970;">Visualize and simulate your responsive scale.</p>',
                         '</div>',
-                        '<button id="wpids-typo-modal-close" style="background:none; border:none; font-size:28px; cursor:pointer; color:#646970;">&times;</button>',
+                        '<button id="utilgp-typo-modal-close" style="background:none; border:none; font-size:28px; cursor:pointer; color:#646970;">&times;</button>',
                     '</div>',
                     
                     // Toolbar (Simulator)
                     '<div style="padding:15px 30px; background:#fff; border-bottom:1px solid #e5e5e5; display:flex; align-items:center; gap:20px;">',
                         '<div style="flex:1; display:flex; align-items:center; gap:15px;">',
                             '<label style="font-size:12px; font-weight:600; color:#3c434a; white-space:nowrap;">Viewport Width:</label>',
-                            '<input type="range" id="wpids-viewport-slider" min="320" max="1440" value="1280" style="flex:1; cursor:pointer;">',
-                            '<span id="wpids-viewport-val" style="background:#2271b1; color:#fff; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:600; min-width:50px; text-align:center;">1280px</span>',
+                            '<input type="range" id="utilgp-viewport-slider" min="320" max="1440" value="1280" style="flex:1; cursor:pointer;">',
+                            '<span id="utilgp-viewport-val" style="background:#2271b1; color:#fff; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:600; min-width:50px; text-align:center;">1280px</span>',
                         '</div>',
                         '<div style="width:1px; height:24px; background:#e5e5e5;"></div>',
-                        '<button id="wpids-viewport-reset" class="wpids-btn-outline" style="height:28px; font-size:11px;">Reset</button>',
+                        '<button id="utilgp-viewport-reset" class="utilgp-btn-outline" style="height:28px; font-size:11px;">Reset</button>',
                     '</div>',
 
                     // Content Area (Scrollable)
-                    '<div id="wpids-modal-canvas-wrap" style="flex:1; overflow:auto; background:#dcdcde; padding:40px; display:flex; justify-content:center; align-items: flex-start;">',
-                        '<div id="wpids-modal-canvas" style="background:#fff; width:1280px; max-width:100%; transition: width 0.2s ease; padding:60px; box-shadow:0 10px 30px rgba(0,0,0,0.15); min-height:100%; border-radius:4px; box-sizing: border-box;">',
-                            '<div id="wpids-modal-list"></div>',
+                    '<div id="utilgp-modal-canvas-wrap" style="flex:1; overflow:auto; background:#dcdcde; padding:40px; display:flex; justify-content:center; align-items: flex-start;">',
+                        '<div id="utilgp-modal-canvas" style="background:#fff; width:1280px; max-width:100%; transition: width 0.2s ease; padding:60px; box-shadow:0 10px 30px rgba(0,0,0,0.15); min-height:100%; border-radius:4px; box-sizing: border-box;">',
+                            '<div id="utilgp-modal-list"></div>',
                         '</div>',
                     '</div>',
                 '</div>',
@@ -49,15 +49,22 @@
 
         // 3. Logic to update Modal Content
         function renderModalContent() {
-            var base = parseFloat(wp.customize('wpids_typo_base_size').get()) || 16;
-            var unit = wp.customize('wpids_typo_base_unit').get() || 'px';
-            var text = wp.customize('wpids_typo_preview_text').get() || 'The quick brown fox';
-            var ratio = wp.customize('wpids_typo_scale_ratio').get();
-            var minVW = parseInt(wp.customize('wpids_typo_min_vw').get()) || 320;
-            var maxVW = parseInt(wp.customize('wpids_typo_max_vw').get()) || 1280;
+            var getVal = function(id, fallback) {
+                if (wp.customize.has(id)) {
+                    return wp.customize(id).get();
+                }
+                return fallback;
+            };
+
+            var base = parseFloat(getVal('utilgp_typo_base_size', 16));
+            var unit = getVal('utilgp_typo_base_unit', 'px');
+            var text = getVal('utilgp_typo_preview_text', 'The quick brown fox');
+            var ratio = getVal('utilgp_typo_scale_ratio', '1.250');
+            var minVW = parseInt(getVal('utilgp_typo_min_vw', 320));
+            var maxVW = parseInt(getVal('utilgp_typo_max_vw', 1280));
 
             if (ratio === 'custom') {
-                ratio = parseFloat(wp.customize('wpids_typo_custom_ratio').get()) || 1.2;
+                ratio = parseFloat(getVal('utilgp_typo_custom_ratio', 1.2));
             } else {
                 ratio = parseFloat(ratio);
             }
@@ -65,7 +72,7 @@
             // If unit is rem/em, we assume 16px root for calculation
             var basePx = (unit === 'px') ? base : base * 16;
 
-            var $list = $('#wpids-modal-list').empty();
+            var $list = $('#utilgp-modal-list').empty();
             var labels = {
                 6: 'Heading 1 (Step 6)',
                 5: 'Heading 2 (Step 5)',
@@ -82,7 +89,7 @@
                 var sizeAtMin = sizeAtMax / 1.2; // Matching the PHP logic factor
 
                 // Calculate current size based on simulator width
-                var currentWidth = parseInt($('#wpids-viewport-slider').val());
+                var currentWidth = parseInt($('#utilgp-viewport-slider').val());
                 var currentSize;
                 
                 if (currentWidth <= minVW) {
@@ -115,20 +122,20 @@
             renderModalContent();
         });
 
-        $('#wpids-typo-modal-close').on('click', function() {
+        $('#utilgp-typo-modal-close').on('click', function() {
             $modal.fadeOut(200);
         });
 
         // Simulator Interaction
-        $('#wpids-viewport-slider').on('input', function() {
+        $('#utilgp-viewport-slider').on('input', function() {
             var val = $(this).val();
-            $('#wpids-viewport-val').text(val + 'px');
-            $('#wpids-modal-canvas').css('width', val + 'px');
+            $('#utilgp-viewport-val').text(val + 'px');
+            $('#utilgp-modal-canvas').css('width', val + 'px');
             renderModalContent();
         });
 
-        $('#wpids-viewport-reset').on('click', function() {
-            $('#wpids-viewport-slider').val(1280).trigger('input');
+        $('#utilgp-viewport-reset').on('click', function() {
+            $('#utilgp-viewport-slider').val(1280).trigger('input');
         });
 
         // Close on ESC
@@ -137,13 +144,27 @@
         });
 
         // 6. Sync Custom Grid Inputs to Customizer Settings
-        $('body').on('change input', '.wpids-fluid-grid-container input, .wpids-fluid-grid-container select', function() {
+        // Use delegated listener to ensure it works even if controls re-render
+        $(document).on('change input', '.utilgp-fluid-grid-container input, .utilgp-fluid-grid-container select', function() {
             var $el = $(this);
             var settingId = $el.data('setting');
             var val = $el.val();
             
-            if (wp.customize(settingId)) {
+            if (settingId && wp.customize.has(settingId)) {
                 wp.customize(settingId).set(val);
+                
+                // If it's a "refresh" transport, the set() above triggers it.
+                // For immediate visual feedback in the wizard modal:
+                if ($('#utilgp-typo-modal').is(':visible')) {
+                    renderModalContent();
+                }
+            }
+        });
+
+        // Listen for changes from the sidebar (standard controls) to update the wizard
+        wp.customize.bind('change', function(setting) {
+            if (setting.id.indexOf('utilgp_typo_') !== -1 && $('#utilgp-typo-modal').is(':visible')) {
+                renderModalContent();
             }
         });
     });

@@ -1,18 +1,18 @@
 /**
- * WPIDS Color Module — Customizer JS
+ * UTILGP Color Module — Customizer JS
  * Handles: Parse colors, Mapping wizard modal, Preview modal, Save/Delete sets.
  */
 (function ($, wp) {
     'use strict';
 
-    var cfg = window.wpidsColorModule || {};
+    var cfg = window.utilgpColorModule || {};
     var gpColors = cfg.gpColors || [];      // existing GP global colors
     var savedSets = cfg.savedExpanded || []; // already saved color sets
 
     // ─── Utilities ───────────────────────────────────────────────
 
     function showStatus(msg, isError) {
-        var $s = $('#wpids-ci-status');
+        var $s = $('#utilgp-ci-status');
         $s.text(msg)
           .css('color', isError ? '#dc2626' : '#16a34a')
           .show();
@@ -20,7 +20,7 @@
     }
 
     function showEditorStatus(msg, isError) {
-        var $s = $('#wpids-editor-status');
+        var $s = $('#utilgp-editor-status');
         $s.text(msg)
           .css('color', isError ? '#dc2626' : '#00a32a')
           .show();
@@ -28,18 +28,18 @@
     }
 
     function showError(msg) {
-        $('#wpids-parse-error').text(msg).show();
+        $('#utilgp-parse-error').text(msg).show();
     }
 
     function clearError() {
-        $('#wpids-parse-error').hide().text('');
+        $('#utilgp-parse-error').hide().text('');
     }
 
     // ─── Step 1: Parse Colors ────────────────────────────────────
 
-    $(document).on('click', '#wpids-parse-btn', function () {
+    $(document).on('click', '#utilgp-parse-btn', function () {
         clearError();
-        var raw = $('#wpids-color-raw-input').val().trim();
+        var raw = $('#utilgp-color-raw-input').val().trim();
         if (!raw) {
             showError('Please paste some colors first.');
             return;
@@ -48,7 +48,7 @@
         var $btn = $(this).prop('disabled', true).text('Parsing...');
 
         $.post(cfg.ajaxUrl, {
-            action: 'wpids_parse_colors',
+            action: 'utilgp_parse_colors',
             nonce: cfg.nonce,
             raw: raw
         })
@@ -70,14 +70,14 @@
     // ─── Mapping Modal ───────────────────────────────────────────
 
     function openMappingModal(parsedColors) {
-        var $rows = $('#wpids-mapping-rows').empty();
+        var $rows = $('#utilgp-mapping-rows').empty();
 
         $.each(parsedColors, function (detectedSlug, hex) {
             var row = buildMappingRow(detectedSlug, hex);
             $rows.append(row);
         });
 
-        $('#wpids-mapping-modal').fadeIn(200);
+        $('#utilgp-mapping-modal').fadeIn(200);
     }
 
     function buildMappingRow(detectedSlug, hex) {
@@ -93,25 +93,25 @@
         var newNameVal = isNew ? detectedSlug : '';
 
         return $([
-            '<div class="wpids-map-row" data-hex="' + escHtml(hex) + '">',
-                '<div class="wpids-map-swatch" style="background:' + escHtml(hex) + ';"></div>',
-                '<div class="wpids-map-detected">',
+            '<div class="utilgp-map-row" data-hex="' + escHtml(hex) + '">',
+                '<div class="utilgp-map-swatch" style="background:' + escHtml(hex) + ';"></div>',
+                '<div class="utilgp-map-detected">',
                     '<code>' + escHtml(hex) + '</code>',
                     '<small>' + escHtml(detectedSlug) + '</small>',
                 '</div>',
-                '<div class="wpids-map-arrow">→</div>',
-                '<div class="wpids-map-assign">',
-                    '<select class="wpids-map-select">' + options + '</select>',
-                    '<input type="text" class="wpids-map-newname" placeholder="new-variable-name" value="' + escHtml(newNameVal) + '" style="' + (isNew ? '' : 'display:none;') + '"/>',
+                '<div class="utilgp-map-arrow">→</div>',
+                '<div class="utilgp-map-assign">',
+                    '<select class="utilgp-map-select">' + options + '</select>',
+                    '<input type="text" class="utilgp-map-newname" placeholder="new-variable-name" value="' + escHtml(newNameVal) + '" style="' + (isNew ? '' : 'display:none;') + '"/>',
                 '</div>',
-                '<button type="button" class="wpids-map-skip" title="Skip this color">Skip</button>',
+                '<button type="button" class="utilgp-map-skip" title="Skip this color">Skip</button>',
             '</div>'
         ].join(''));
     }
 
     // Toggle new name field when select changes
-    $(document).on('change', '.wpids-map-select', function () {
-        var $input = $(this).closest('.wpids-map-assign').find('.wpids-map-newname');
+    $(document).on('change', '.utilgp-map-select', function () {
+        var $input = $(this).closest('.utilgp-map-assign').find('.utilgp-map-newname');
         if ($(this).val() === '__new__') {
             $input.show().focus();
         } else {
@@ -120,33 +120,33 @@
     });
 
     // Skip row
-    $(document).on('click', '.wpids-map-skip', function () {
-        $(this).closest('.wpids-map-row').addClass('wpids-map-skipped').css('opacity', 0.4);
-        $(this).text('Undo').removeClass('wpids-map-skip').addClass('wpids-map-undo');
+    $(document).on('click', '.utilgp-map-skip', function () {
+        $(this).closest('.utilgp-map-row').addClass('utilgp-map-skipped').css('opacity', 0.4);
+        $(this).text('Undo').removeClass('utilgp-map-skip').addClass('utilgp-map-undo');
     });
-    $(document).on('click', '.wpids-map-undo', function () {
-        $(this).closest('.wpids-map-row').removeClass('wpids-map-skipped').css('opacity', 1);
-        $(this).text('Skip').removeClass('wpids-map-undo').addClass('wpids-map-skip');
+    $(document).on('click', '.utilgp-map-undo', function () {
+        $(this).closest('.utilgp-map-row').removeClass('utilgp-map-skipped').css('opacity', 1);
+        $(this).text('Skip').removeClass('utilgp-map-undo').addClass('utilgp-map-skip');
     });
 
     // Close modal
-    $(document).on('click', '#wpids-modal-close, #wpids-modal-cancel', function () {
-        $('#wpids-mapping-modal').fadeOut(200);
+    $(document).on('click', '#utilgp-modal-close, #utilgp-modal-cancel', function () {
+        $('#utilgp-mapping-modal').fadeOut(200);
     });
 
     // ─── Apply Import ─────────────────────────────────────────────
 
-    $(document).on('click', '#wpids-modal-apply', function () {
+    $(document).on('click', '#utilgp-modal-apply', function () {
         var colors = [];
 
-        $('#wpids-mapping-rows .wpids-map-row').each(function () {
-            if ($(this).hasClass('wpids-map-skipped')) return;
+        $('#utilgp-mapping-rows .utilgp-map-row').each(function () {
+            if ($(this).hasClass('utilgp-map-skipped')) return;
 
             var hex     = $(this).data('hex');
-            var select  = $(this).find('.wpids-map-select').val();
+            var select  = $(this).find('.utilgp-map-select').val();
             var isNew   = (select === '__new__');
             var slug    = isNew
-                ? $(this).find('.wpids-map-newname').val().trim().replace(/[^a-z0-9-]/gi, '-').toLowerCase()
+                ? $(this).find('.utilgp-map-newname').val().trim().replace(/[^a-z0-9-]/gi, '-').toLowerCase()
                 : select;
 
             if (!slug || !hex) return;
@@ -159,12 +159,12 @@
                 hex:        hex,
                 gp_replace: isGpReplace ? 1 : 0,
                 options: {
-                    scale:            $('#wpids-opt-scale').is(':checked') ? 1 : 0,
-                    complementary:    $('#wpids-opt-complementary').is(':checked') ? 1 : 0,
-                    triadic:          $('#wpids-opt-triadic').is(':checked') ? 1 : 0,
-                    analogous:        $('#wpids-opt-analogous').is(':checked') ? 1 : 0,
-                    split_comp:       $('#wpids-opt-split-comp').is(':checked') ? 1 : 0,
-                    dark_counterpart: $('#wpids-opt-dark').is(':checked') ? 1 : 0,
+                    scale:            $('#utilgp-opt-scale').is(':checked') ? 1 : 0,
+                    complementary:    $('#utilgp-opt-complementary').is(':checked') ? 1 : 0,
+                    triadic:          $('#utilgp-opt-triadic').is(':checked') ? 1 : 0,
+                    analogous:        $('#utilgp-opt-analogous').is(':checked') ? 1 : 0,
+                    split_comp:       $('#utilgp-opt-split-comp').is(':checked') ? 1 : 0,
+                    dark_counterpart: $('#utilgp-opt-dark').is(':checked') ? 1 : 0,
                 }
             });
         });
@@ -175,10 +175,10 @@
         }
 
         var $btn = $(this).prop('disabled', true).text('Processing...');
-        var syncDark = $('#wpids-opt-sync-dark').is(':checked') ? 1 : 0;
+        var syncDark = $('#utilgp-opt-sync-dark').is(':checked') ? 1 : 0;
 
         $.post(cfg.ajaxUrl, {
-            action: 'wpids_expand_colors',
+            action: 'utilgp_expand_colors',
             nonce:  cfg.nonce,
             colors: colors
         })
@@ -204,7 +204,7 @@
 
             // Save to DB
             $.post(cfg.ajaxUrl, {
-                action:    'wpids_save_expanded',
+                action:    'utilgp_save_expanded',
                 nonce:     cfg.nonce,
                 expanded:  savedSets,
                 sync_dark: syncDark
@@ -215,8 +215,8 @@
                     return;
                 }
 
-                $('#wpids-mapping-modal').fadeOut(200);
-                $('#wpids-color-raw-input').val('');
+                $('#utilgp-mapping-modal').fadeOut(200);
+                $('#utilgp-color-raw-input').val('');
                 renderPaletteGrid();
                 showStatus(saveRes.data.message);
 
@@ -269,25 +269,25 @@
     }
 
     function renderPaletteGrid() {
-        var $container = $('#wpids-color-palette');
+        var $container = $('#utilgp-color-palette');
         if (!$container.length) return;
 
         $container.empty();
 
         if (!gpColors || !gpColors.length) {
-            $container.append('<span class="wpids-ci-empty">No GP global colors found.</span>');
+            $container.append('<span class="utilgp-ci-empty">No GP global colors found.</span>');
             return;
         }
 
         $.each(gpColors, function (i, c) {
-            var $swatch = $('<button type="button" class="wpids-gc-swatch"></button>');
+            var $swatch = $('<button type="button" class="utilgp-gc-swatch"></button>');
             $swatch.attr('title', c.name + ' (' + c.slug + ')')
                    .css('background-color', c.color)
                    .on('click', function () { openMassiveMenu(c.slug); });
             $container.append($swatch);
         });
 
-        var $add = $('<button type="button" class="wpids-gc-swatch-add" title="Add New Color">+</button>');
+        var $add = $('<button type="button" class="utilgp-gc-swatch-add" title="Add New Color">+</button>');
         $add.on('click', function () { openMassiveMenu('__new__'); });
         $container.append($add);
     }
@@ -320,8 +320,8 @@
             }
         });
 
-        $('#wpids-edit-name').val(gpColor.name || '');
-        var $hexInput = $('#wpids-edit-hex');
+        $('#utilgp-edit-name').val(gpColor.name || '');
+        var $hexInput = $('#utilgp-edit-hex');
         var colorVal = gpColor.color || '#000000';
         $hexInput.val(colorVal);
 
@@ -341,47 +341,47 @@
                         $hexInput.val(newColor);
                     }
                 }),
-                document.getElementById('wpids-react-color-picker-root')
+                document.getElementById('utilgp-react-color-picker-root')
             );
         } else {
             // Fallback to plain text input if React is somehow missing
-            document.getElementById('wpids-react-color-picker-root').innerHTML = 
-                '<input type="text" id="wpids-fallback-hex" class="wpids-ci-input" value="' + escHtml(colorVal) + '" />';
-            $('#wpids-fallback-hex').on('input', function() {
+            document.getElementById('utilgp-react-color-picker-root').innerHTML = 
+                '<input type="text" id="utilgp-fallback-hex" class="utilgp-ci-input" value="' + escHtml(colorVal) + '" />';
+            $('#utilgp-fallback-hex').on('input', function() {
                 $hexInput.val($(this).val());
             });
         }
 
-        $('#wpids-edit-opt-scale').prop('checked', !!setOpt.scale);
-        $('#wpids-edit-opt-complementary').prop('checked', !!setOpt.complementary);
-        $('#wpids-edit-opt-triadic').prop('checked', !!setOpt.triadic);
-        $('#wpids-edit-opt-analogous').prop('checked', !!setOpt.analogous);
-        $('#wpids-edit-opt-split-comp').prop('checked', !!setOpt.split_comp);
-        $('#wpids-edit-opt-dark').prop('checked', !!setOpt.dark_counterpart);
+        $('#utilgp-edit-opt-scale').prop('checked', !!setOpt.scale);
+        $('#utilgp-edit-opt-complementary').prop('checked', !!setOpt.complementary);
+        $('#utilgp-edit-opt-triadic').prop('checked', !!setOpt.triadic);
+        $('#utilgp-edit-opt-analogous').prop('checked', !!setOpt.analogous);
+        $('#utilgp-edit-opt-split-comp').prop('checked', !!setOpt.split_comp);
+        $('#utilgp-edit-opt-dark').prop('checked', !!setOpt.dark_counterpart);
 
         renderPreviewList(existingSet);
 
-        $('#wpids-editor-status').hide();
-        $('#wpids-editor-modal').fadeIn(200);
+        $('#utilgp-editor-status').hide();
+        $('#utilgp-editor-modal').fadeIn(200);
     }
 
     function renderPreviewList(setObj) {
-        var $list = $('#wpids-editor-preview-list').empty();
+        var $list = $('#utilgp-editor-preview-list').empty();
         var hasVars = setObj && setObj.variables && Object.keys(setObj.variables).length > 0;
         var hasDark = setObj && setObj.dark_counterparts && Object.keys(setObj.dark_counterparts).length > 0;
 
         if (!hasVars && !hasDark) {
-            $list.append('<span class="wpids-ci-empty" style="grid-column: 1 / -1;">No derivatives generated yet. Click Apply & Save.</span>');
+            $list.append('<span class="utilgp-ci-empty" style="grid-column: 1 / -1;">No derivatives generated yet. Click Apply & Save.</span>');
             return;
         }
 
         if (hasVars) {
             $.each(setObj.variables, function (varName, hex) {
                 var $item = $([
-                    '<div class="wpids-ep-item">',
-                        '<div class="wpids-ep-swatch" style="background-color:' + escHtml(hex) + ';"></div>',
+                    '<div class="utilgp-ep-item">',
+                        '<div class="utilgp-ep-swatch" style="background-color:' + escHtml(hex) + ';"></div>',
                         '<code>' + escHtml(varName) + '</code>',
-                        '<button type="button" class="wpids-ep-copy-btn" data-clipboard="' + escHtml(varName) + '" title="Copy CSS variable"><span class="dashicons dashicons-admin-page"></span></button>',
+                        '<button type="button" class="utilgp-ep-copy-btn" data-clipboard="' + escHtml(varName) + '" title="Copy CSS variable"><span class="dashicons dashicons-admin-page"></span></button>',
                     '</div>'
                 ].join(''));
                 $list.append($item);
@@ -392,10 +392,10 @@
             $.each(setObj.dark_counterparts, function (slug, hex) {
                 var varName = '--' + slug;
                 var $item = $([
-                    '<div class="wpids-ep-item" style="border-color: #374151; background: #f8fafc;">',
-                        '<div class="wpids-ep-swatch" style="background-color:' + escHtml(hex) + ';"></div>',
+                    '<div class="utilgp-ep-item" style="border-color: #374151; background: #f8fafc;">',
+                        '<div class="utilgp-ep-swatch" style="background-color:' + escHtml(hex) + ';"></div>',
                         '<code>' + escHtml(varName) + ' <small style="color:#64748b;">(Dark)</small></code>',
-                        '<button type="button" class="wpids-ep-copy-btn" data-clipboard="' + escHtml(varName) + '" title="Copy CSS variable"><span class="dashicons dashicons-admin-page"></span></button>',
+                        '<button type="button" class="utilgp-ep-copy-btn" data-clipboard="' + escHtml(varName) + '" title="Copy CSS variable"><span class="dashicons dashicons-admin-page"></span></button>',
                     '</div>'
                 ].join(''));
                 $list.append($item);
@@ -404,7 +404,7 @@
     }
 
     // Handle copy button in Massive Menu
-    $(document).on('click', '.wpids-ep-copy-btn', function() {
+    $(document).on('click', '.utilgp-ep-copy-btn', function() {
         var $btn = $(this);
         var text = 'var(' + $btn.attr('data-clipboard') + ')';
         navigator.clipboard.writeText(text).then(function() {
@@ -420,9 +420,9 @@
 
     // ─── Massive Menu Actions ─────────────────────────────────────
 
-    $(document).on('click', '#wpids-editor-apply', function() {
-        var name = $('#wpids-edit-name').val().trim();
-        var hex = $('#wpids-edit-hex').val().trim();
+    $(document).on('click', '#utilgp-editor-apply', function() {
+        var name = $('#utilgp-edit-name').val().trim();
+        var hex = $('#utilgp-edit-hex').val().trim();
         if (!name || !hex) {
             alert('Name and Hex color are required.');
             return;
@@ -435,12 +435,12 @@
             hex: hex,
             gp_replace: 1, // We always force update GP from this editor
             options: {
-                scale: $('#wpids-edit-opt-scale').is(':checked') ? 1 : 0,
-                complementary: $('#wpids-edit-opt-complementary').is(':checked') ? 1 : 0,
-                triadic: $('#wpids-edit-opt-triadic').is(':checked') ? 1 : 0,
-                analogous: $('#wpids-edit-opt-analogous').is(':checked') ? 1 : 0,
-                split_comp: $('#wpids-edit-opt-split-comp').is(':checked') ? 1 : 0,
-                dark_counterpart: $('#wpids-edit-opt-dark').is(':checked') ? 1 : 0,
+                scale: $('#utilgp-edit-opt-scale').is(':checked') ? 1 : 0,
+                complementary: $('#utilgp-edit-opt-complementary').is(':checked') ? 1 : 0,
+                triadic: $('#utilgp-edit-opt-triadic').is(':checked') ? 1 : 0,
+                analogous: $('#utilgp-edit-opt-analogous').is(':checked') ? 1 : 0,
+                split_comp: $('#utilgp-edit-opt-split-comp').is(':checked') ? 1 : 0,
+                dark_counterpart: $('#utilgp-edit-opt-dark').is(':checked') ? 1 : 0,
             }
         };
 
@@ -448,7 +448,7 @@
 
         // Step 1: Expand math
         $.post(cfg.ajaxUrl, {
-            action: 'wpids_expand_colors',
+            action: 'utilgp_expand_colors',
             nonce: cfg.nonce,
             colors: [colorObj]
         })
@@ -472,7 +472,7 @@
 
             // Step 2: Save to DB
             $.post(cfg.ajaxUrl, {
-                action: 'wpids_save_expanded',
+                action: 'utilgp_save_expanded',
                 nonce: cfg.nonce,
                 expanded: savedSets,
                 sync_dark: 1
@@ -514,8 +514,8 @@
                 }
 
                 // Sync Dark Mode Customizer UI
-                if (saveRes.data && saveRes.data.updated_dark_colors && wp && wp.customize && wp.customize('wpids_dark_global_colors')) {
-                    wp.customize('wpids_dark_global_colors').set($.extend([], saveRes.data.updated_dark_colors));
+                if (saveRes.data && saveRes.data.updated_dark_colors && wp && wp.customize && wp.customize('utilgp_dark_global_colors')) {
+                    wp.customize('utilgp_dark_global_colors').set($.extend([], saveRes.data.updated_dark_colors));
                 }
             });
         })
@@ -525,13 +525,13 @@
         });
     });
 
-    $(document).on('click', '#wpids-resync-dark-btn', function() {
+    $(document).on('click', '#utilgp-resync-dark-btn', function() {
         var $btn = $(this);
         var oldText = $btn.text();
         $btn.prop('disabled', true).text('Syncing...');
 
         $.post(cfg.ajaxUrl, {
-            action: 'wpids_sync_dark_auto',
+            action: 'utilgp_sync_dark_auto',
             nonce: cfg.nonce
         })
         .done(function (res) {
@@ -539,8 +539,8 @@
             if (res.success) {
                 showStatus(res.data.message);
                 
-                if (res.data && res.data.updated_dark_colors && wp && wp.customize && wp.customize('wpids_dark_global_colors')) {
-                    wp.customize('wpids_dark_global_colors').set($.extend([], res.data.updated_dark_colors));
+                if (res.data && res.data.updated_dark_colors && wp && wp.customize && wp.customize('utilgp_dark_global_colors')) {
+                    wp.customize('utilgp_dark_global_colors').set($.extend([], res.data.updated_dark_colors));
                 }
 
                 if (wp && wp.customize && wp.customize.previewer) {
@@ -556,9 +556,9 @@
         });
     });
 
-    $(document).on('click', '#wpids-edit-delete', function() {
+    $(document).on('click', '#utilgp-edit-delete', function() {
         if (activeSlug === '__new__') {
-            $('#wpids-editor-modal').fadeOut(200);
+            $('#utilgp-editor-modal').fadeOut(200);
             return;
         }
 
@@ -586,28 +586,28 @@
 
         // 3. Save expanded to DB
         $.post(cfg.ajaxUrl, {
-            action: 'wpids_save_expanded',
+            action: 'utilgp_save_expanded',
             nonce: cfg.nonce,
             expanded: savedSets,
             sync_dark: 1
         });
 
-        $('#wpids-editor-modal').fadeOut(200);
+        $('#utilgp-editor-modal').fadeOut(200);
         showStatus('Color deleted.');
     });
 
-    $(document).on('click', '#wpids-editor-cancel, #wpids-editor-close', function () {
+    $(document).on('click', '#utilgp-editor-cancel, #utilgp-editor-close', function () {
         if (wp && wp.element && wp.element.unmountComponentAtNode) {
-            wp.element.unmountComponentAtNode(document.getElementById('wpids-react-color-picker-root'));
+            wp.element.unmountComponentAtNode(document.getElementById('utilgp-react-color-picker-root'));
         }
-        $('#wpids-editor-modal').fadeOut(200);
+        $('#utilgp-editor-modal').fadeOut(200);
     });
 
     // ─── ESC key closes modals ────────────────────────────────────
 
     $(document).on('keydown', function (e) {
         if (e.key === 'Escape') {
-            $('#wpids-mapping-modal, #wpids-editor-modal').fadeOut(200);
+            $('#utilgp-mapping-modal, #utilgp-editor-modal').fadeOut(200);
         }
     });
 
@@ -619,14 +619,14 @@
      * This notice gives the user a one-click way to do that.
      */
     function showReloadNotice() {
-        if ($('#wpids-reload-notice').length) return;
+        if ($('#utilgp-reload-notice').length) return;
 
         var $notice = $([
-            '<div id="wpids-reload-notice" style="',
+            '<div id="utilgp-reload-notice" style="',
                 'background:#1d2327;color:#f0f0f1;padding:10px 14px;border-radius:6px;',
                 'margin-top:10px;font-size:12px;display:flex;align-items:center;gap:10px;">',
                 '<span>&#9432; Reload Customizer to see updated GP Color palette.</span>',
-                '<button id="wpids-reload-btn" style="',
+                '<button id="utilgp-reload-btn" style="',
                     'background:#2271b1;color:#fff;border:none;padding:5px 12px;',
                     'border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap;">',
                     'Reload Now',
@@ -634,9 +634,9 @@
             '</div>'
         ].join(''));
 
-        $('#wpids-color-import-wrap').append($notice);
+        $('#utilgp-color-import-wrap').append($notice);
 
-        $('#wpids-reload-btn').on('click', function () {
+        $('#utilgp-reload-btn').on('click', function () {
             window.location.reload();
         });
     }

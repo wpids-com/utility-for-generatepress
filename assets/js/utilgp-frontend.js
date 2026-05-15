@@ -1,19 +1,19 @@
 /**
- * WPIDS Utility Frontend Script
+ * UTILGP Utility Frontend Script
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    const toggleButtons = document.querySelectorAll('.wpids-dark-mode-toggle');
+    const toggleButtons = document.querySelectorAll('.utilgp-dark-mode-toggle');
 
     // Function to set theme
     const setTheme = (isDark) => {
         if (isDark) {
             document.documentElement.classList.add('dark');
-            localStorage.setItem('wpids-dark-mode', 'true');
+            localStorage.setItem('utilgp-dark-mode', 'true');
         } else {
             document.documentElement.classList.remove('dark');
-            localStorage.setItem('wpids-dark-mode', 'false');
+            localStorage.setItem('utilgp-dark-mode', 'false');
         }
     };
 

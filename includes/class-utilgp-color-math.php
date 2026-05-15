@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class WPIDS_Color_Math {
+class UTILGP_Color_Math {
 
 	// ─────────────────────────────────────────────
 	// SECTION 1: Color Space Conversion

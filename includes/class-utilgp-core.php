@@ -1,13 +1,13 @@
 <?php
 /**
- * Core Class of the WPIDS Utility Plugin.
+ * Core Class of the UTILGP Utility Plugin.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class WPIDS_Utility_Core {
+class UTILGP_Core {
 
 	/**
 	 * Constructor.
@@ -20,47 +20,47 @@ class WPIDS_Utility_Core {
 	 * Load the required dependencies for this plugin.
 	 */
 	private function load_dependencies() {
-		require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-color-math.php';
-		require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-color-module.php';
-		require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-gradient-module.php';
-		require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-typography.php';
-		require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-dark-mode.php';
-		require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-settings.php';
+		require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-color-math.php';
+		require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-color-module.php';
+		require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-gradient-module.php';
+		require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-typography.php';
+		require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-dark-mode.php';
+		require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-settings.php';
 	}
 
 	/**
 	 * Run the plugin logic.
 	 */
 	public function run() {
-		$settings = new WPIDS_Settings();
+		$settings = new UTILGP_Settings();
 		$settings->init();
 
-		$options = get_option( 'wpids_utility_options' );
+		$options = get_option( 'utilgp_options' );
 		// 1. Color Management (import, expansion, harmony variants)
 		$is_color_management = isset( $options['enable_color_manager'] ) ? $options['enable_color_manager'] : true;
 		if ( $is_color_management ) {
-			$color_module = new WPIDS_Color_Module();
+			$color_module = new UTILGP_Color_Module();
 			$color_module->init();
 		}
 
 		// 2. Gradient Palette (independent — theme.json native + utility classes)
 		$is_gradient_palette = isset( $options['enable_gradient_palette'] ) ? $options['enable_gradient_palette'] : true;
 		if ( $is_gradient_palette ) {
-			$gradient_module = new WPIDS_Gradient_Module();
+			$gradient_module = new UTILGP_Gradient_Module();
 			$gradient_module->init();
 		}
 
 		// 2. Fluid Typography
 		$is_typography = isset( $options['enable_typography'] ) ? $options['enable_typography'] : true;
 		if ( $is_typography ) {
-			$typography = new WPIDS_Typography();
+			$typography = new UTILGP_Typography();
 			$typography->init();
 		}
 
 		// 3. Dark Mode
 		$is_dark_mode = isset( $options['enable_dark_mode'] ) ? $options['enable_dark_mode'] : true;
 		if ( $is_dark_mode ) {
-			$dark_mode = new WPIDS_Dark_Mode();
+			$dark_mode = new UTILGP_Dark_Mode();
 			$dark_mode->init();
 		}
 
@@ -76,7 +76,7 @@ class WPIDS_Utility_Core {
 		add_action( 'customize_register', array( $this, 'register_customizer_panel' ), 990 );
 
 		// Add Settings link in Plugins list
-		add_filter( 'plugin_action_links_' . plugin_basename( WPIDS_UTILITY_FILE ), array( $this, 'add_plugin_action_links' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( UTILGP_FILE ), array( $this, 'add_plugin_action_links' ) );
 	}
 
 	/**
@@ -84,15 +84,15 @@ class WPIDS_Utility_Core {
 	 */
 	public function enqueue_admin_assets( $hook = '' ) {
 		// Only load on our settings page to prevent breaking other GP dashboards
-		if ( 'appearance_page_wpids-utility' !== $hook ) {
+		if ( 'appearance_page_utilgp-utility' !== $hook ) {
 			return;
 		}
 
 		wp_enqueue_style(
-			'wpids-admin-common',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/css/wpids-admin-common.css',
+			'utilgp-admin-common',
+			UTILGP_PLUGIN_URL . 'assets/css/utilgp-admin-common.css',
 			array(),
-			WPIDS_UTILITY_VERSION
+			UTILGP_VERSION
 		);
 	}
 
@@ -102,7 +102,7 @@ class WPIDS_Utility_Core {
 	 */
 	public function register_customizer_panel( $wp_customize ) {
 		$wp_customize->add_panel(
-			'wpids_utility_panel',
+			'utilgp_utility_panel',
 			array(
 				'title'    => __( 'Utility', 'utility-for-generatepress' ),
 				'priority' => 30,
@@ -114,7 +114,7 @@ class WPIDS_Utility_Core {
 	 * Add Configure link to the Plugins list page.
 	 */
 	public function add_plugin_action_links( $links ) {
-		$settings_link = '<a href="' . esc_url( admin_url( 'themes.php?page=wpids-utility' ) ) . '">' . esc_html__( 'Configure', 'utility-for-generatepress' ) . '</a>';
+		$settings_link = '<a href="' . esc_url( admin_url( 'themes.php?page=utilgp-utility' ) ) . '">' . esc_html__( 'Configure', 'utility-for-generatepress' ) . '</a>';
 		$links[] = $settings_link; // Append to the right of Deactivate
 		return $links;
 	}
@@ -124,18 +124,18 @@ class WPIDS_Utility_Core {
 	 */
 	public function enqueue_frontend_assets() {
 		wp_enqueue_style(
-			'wpids-utility-frontend',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/css/wpids-frontend.css',
+			'utilgp-utility-frontend',
+			UTILGP_PLUGIN_URL . 'assets/css/utilgp-frontend.css',
 			array(),
-			WPIDS_UTILITY_VERSION,
+			UTILGP_VERSION,
 			'all'
 		);
 
 		wp_enqueue_script(
-			'wpids-utility-frontend-js',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/js/wpids-frontend.js',
+			'utilgp-utility-frontend-js',
+			UTILGP_PLUGIN_URL . 'assets/js/utilgp-frontend.js',
 			array(),
-			WPIDS_UTILITY_VERSION,
+			UTILGP_VERSION,
 			true // in footer
 		);
 	}
@@ -145,21 +145,21 @@ class WPIDS_Utility_Core {
 	 */
 	public function enqueue_editor_assets() {
 		wp_enqueue_style(
-			'wpids-utility-editor',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/css/wpids-editor.css',
+			'utilgp-utility-editor',
+			UTILGP_PLUGIN_URL . 'assets/css/utilgp-editor.css',
 			array(),
-			WPIDS_UTILITY_VERSION,
+			UTILGP_VERSION,
 			'all'
 		);
 
-		$options = get_option( 'wpids_utility_options' );
+		$options = get_option( 'utilgp_options' );
 		$is_editor_sync = isset( $options['enable_editor_sync'] ) ? $options['enable_editor_sync'] : true;
 
 		if ( $is_editor_sync ) {
 			// 1. Sync Child Theme / Active Theme Stylesheet to Editor
 			$theme = wp_get_theme();
 			wp_enqueue_style(
-				'wpids-theme-style-sync',
+				'utilgp-theme-style-sync',
 				get_stylesheet_uri(),
 				array(),
 				$theme->get('Version')
@@ -168,7 +168,8 @@ class WPIDS_Utility_Core {
 			// 2. Sync Customizer "Additional CSS" to Editor
 			$custom_css = wp_get_custom_css();
 			if ( ! empty( $custom_css ) ) {
-				wp_add_inline_style( 'wpids-utility-editor', $custom_css );
+				// Escape CSS late.
+				wp_add_inline_style( 'utilgp-utility-editor', wp_strip_all_tags( $custom_css ) );
 			}
 		}
 
@@ -176,13 +177,15 @@ class WPIDS_Utility_Core {
 		// This makes var(--slug) work in GenerateBlocks for gradients and variant colors
 		$css_vars = $this->build_css_variables_string();
 		if ( ! empty( $css_vars ) ) {
-			wp_add_inline_style( 'wpids-utility-editor', $css_vars );
+			// Escape CSS late.
+			wp_add_inline_style( 'utilgp-utility-editor', wp_strip_all_tags( $css_vars ) );
 		}
 
 		// 4. Inject gradient utility classes to editor (enables .has-[slug]-gradient-text live preview)
-		$gradient_utils = WPIDS_Gradient_Module::build_utility_css( 'editor' );
+		$gradient_utils = UTILGP_Gradient_Module::build_utility_css( 'editor' );
 		if ( ! empty( $gradient_utils ) ) {
-			wp_add_inline_style( 'wpids-utility-editor', $gradient_utils );
+			// Escape CSS late.
+			wp_add_inline_style( 'utilgp-utility-editor', wp_strip_all_tags( $gradient_utils ) );
 		}
 	}
 
@@ -194,7 +197,7 @@ class WPIDS_Utility_Core {
 		$lines = array();
 
 		// Expanded color variants (--slug-10, --slug-50, etc.)
-		$expanded = get_option( 'wpids_expanded_colors', array() );
+		$expanded = get_option( 'utilgp_expanded_colors', array() );
 		if ( is_array( $expanded ) ) {
 			foreach ( $expanded as $set ) {
 				if ( empty( $set['variables'] ) ) continue;
@@ -205,12 +208,12 @@ class WPIDS_Utility_Core {
 		}
 
 		// Gradient variables
-		$gradients = get_option( 'wpids_gradient_variables', array() );
+		$gradients = get_option( 'utilgp_gradient_variables', array() );
 		if ( is_array( $gradients ) ) {
 			foreach ( $gradients as $g ) {
 				$slug = $g['slug'] ?? '';
 				if ( empty( $slug ) || empty( $g['stops'] ) ) continue;
-				$css_val = WPIDS_Gradient_Module::build_gradient_css( $g );
+				$css_val = UTILGP_Gradient_Module::build_gradient_css( $g );
 				if ( $css_val ) {
 					$lines[] = "\t--" . esc_html( $slug ) . ": " . esc_attr( $css_val ) . ';';
 				}

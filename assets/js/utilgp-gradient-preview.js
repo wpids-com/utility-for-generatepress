@@ -1,5 +1,5 @@
 /**
- * WPIDS Gradient Preview JS
+ * UTILGP Gradient Preview JS
  * Runs inside the Customizer preview iframe.
  * Listens for gradient changes from the control sidebar
  * and injects CSS variables + utility classes in real-time.
@@ -9,14 +9,14 @@
 
 	api.bind( 'preview-ready', function() {
 
-		api.preview.bind( 'wpids-gradient-preview', function( data ) {
+		api.preview.bind( 'utilgp-gradient-preview', function( data ) {
 			var gradients = data.gradients || [];
 			var css = buildPreviewCSS( gradients );
 
-			var $el = document.getElementById( 'wpids-gradient-preview-live' );
+			var $el = document.getElementById( 'utilgp-gradient-preview-live' );
 			if ( ! $el ) {
 				$el = document.createElement( 'style' );
-				$el.id = 'wpids-gradient-preview-live';
+				$el.id = 'utilgp-gradient-preview-live';
 				document.head.appendChild( $el );
 			}
 			$el.textContent = css;

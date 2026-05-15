@@ -1,14 +1,14 @@
 /* =====================================================
-   WPIDS Gradient Control — GP React Color Style
+   UTILGP Gradient Control — GP React Color Style
    ===================================================== */
 
-.wpids-gc-wrap {
+.utilgp-gc-wrap {
 	font-size: 12px;
 	color: #1d2327;
 }
 
 /* ── Palette Grid ── */
-.wpids-gc-palette {
+.utilgp-gc-palette {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
@@ -17,7 +17,7 @@
 }
 
 /* Each gradient swatch */
-.wpids-gc-swatch {
+.utilgp-gc-swatch {
 	position: relative;
 	width: 28px;
 	height: 28px;
@@ -29,14 +29,14 @@
 	flex-shrink: 0;
 }
 
-.wpids-gc-swatch:hover,
-.wpids-gc-swatch.is-active {
+.utilgp-gc-swatch:hover,
+.utilgp-gc-swatch.is-active {
 	transform: scale(1.15);
 	box-shadow: 0 0 0 2px #2271b1;
 }
 
 /* The "+" add button — same circle style as GP color swatches */
-.wpids-gc-swatch-add {
+.utilgp-gc-swatch-add {
 	width: 28px;
 	height: 28px;
 	border-radius: 50%;
@@ -53,14 +53,14 @@
 	flex-shrink: 0;
 }
 
-.wpids-gc-swatch-add:hover {
+.utilgp-gc-swatch-add:hover {
 	border-color: #2271b1;
 	color: #2271b1;
 	background: #f0f6fc;
 }
 
 /* Empty state */
-.wpids-gc-empty {
+.utilgp-gc-empty {
 	font-size: 11px;
 	color: #8c8f94;
 	font-style: italic;
@@ -68,7 +68,7 @@
 }
 
 /* ── Editor Panel ── */
-.wpids-gc-editor {
+.utilgp-gc-editor {
 	background: #fff;
 	border: 1px solid #dcdcde;
 	border-radius: 3px;
@@ -77,7 +77,7 @@
 	position: relative;
 }
 
-.wpids-gc-editor-caret {
+.utilgp-gc-editor-caret {
 	position: absolute;
 	top: -6px;
 	width: 10px;
@@ -90,15 +90,15 @@
 }
 
 /* Header: back / name / delete */
-.wpids-gc-editor-header {
+.utilgp-gc-editor-header {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	margin-bottom: 10px;
 }
 
-.wpids-gc-back-btn,
-.wpids-gc-delete-btn {
+.utilgp-gc-back-btn,
+.utilgp-gc-delete-btn {
 	background: none;
 	border: none;
 	padding: 2px 4px;
@@ -109,11 +109,11 @@
 	line-height: 1;
 }
 
-.wpids-gc-back-btn:hover { color: #2271b1; background: #f0f6fc; }
-.wpids-gc-delete-btn { color: #b32d2e; margin-left: auto; }
-.wpids-gc-delete-btn:hover { background: #fbeaea; }
+.utilgp-gc-back-btn:hover { color: #2271b1; background: #f0f6fc; }
+.utilgp-gc-delete-btn { color: #b32d2e; margin-left: auto; }
+.utilgp-gc-delete-btn:hover { background: #fbeaea; }
 
-.wpids-gc-name-input {
+.utilgp-gc-name-input {
 	flex: 1;
 	height: 28px;
 	padding: 0 8px;
@@ -123,14 +123,14 @@
 	color: #1d2327;
 }
 
-.wpids-gc-name-input:focus {
+.utilgp-gc-name-input:focus {
 	border-color: #2271b1;
 	box-shadow: 0 0 0 1px #2271b1;
 	outline: none;
 }
 
 /* Gradient preview bar (like GB) */
-.wpids-gc-preview-bar {
+.utilgp-gc-preview-bar {
 	height: 24px;
 	border-radius: 3px;
 	border: 1px solid rgba(0,0,0,0.1);
@@ -139,20 +139,20 @@
 }
 
 /* Type + Angle row */
-.wpids-gc-row {
+.utilgp-gc-row {
 	display: flex;
 	gap: 10px;
 	margin-bottom: 12px;
 }
 
-.wpids-gc-field {
+.utilgp-gc-field {
 	display: flex;
 	flex-direction: column;
 	gap: 3px;
 	flex: 1;
 }
 
-.wpids-gc-field label {
+.utilgp-gc-field label {
 	font-size: 11px;
 	font-weight: 500;
 	color: #646970;
@@ -160,8 +160,8 @@
 	letter-spacing: 0.03em;
 }
 
-.wpids-gc-select,
-.wpids-gc-num {
+.utilgp-gc-select,
+.utilgp-gc-num {
 	height: 28px;
 	border: 1px solid #dcdcde;
 	border-radius: 2px;
@@ -171,38 +171,38 @@
 	background: #fff;
 }
 
-.wpids-gc-select:focus,
-.wpids-gc-num:focus {
+.utilgp-gc-select:focus,
+.utilgp-gc-num:focus {
 	border-color: #2271b1;
 	outline: none;
 }
 
-.wpids-gc-angle-group {
+.utilgp-gc-angle-group {
 	display: flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.wpids-gc-angle-group .wpids-gc-num {
+.utilgp-gc-angle-group .utilgp-gc-num {
 	width: 56px;
 }
 
 /* ── Color Stops ── */
-.wpids-gc-stops {
+.utilgp-gc-stops {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
 	margin-bottom: 8px;
 }
 
-.wpids-gc-stop-row {
+.utilgp-gc-stop-row {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
 /* The color circle swatch (like GB's stop dot) */
-.wpids-gc-stop-swatch {
+.utilgp-gc-stop-swatch {
 	width: 22px;
 	height: 22px;
 	border-radius: 50%;
@@ -212,13 +212,13 @@
 	position: relative;
 }
 
-.wpids-gc-stop-swatch:focus {
+.utilgp-gc-stop-swatch:focus {
 	outline: none;
 	box-shadow: 0 0 0 2px #2271b1;
 }
 
 /* Position slider */
-.wpids-gc-stop-slider {
+.utilgp-gc-stop-slider {
 	flex: 1;
 	height: 3px;
 	-webkit-appearance: none;
@@ -228,7 +228,7 @@
 	cursor: pointer;
 }
 
-.wpids-gc-stop-slider::-webkit-slider-thumb {
+.utilgp-gc-stop-slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	width: 14px;
 	height: 14px;
@@ -240,7 +240,7 @@
 }
 
 /* Position number input */
-.wpids-gc-stop-pos {
+.utilgp-gc-stop-pos {
 	width: 42px;
 	height: 26px;
 	border: 1px solid #dcdcde;
@@ -252,7 +252,7 @@
 }
 
 /* Remove stop button */
-.wpids-gc-stop-remove {
+.utilgp-gc-stop-remove {
 	background: none;
 	border: none;
 	cursor: pointer;
@@ -265,10 +265,10 @@
 	transition: background 0.15s;
 }
 
-.wpids-gc-stop-remove:hover { background: #fbeaea; }
+.utilgp-gc-stop-remove:hover { background: #fbeaea; }
 
 /* Add stop button */
-.wpids-gc-add-stop {
+.utilgp-gc-add-stop {
 	font-size: 11px !important;
 	height: 26px !important;
 	line-height: 24px !important;
@@ -277,7 +277,7 @@
 }
 
 /* Utility class hint */
-.wpids-gc-utility-hint {
+.utilgp-gc-utility-hint {
 	display: flex;
 	align-items: flex-start;
 	gap: 4px;
@@ -291,7 +291,7 @@
 	word-break: break-all;
 }
 
-.wpids-gc-utility-hint .dashicons {
+.utilgp-gc-utility-hint .dashicons {
 	font-size: 14px;
 	width: 14px;
 	height: 14px;
@@ -300,26 +300,26 @@
 }
 
 /* Actions */
-.wpids-gc-actions {
+.utilgp-gc-actions {
 	display: flex;
 	align-items: center;
 	gap: 10px;
 }
 
-.wpids-gc-save-status {
+.utilgp-gc-save-status {
 	font-size: 11px;
 	color: #00a32a;
 	font-weight: 500;
 }
 
 /* ── Border Settings Section ── */
-.wpids-gb-settings {
+.utilgp-gb-settings {
 	margin-top: 16px;
 	padding-top: 14px;
 	border-top: 1px solid #dcdcde;
 }
 
-.wpids-gb-settings-title {
+.utilgp-gb-settings-title {
 	display: block;
 	font-size: 11px;
 	font-weight: 600;
@@ -329,16 +329,16 @@
 	margin-bottom: 10px;
 }
 
-.wpids-gb-custom-radius { margin-top: 8px; }
+.utilgp-gb-custom-radius { margin-top: 8px; }
 
-.wpids-gb-radius-header {
+.utilgp-gb-radius-header {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	margin-bottom: 8px;
 }
 
-.wpids-gb-radius-header label {
+.utilgp-gb-radius-header label {
 	font-size: 11px;
 	font-weight: 500;
 	color: #646970;
@@ -346,13 +346,13 @@
 	flex: 1;
 }
 
-.wpids-gb-radius-controls {
+.utilgp-gb-radius-controls {
 	display: flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.wpids-gb-unit-select {
+.utilgp-gb-unit-select {
 	height: 24px;
 	border: 1px solid #dcdcde;
 	border-radius: 2px;
@@ -362,7 +362,7 @@
 	background: #fff;
 }
 
-.wpids-gb-link-btn {
+.utilgp-gb-link-btn {
 	background: none;
 	border: 1px solid #dcdcde;
 	border-radius: 2px;
@@ -377,36 +377,36 @@
 	padding: 0;
 }
 
-.wpids-gb-link-btn.is-linked {
+.utilgp-gb-link-btn.is-linked {
 	background: #2271b1;
 	border-color: #2271b1;
 	color: #fff;
 }
 
-.wpids-gb-link-btn .dashicons {
+.utilgp-gb-link-btn .dashicons {
 	font-size: 14px;
 	width: 14px;
 	height: 14px;
 }
 
-.wpids-gb-radius-grid {
+.utilgp-gb-radius-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 6px;
 }
 
-.wpids-gb-radius-field {
+.utilgp-gb-radius-field {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 }
 
-.wpids-gb-radius-field label {
+.utilgp-gb-radius-field label {
 	font-size: 10px;
 	color: #8c8f94;
 }
 
-.wpids-gb-r-input {
+.utilgp-gb-r-input {
 	height: 28px;
 	border: 1px solid #dcdcde;
 	border-radius: 2px;
@@ -417,13 +417,13 @@
 	box-sizing: border-box;
 }
 
-.wpids-gb-r-input:focus {
+.utilgp-gb-r-input:focus {
 	border-color: #2271b1;
 	outline: none;
 }
 
 /* Usage / class list */
-.wpids-gb-usage {
+.utilgp-gb-usage {
 	margin: 12px 0 10px;
 	padding: 8px;
 	background: #f6f7f7;
@@ -431,7 +431,7 @@
 	border-radius: 2px;
 }
 
-.wpids-gb-usage-title {
+.utilgp-gb-usage-title {
 	font-weight: 600;
 	font-size: 11px;
 	display: flex;
@@ -441,13 +441,13 @@
 	color: #1d2327;
 }
 
-.wpids-gb-usage p {
+.utilgp-gb-usage p {
 	font-size: 11px;
 	color: #646970;
 	margin: 0 0 6px;
 }
 
-.wpids-gb-class-item {
+.utilgp-gb-class-item {
 	display: flex;
 	flex-direction: row;
 	align-items: stretch;
@@ -457,7 +457,7 @@
 	border-radius: 2px;
 }
 
-.wpids-gb-class-item code {
+.utilgp-gb-class-item code {
 	flex: 1;
 	border: none;
 	background: none;
@@ -469,7 +469,7 @@
 	align-items: center;
 }
 
-.wpids-gb-copy-btn {
+.utilgp-gb-copy-btn {
 	background: none;
 	border: none;
 	border-left: 1px solid #dcdcde;
@@ -482,17 +482,17 @@
 	transition: all 0.15s;
 }
 
-.wpids-gb-copy-btn:hover {
+.utilgp-gb-copy-btn:hover {
 	color: #2271b1;
 	background: #f6f7f7;
 }
 
-.wpids-gb-copy-btn.is-copied {
+.utilgp-gb-copy-btn.is-copied {
 	color: #00a32a;
 	background: #edfaef;
 }
 
-.wpids-gb-copy-btn .dashicons {
+.utilgp-gb-copy-btn .dashicons {
 	font-size: 14px;
 	width: 14px;
 	height: 14px;

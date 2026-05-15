@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class WPIDS_Dark_Mode {
+class UTILGP_Dark_Mode {
 
 		public function init() {
 		// Customizer integration
@@ -21,38 +21,133 @@ class WPIDS_Dark_Mode {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ), 20 );
 		
 		// Customizer UI Restrictions (Lock GP React Control)
-		add_action( 'customize_controls_print_styles', array( $this, 'customizer_ui_restrictions' ) );
-		add_action( 'customize_controls_print_footer_scripts', array( $this, 'customizer_ui_js_restrictions' ) );
+		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customizer_dashboard_assets' ) );
 
 		// Auto-sync data structural array
-		add_filter( 'theme_mod_wpids_dark_global_colors', array( $this, 'sync_dark_colors_with_gp' ) );
+		add_filter( 'theme_mod_utilgp_dark_global_colors', array( $this, 'sync_dark_colors_with_gp' ) );
+	}
+
+	public function customizer_dashboard_assets() {
+		// 1. CSS Restrictions
+		$css = "
+			#customize-control-utilgp_dark_global_colors .generate-color-manager--add-color,
+			#customize-control-utilgp_dark_global_colors .generate-color-manager--remove,
+			#customize-control-utilgp_dark_global_colors button[aria-label*='Lock'],
+			#customize-control-utilgp_dark_global_colors button[aria-label*='Unlock'],
+			#customize-control-utilgp_dark_global_colors .generate-color-input--css-var-name-wrapper button {
+				display: none !important;
+			}
+		";
+		wp_add_inline_style( 'customize-controls', wp_strip_all_tags( $css ) );
+
+		// 2. JS Restrictions
+		$js = "
+			document.addEventListener('DOMContentLoaded', function() {
+				if (typeof wp !== 'undefined' && wp.customize) {
+					wp.customize.bind('ready', function() {
+						var gpColorsSetting = wp.customize('generate_settings[global_colors]');
+						var darkColorsSetting = wp.customize('utilgp_dark_global_colors');
+						
+						if (gpColorsSetting && darkColorsSetting) {
+							var syncColors = function() {
+								var gpColors = gpColorsSetting.get() || [];
+								var darkColors = darkColorsSetting.get() || [];
+								var updated = false;
+								
+								if (!Array.isArray(darkColors)) darkColors = [];
+								if (!Array.isArray(gpColors)) gpColors = [];
+								
+								var newDarkColors = [];
+								
+								gpColors.forEach(function(gpColor) {
+									if (!gpColor.slug) return;
+									
+									var existingDark = darkColors.find(function(dc) { return dc.slug === gpColor.slug; });
+									
+									if (existingDark) {
+										if (existingDark.name !== gpColor.name) {
+											existingDark.name = gpColor.name;
+											updated = true;
+										}
+										newDarkColors.push(existingDark);
+									} else {
+										newDarkColors.push({
+											name: gpColor.name,
+											slug: gpColor.slug,
+											color: gpColor.color
+										});
+										updated = true;
+									}
+								});
+								
+								if (darkColors.length !== newDarkColors.length) {
+									updated = true;
+								}
+								
+								if (updated) {
+									darkColorsSetting.set(newDarkColors);
+								}
+							};
+							
+							gpColorsSetting.bind(syncColors);
+							setTimeout(syncColors, 500); 
+						}
+					});
+				}
+
+				setInterval(function() {
+					var container = document.getElementById('customize-control-utilgp_dark_global_colors');
+					if (!container) return;
+
+					var inputs = container.querySelectorAll('.generate-color-input--css-var-name-wrapper');
+					inputs.forEach(function(input) {
+						if (!input.disabled) {
+							input.disabled = true;
+							input.style.opacity = '0.6';
+						}
+					});
+
+					var buttons = container.querySelectorAll('.components-button, .generate-color-manager--delete-color');
+					buttons.forEach(function(btn) {
+						var svg = btn.querySelector('svg');
+						if (svg && btn.getAttribute('aria-label') && (btn.getAttribute('aria-label').indexOf('Lock') !== -1 || btn.getAttribute('aria-label').indexOf('Unlock') !== -1)) {
+							btn.style.display = 'none';
+						}
+						if (btn.classList.contains('generate-color-manager--delete-color')) {
+							btn.style.display = 'none';
+						}
+					});
+				}, 1000);
+			});
+		";
+		wp_add_inline_script( 'customize-controls', $js );
 	}
 
 	public function enqueue_frontend_assets() {
 		// Only run if Dark Mode is enabled in Customizer
-		if ( 'on' !== get_theme_mod( 'wpids_dark_mode_enable', 'off' ) ) {
+		if ( 'on' !== get_theme_mod( 'utilgp_dark_mode_enable', 'off' ) ) {
 			return;
 		}
 
 		// Enqueue FOUC script at the top
 		wp_enqueue_script(
-			'wpids-dark-mode-fouc',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/js/wpids-dark-mode-fouc.js',
+			'utilgp-dark-mode-fouc',
+			UTILGP_PLUGIN_URL . 'assets/js/utilgp-dark-mode-fouc.js',
 			array(),
-			WPIDS_UTILITY_VERSION,
+			UTILGP_VERSION,
 			false // In head
 		);
 
 		// Inject Dark Mode CSS
 		$css = $this->get_dark_mode_css();
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'wpids-utility-frontend', $css );
+			wp_add_inline_style( 'utilgp-utility-frontend', wp_strip_all_tags( $css ) );
 		}
 
 		// Inject Toggle styles
 		$toggle_css = $this->get_toggle_css();
 		if ( ! empty( $toggle_css ) ) {
-			wp_add_inline_style( 'wpids-utility-frontend', $toggle_css );
+			wp_add_inline_style( 'utilgp-utility-frontend', wp_strip_all_tags( $toggle_css ) );
 		}
 	}
 
@@ -62,8 +157,8 @@ class WPIDS_Dark_Mode {
 	private function get_dark_mode_css() {
 		$dark_colors = array();
 
-		if ( class_exists( 'WPIDS_Color_Module' ) ) {
-			$expanded = get_option( 'wpids_expanded_colors', array() );
+		if ( class_exists( 'UTILGP_Color_Module' ) ) {
+			$expanded = get_option( 'utilgp_expanded_colors', array() );
 			if ( ! empty( $expanded ) && is_array( $expanded ) ) {
 				foreach ( $expanded as $set ) {
 					if ( empty( $set['dark_counterparts'] ) ) continue;
@@ -78,7 +173,7 @@ class WPIDS_Dark_Mode {
 		}
 
 		$theme_mods_raw = get_option( 'theme_mods_' . get_option( 'stylesheet' ), array() );
-		$db_saved       = isset( $theme_mods_raw['wpids_dark_global_colors'] ) ? $theme_mods_raw['wpids_dark_global_colors'] : array();
+		$db_saved       = isset( $theme_mods_raw['utilgp_dark_global_colors'] ) ? $theme_mods_raw['utilgp_dark_global_colors'] : array();
 		if ( is_array( $db_saved ) && ! empty( $db_saved ) ) {
 			foreach ( $db_saved as $dc ) {
 				if ( empty( $dc['slug'] ) || empty( $dc['color'] ) ) continue;
@@ -88,7 +183,7 @@ class WPIDS_Dark_Mode {
 			}
 		}
 
-		if ( ! class_exists( 'WPIDS_Color_Module' ) || empty( $dark_colors ) ) {
+		if ( ! class_exists( 'UTILGP_Color_Module' ) || empty( $dark_colors ) ) {
 			$defaults = array(
 				'contrast'   => '#f9fafb',
 				'contrast-2' => '#e5e7eb',
@@ -191,8 +286,8 @@ class WPIDS_Dark_Mode {
 
 	private function get_toggle_css() {
 		return "
-			/* === WPIDS Dark Mode Toggle === */
-			.wpids-dark-mode-toggle {
+			/* === UTILGP Dark Mode Toggle === */
+			.utilgp-dark-mode-toggle {
 				background: transparent !important;
 				border: none !important;
 				box-shadow: none !important;
@@ -205,7 +300,7 @@ class WPIDS_Dark_Mode {
 				color: #1f2937 !important;
 				transition: color 0.3s ease;
 			}
-			.wpids-dark-mode-toggle svg {
+			.utilgp-dark-mode-toggle svg {
 				width: 22px;
 				height: 22px;
 				stroke-width: 2;
@@ -213,34 +308,34 @@ class WPIDS_Dark_Mode {
 				stroke-linejoin: round;
 				pointer-events: none;
 			}
-			.wpids-dark-mode-toggle svg.wpids-icon-moon {
+			.utilgp-dark-mode-toggle svg.utilgp-icon-moon {
 				transform: scale(1.15);
 				transform-origin: center;
 			}
-			body.dark .wpids-dark-mode-toggle {
+			body.dark .utilgp-dark-mode-toggle {
 				color: #f9fafb !important;
 			}
-			.wpids-dark-mode-toggle.style-outlined svg {
+			.utilgp-dark-mode-toggle.style-outlined svg {
 				fill: transparent;
 				stroke: currentColor;
 			}
-			.wpids-dark-mode-toggle.style-monocolor svg {
+			.utilgp-dark-mode-toggle.style-monocolor svg {
 				fill: currentColor;
 				stroke: currentColor;
 			}
-			.wpids-dark-mode-toggle.style-multicolor svg.wpids-icon-sun {
+			.utilgp-dark-mode-toggle.style-multicolor svg.utilgp-icon-sun {
 				fill: #fbbf24;
 				stroke: #f59e0b;
 			}
-			.wpids-dark-mode-toggle.style-multicolor svg.wpids-icon-moon {
+			.utilgp-dark-mode-toggle.style-multicolor svg.utilgp-icon-moon {
 				fill: #818cf8;
 				stroke: #6366f1;
 			}
-			@keyframes wpidsSpinSun { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(45deg) scale(1.1); } }
-			@keyframes wpidsSwingMoon { 0% { transform: rotate(0deg) scale(1.15); } 100% { transform: rotate(-15deg) scale(1.25); } }
-			.wpids-dark-mode-toggle:hover svg.wpids-icon-sun { animation: wpidsSpinSun 0.4s ease forwards; }
-			.wpids-dark-mode-toggle:hover svg.wpids-icon-moon { animation: wpidsSwingMoon 0.4s ease forwards; }
-			.wpids-dark-mode-toggle.is-floating {
+			@keyframes utilgpSpinSun { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(45deg) scale(1.1); } }
+			@keyframes utilgpSwingMoon { 0% { transform: rotate(0deg) scale(1.15); } 100% { transform: rotate(-15deg) scale(1.25); } }
+			.utilgp-dark-mode-toggle:hover svg.utilgp-icon-sun { animation: utilgpSpinSun 0.4s ease forwards; }
+			.utilgp-dark-mode-toggle:hover svg.utilgp-icon-moon { animation: utilgpSwingMoon 0.4s ease forwards; }
+			.utilgp-dark-mode-toggle.is-floating {
 				position: fixed;
 				bottom: 25px;
 				right: 25px;
@@ -253,120 +348,23 @@ class WPIDS_Dark_Mode {
 				box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
 				transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 			}
-			.wpids-dark-mode-toggle.is-floating:hover {
+			.utilgp-dark-mode-toggle.is-floating:hover {
 				transform: translateY(-3px);
 				box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
 			}
-			body.dark .wpids-dark-mode-toggle.is-floating {
+			body.dark .utilgp-dark-mode-toggle.is-floating {
 				background-color: #1f2937 !important;
 				color: #f9fafb !important;
 			}
 		";
 	}
 
-	public function customizer_ui_restrictions() {
-		$css = "
-			#customize-control-wpids_dark_global_colors .generate-color-manager--add-color,
-			#customize-control-wpids_dark_global_colors .generate-color-manager--remove,
-			#customize-control-wpids_dark_global_colors button[aria-label*='Lock'],
-			#customize-control-wpids_dark_global_colors button[aria-label*='Unlock'],
-			#customize-control-wpids_dark_global_colors .generate-color-input--css-var-name-wrapper button {
-				display: none !important;
-			}
-		";
-		echo "<style id='wpids-dark-mode-customizer-css'>\n" . esc_html( $css ) . "\n</style>";
-	}
-
-	public function customizer_ui_js_restrictions() {
-		?>
-		<script id="wpids-dark-mode-customizer-js">
-			document.addEventListener('DOMContentLoaded', function() {
-				if (typeof wp !== 'undefined' && wp.customize) {
-					wp.customize.bind('ready', function() {
-						var gpColorsSetting = wp.customize('generate_settings[global_colors]');
-						var darkColorsSetting = wp.customize('wpids_dark_global_colors');
-						
-						if (gpColorsSetting && darkColorsSetting) {
-							var syncColors = function() {
-								var gpColors = gpColorsSetting.get() || [];
-								var darkColors = darkColorsSetting.get() || [];
-								var updated = false;
-								
-								if (!Array.isArray(darkColors)) darkColors = [];
-								if (!Array.isArray(gpColors)) gpColors = [];
-								
-								var newDarkColors = [];
-								
-								gpColors.forEach(function(gpColor) {
-									if (!gpColor.slug) return;
-									
-									var existingDark = darkColors.find(function(dc) { return dc.slug === gpColor.slug; });
-									
-									if (existingDark) {
-										if (existingDark.name !== gpColor.name) {
-											existingDark.name = gpColor.name;
-											updated = true;
-										}
-										newDarkColors.push(existingDark);
-									} else {
-										newDarkColors.push({
-											name: gpColor.name,
-											slug: gpColor.slug,
-											color: gpColor.color
-										});
-										updated = true;
-									}
-								});
-								
-								if (darkColors.length !== newDarkColors.length) {
-									updated = true;
-								}
-								
-								if (updated) {
-									darkColorsSetting.set(newDarkColors);
-								}
-							};
-							
-							gpColorsSetting.bind(syncColors);
-							setTimeout(syncColors, 500); 
-						}
-					});
-				}
-
-				setInterval(function() {
-					var container = document.getElementById('customize-control-wpids_dark_global_colors');
-					if (!container) return;
-
-					var inputs = container.querySelectorAll('.generate-color-input--css-var-name-wrapper');
-					inputs.forEach(function(input) {
-						if (!input.disabled) {
-							input.disabled = true;
-							input.style.opacity = '0.6';
-						}
-					});
-
-					var buttons = container.querySelectorAll('.components-button, .generate-color-manager--delete-color');
-					buttons.forEach(function(btn) {
-						var svg = btn.querySelector('svg');
-						if (svg && btn.getAttribute('aria-label') && (btn.getAttribute('aria-label').indexOf('Lock') !== -1 || btn.getAttribute('aria-label').indexOf('Unlock') !== -1)) {
-							btn.style.display = 'none';
-						}
-						if (btn.classList.contains('generate-color-manager--delete-color')) {
-							btn.style.display = 'none';
-						}
-					});
-				}, 1000);
-			});
-		</script>
-		<?php
-	}
-
 	public function setup_frontend_hooks() {
-		if ( 'on' !== get_theme_mod( 'wpids_dark_mode_enable', 'off' ) ) {
+		if ( 'on' !== get_theme_mod( 'utilgp_dark_mode_enable', 'off' ) ) {
 			return;
 		}
 
-		$position = get_theme_mod( 'wpids_dark_mode_position', 'after_nav' );
+		$position = get_theme_mod( 'utilgp_dark_mode_position', 'after_nav' );
 		if ( 'inside_nav' === $position ) {
 			add_action( 'generate_inside_navigation', array( __CLASS__, 'render_toggle_hook' ) );
 		} elseif ( 'floating' === $position ) {
@@ -377,21 +375,39 @@ class WPIDS_Dark_Mode {
 	}
 
 	public static function render_toggle_hook() {
-		echo WPIDS_Dark_Mode::render_toggle(); // Sanitized inside render_toggle()
+		echo wp_kses( 
+			self::render_toggle(), 
+			array(
+				'button' => array(
+					'type'       => array(),
+					'class'      => array(),
+					'aria-label' => array(),
+				),
+				'svg'    => array(
+					'class'   => array(),
+					'viewbox' => array(),
+					'xmlns'   => array(),
+					'style'   => array(),
+				),
+				'path'   => array(
+					'd' => array(),
+				),
+			)
+		);
 	}
 
 	public function register_customizer( $wp_customize ) {
 		$wp_customize->add_section(
-			'wpids_dark_mode_section',
+			'utilgp_dark_mode_section',
 			array(
 				'title'    => 'Dark Mode',
-				'panel'    => 'wpids_utility_panel',
+				'panel'    => 'utilgp_utility_panel',
 				'priority' => 40,
 			)
 		);
 
 		$wp_customize->add_setting(
-			'wpids_dark_mode_enable',
+			'utilgp_dark_mode_enable',
 			array(
 				'default'   => 'off',
 				'transport' => 'refresh',
@@ -400,11 +416,11 @@ class WPIDS_Dark_Mode {
 		);
 
 		$wp_customize->add_control(
-			'wpids_dark_mode_enable_control',
+			'utilgp_dark_mode_enable_control',
 			array(
 				'label'   => __( 'Dark Mode', 'utility-for-generatepress' ),
-				'section' => 'wpids_dark_mode_section',
-				'settings'=> 'wpids_dark_mode_enable',
+				'section' => 'utilgp_dark_mode_section',
+				'settings'=> 'utilgp_dark_mode_enable',
 				'type'    => 'select',
 				'choices' => array(
 					'off' => __( 'Off', 'utility-for-generatepress' ),
@@ -414,7 +430,7 @@ class WPIDS_Dark_Mode {
 		);
 
 		$wp_customize->add_setting(
-			'wpids_dark_mode_position',
+			'utilgp_dark_mode_position',
 			array(
 				'default'   => 'after_nav',
 				'transport' => 'refresh',
@@ -423,11 +439,11 @@ class WPIDS_Dark_Mode {
 		);
 
 		$wp_customize->add_control(
-			'wpids_dark_mode_position_control',
+			'utilgp_dark_mode_position_control',
 			array(
 				'label'   => __( 'Toggle Position', 'utility-for-generatepress' ),
-				'section' => 'wpids_dark_mode_section',
-				'settings'=> 'wpids_dark_mode_position',
+				'section' => 'utilgp_dark_mode_section',
+				'settings'=> 'utilgp_dark_mode_position',
 				'type'    => 'select',
 				'choices' => array(
 					'after_nav'  => __( 'After Navigation', 'utility-for-generatepress' ),
@@ -439,7 +455,7 @@ class WPIDS_Dark_Mode {
 		);
 
 		$wp_customize->add_setting(
-			'wpids_dark_mode_icon',
+			'utilgp_dark_mode_icon',
 			array(
 				'default'   => 'outlined',
 				'transport' => 'refresh',
@@ -448,11 +464,11 @@ class WPIDS_Dark_Mode {
 		);
 
 		$wp_customize->add_control(
-			'wpids_dark_mode_icon_control',
+			'utilgp_dark_mode_icon_control',
 			array(
 				'label'   => __( 'Toggle Icon', 'utility-for-generatepress' ),
-				'section' => 'wpids_dark_mode_section',
-				'settings'=> 'wpids_dark_mode_icon',
+				'section' => 'utilgp_dark_mode_section',
+				'settings'=> 'utilgp_dark_mode_icon',
 				'type'    => 'select',
 				'choices' => array(
 					'outlined'   => __( 'Outlined', 'utility-for-generatepress' ),
@@ -465,9 +481,9 @@ class WPIDS_Dark_Mode {
 
 		if ( class_exists( 'GeneratePress_Customize_Field' ) ) {
 			GeneratePress_Customize_Field::add_title(
-				'wpids_dark_global_colors_title',
+				'utilgp_dark_global_colors_title',
 				array(
-					'section' => 'wpids_dark_mode_section',
+					'section' => 'utilgp_dark_mode_section',
 					'title' => __( 'Dark Global Colors', 'utility-for-generatepress' ),
 				)
 			);
@@ -499,7 +515,7 @@ class WPIDS_Dark_Mode {
 			}
 
 			GeneratePress_Customize_Field::add_field(
-				'wpids_dark_global_colors',
+				'utilgp_dark_global_colors',
 				'GeneratePress_Customize_React_Control',
 				array(
 					'default' => $default_dark_colors,
@@ -521,7 +537,7 @@ class WPIDS_Dark_Mode {
 				array(
 					'type' => 'generate-color-manager-control',
 					'label' => __( 'Choose Color', 'utility-for-generatepress' ),
-					'section' => 'wpids_dark_mode_section',
+					'section' => 'utilgp_dark_mode_section',
 					'choices' => array(
 						'alpha' => true,
 						'showPalette' => false,
@@ -534,14 +550,14 @@ class WPIDS_Dark_Mode {
 	}
 
 	public function is_dark_mode_enabled( $control ) {
-		return 'on' === $control->manager->get_setting( 'wpids_dark_mode_enable' )->value();
+		return 'on' === $control->manager->get_setting( 'utilgp_dark_mode_enable' )->value();
 	}
 
 	public static function render_toggle() {
-		$icon_style = get_theme_mod( 'wpids_dark_mode_icon', 'outlined' );
-		$position   = get_theme_mod( 'wpids_dark_mode_position', 'after_nav' );
+		$icon_style = get_theme_mod( 'utilgp_dark_mode_icon', 'outlined' );
+		$position   = get_theme_mod( 'utilgp_dark_mode_position', 'after_nav' );
 		
-		$classes = 'wpids-dark-mode-toggle style-' . esc_attr( $icon_style );
+		$classes = 'utilgp-dark-mode-toggle style-' . esc_attr( $icon_style );
 		if ( 'floating' === $position ) {
 			$classes .= ' is-floating';
 		}
@@ -549,14 +565,17 @@ class WPIDS_Dark_Mode {
 		ob_start();
 		?>
 		<button type="button" class="<?php echo esc_attr( $classes ); ?>" aria-label="Toggle Dark Mode">
-			<svg class="wpids-icon-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-			<svg class="wpids-icon-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg>
+			<svg class="utilgp-icon-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+			<svg class="utilgp-icon-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg>
 		</button>
 		<?php
 		return ob_get_clean();
 	}
+
+	public function sync_dark_colors_with_gp( $dark_colors ) {
+		return $dark_colors;
 	}
 }
 
 // Register shortcode for the toggle
-add_shortcode( 'wpids_dark_mode_toggle', array( 'WPIDS_Dark_Mode', 'render_toggle' ) );
+add_shortcode( 'utilgp_dark_mode_toggle', array( 'UTILGP_Dark_Mode', 'render_toggle' ) );

@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class WPIDS_Gradient_Module {
+class UTILGP_Gradient_Module {
 
 	public function init() {
 		// Customizer panel/control
@@ -34,15 +34,15 @@ class WPIDS_Gradient_Module {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_styles' ), 20 );
 
 		// AJAX
-		add_action( 'wp_ajax_wpids_save_gradients', array( $this, 'ajax_save_gradients' ) );
-		add_action( 'wp_ajax_wpids_dark_gradient', array( $this, 'ajax_dark_gradient' ) );
-		add_action( 'wp_ajax_wpids_save_border_settings', array( $this, 'ajax_save_border_settings' ) );
+		add_action( 'wp_ajax_utilgp_save_gradients', array( $this, 'ajax_save_gradients' ) );
+		add_action( 'wp_ajax_utilgp_dark_gradient', array( $this, 'ajax_dark_gradient' ) );
+		add_action( 'wp_ajax_utilgp_save_border_settings', array( $this, 'ajax_save_border_settings' ) );
 	}
 
 	public function enqueue_frontend_styles() {
 		$css = self::build_utility_css( 'frontend' );
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'wpids-utility-frontend', $css );
+			wp_add_inline_style( 'utilgp-utility-frontend', wp_strip_all_tags( $css ) );
 		}
 	}
 
@@ -57,7 +57,7 @@ class WPIDS_Gradient_Module {
 	 * from this, and shows them natively in the block editor gradient palette.
 	 */
 	public function inject_theme_json_gradients( $theme_json ) {
-		$gradients = get_option( 'wpids_gradient_variables', array() );
+		$gradients = get_option( 'utilgp_gradient_variables', array() );
 		if ( empty( $gradients ) || ! is_array( $gradients ) ) {
 			return $theme_json;
 		}
@@ -98,7 +98,7 @@ class WPIDS_Gradient_Module {
 	 * Called for both frontend and block editor injection.
 	 */
 	public static function build_utility_css( $context = 'frontend' ) {
-		$gradients = get_option( 'wpids_gradient_variables', array() );
+		$gradients = get_option( 'utilgp_gradient_variables', array() );
 		if ( empty( $gradients ) || ! is_array( $gradients ) ) return '';
 
 		$css = '';
@@ -119,8 +119,8 @@ class WPIDS_Gradient_Module {
 				$css .= ".has-{$slug}-gradient-border{border-style:solid!important;border-image:{$grad} 1;}\n";
 			} else {
 				// Rounded/Pill/Custom: ::before pseudo-element (supports border-radius)
-				$css .= ".has-{$slug}-gradient-border{position:relative;border:var(--wpids-gb-width,2px) solid transparent!important;}\n";
-				$css .= ".has-{$slug}-gradient-border::before{content:'';position:absolute;inset:0;border-radius:{$radius};padding:var(--wpids-gb-width,2px);background:{$grad};-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}\n";
+				$css .= ".has-{$slug}-gradient-border{position:relative;border:var(--utilgp-gb-width,2px) solid transparent!important;}\n";
+				$css .= ".has-{$slug}-gradient-border::before{content:'';position:absolute;inset:0;border-radius:{$radius};padding:var(--utilgp-gb-width,2px);background:{$grad};-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}\n";
 			}
 
 			// Dark mode variants
@@ -146,16 +146,16 @@ class WPIDS_Gradient_Module {
 
 	public function register_customizer( $wp_customize ) {
 		$wp_customize->add_section(
-			'wpids_gradient_variables',
+			'utilgp_gradient_variables',
 			array(
 				'title'    => __( 'Gradients & Borders', 'utility-for-generatepress' ),
-				'panel'    => 'wpids_utility_panel',
+				'panel'    => 'utilgp_utility_panel',
 				'priority' => 20,
 			)
 		);
 
 		$wp_customize->add_setting(
-			'wpids_gradient_variables',
+			'utilgp_gradient_variables',
 			array(
 				'default'           => array(),
 				'type'              => 'option',
@@ -166,7 +166,7 @@ class WPIDS_Gradient_Module {
 
 		// Border settings — saves via Publish button (no separate AJAX needed)
 		$wp_customize->add_setting(
-			'wpids_gradient_border_settings',
+			'utilgp_gradient_border_settings',
 			array(
 				'default'           => wp_json_encode( array(
 					'radius_preset' => 'sharp',
@@ -180,14 +180,14 @@ class WPIDS_Gradient_Module {
 			)
 		);
 
-		require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-gradient-control.php';
+		require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-gradient-control.php';
 		$wp_customize->add_control(
-			new WPIDS_Gradient_Control(
+			new UTILGP_Gradient_Control(
 				$wp_customize,
-				'wpids_gradient_variables',
+				'utilgp_gradient_variables',
 				array(
 					'label'   => __( 'Gradient Palette', 'utility-for-generatepress' ),
-					'section' => 'wpids_gradient_variables',
+					'section' => 'utilgp_gradient_variables',
 				)
 			)
 		);
@@ -195,23 +195,23 @@ class WPIDS_Gradient_Module {
 
 	public function enqueue_customizer_assets() {
 		wp_enqueue_style(
-			'wpids-gradient-module',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/css/wpids-gradient-module.css',
+			'utilgp-gradient-module',
+			UTILGP_PLUGIN_URL . 'assets/css/utilgp-gradient-module.css',
 			array(),
-			WPIDS_UTILITY_VERSION
+			UTILGP_VERSION
 		);
 
 		wp_enqueue_script(
-			'wpids-gradient-module',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/js/wpids-gradient-module.js',
+			'utilgp-gradient-module',
+			UTILGP_PLUGIN_URL . 'assets/js/utilgp-gradient-module.js',
 			array( 'jquery', 'customize-controls', 'wp-color-picker' ),
-			WPIDS_UTILITY_VERSION,
+			UTILGP_VERSION,
 			true
 		);
 
 		wp_enqueue_style( 'wp-color-picker' );
 
-		$saved    = get_option( 'wpids_gradient_variables', array() );
+		$saved    = get_option( 'utilgp_gradient_variables', array() );
 		$gp_colors = array();
 		$gp_settings = get_option( 'generate_settings', array() );
 		if ( ! empty( $gp_settings['global_colors'] ) ) {
@@ -222,7 +222,7 @@ class WPIDS_Gradient_Module {
 			}
 		}
 
-		$border_raw = get_option( 'wpids_gradient_border_settings', '' );
+		$border_raw = get_option( 'utilgp_gradient_border_settings', '' );
 		$border     = is_string( $border_raw ) && ! empty( $border_raw ) ? json_decode( $border_raw, true ) : $border_raw;
 		if ( ! is_array( $border ) ) {
 			$border = array(
@@ -234,11 +234,11 @@ class WPIDS_Gradient_Module {
 		}
 
 		wp_localize_script(
-			'wpids-gradient-module',
-			'wpidsGradientModule',
+			'utilgp-gradient-module',
+			'utilgpGradientModule',
 			array(
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'nonce'         => wp_create_nonce( 'wpids_gradient_module' ),
+				'nonce'         => wp_create_nonce( 'utilgp_gradient_module' ),
 				'saved'         => is_array( $saved ) ? $saved : array(),
 				'borderSettings' => $border,
 				'gpColors'      => $gp_colors,
@@ -265,10 +265,10 @@ class WPIDS_Gradient_Module {
 	/** Enqueue preview JS for live Customizer preview. */
 	public function enqueue_preview_assets() {
 		wp_enqueue_script(
-			'wpids-gradient-preview',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/js/wpids-gradient-preview.js',
+			'utilgp-gradient-preview',
+			UTILGP_PLUGIN_URL . 'assets/js/utilgp-gradient-preview.js',
 			array( 'customize-preview' ),
-			WPIDS_UTILITY_VERSION,
+			UTILGP_VERSION,
 			true
 		);
 	}
@@ -278,18 +278,18 @@ class WPIDS_Gradient_Module {
 	// ─────────────────────────────────────────
 
 	public function ajax_save_gradients() {
-		check_ajax_referer( 'wpids_gradient_module', 'nonce' );
+		check_ajax_referer( 'utilgp_gradient_module', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( 'Unauthorized' );
 		}
 
-		$raw = isset( $_POST['gradients'] ) ? wp_unslash( $_POST['gradients'] ) : array();
+		$raw = isset( $_POST['gradients'] ) ? map_deep( wp_unslash( $_POST['gradients'] ), 'sanitize_text_field' ) : array();
 		if ( ! is_array( $raw ) ) {
 			wp_send_json_error( 'Invalid data' );
 		}
 
 		$sanitized = $this->sanitize_gradients( $raw );
-		update_option( 'wpids_gradient_variables', $sanitized );
+		update_option( 'utilgp_gradient_variables', $sanitized );
 
 		wp_send_json_success( array(
 			'saved'   => count( $sanitized ),
@@ -298,12 +298,12 @@ class WPIDS_Gradient_Module {
 	}
 
 	public function ajax_dark_gradient() {
-		check_ajax_referer( 'wpids_gradient_module', 'nonce' );
+		check_ajax_referer( 'utilgp_gradient_module', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( 'Unauthorized' );
 		}
 
-		$stops = isset( $_POST['stops'] ) ? wp_unslash( $_POST['stops'] ) : array();
+		$stops = isset( $_POST['stops'] ) ? map_deep( wp_unslash( $_POST['stops'] ), 'sanitize_text_field' ) : array();
 		if ( ! is_array( $stops ) ) {
 			wp_send_json_error( 'Invalid stops' );
 		}
@@ -314,13 +314,26 @@ class WPIDS_Gradient_Module {
 			$pos = intval( $stop['position'] ?? 0 );
 			if ( preg_match( '/^#[0-9a-fA-F]{3,6}$/', $hex ) ) {
 				$result[] = array(
-					'color'    => WPIDS_Color_Math::dark_counterpart( $hex ),
+					'color'    => UTILGP_Color_Math::dark_counterpart( $hex ),
 					'position' => $pos,
 				);
 			}
 		}
 
 		wp_send_json_success( array( 'dark_stops' => $result ) );
+	}
+
+	public function ajax_save_border_settings() {
+		check_ajax_referer( 'utilgp_gradient_module', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Unauthorized' );
+		}
+
+		$raw = isset( $_POST['borderSettings'] ) ? map_deep( wp_unslash( $_POST['borderSettings'] ), 'sanitize_text_field' ) : array();
+		$sanitized = $this->sanitize_border_settings( $raw );
+		update_option( 'utilgp_gradient_border_settings', $sanitized );
+
+		wp_send_json_success( 'Border settings saved' );
 	}
 
 	/** Sanitize border settings (stored as JSON string via Customizer). */
@@ -347,7 +360,7 @@ class WPIDS_Gradient_Module {
 
 	/** Return the border-radius CSS value based on saved border settings. */
 	public static function get_border_radius_css() {
-		$raw  = get_option( 'wpids_gradient_border_settings', '' );
+		$raw  = get_option( 'utilgp_gradient_border_settings', '' );
 		$s    = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
 		if ( ! is_array( $s ) ) return '0';
 		$preset = $s['radius_preset'] ?? 'sharp';

@@ -1,22 +1,22 @@
 /* ===================================================
-   WPIDS Color Module — Customizer Control Styles
+   UTILGP Color Module — Customizer Control Styles
    =================================================== */
 
 /* ── Wrap ─────────────────────────────────────────── */
-.wpids-color-import-wrap {
+.utilgp-color-import-wrap {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 13px;
     color: #1e1e1e;
 }
 
 /* ── Header ───────────────────────────────────────── */
-.wpids-ci-header {
+.utilgp-ci-header {
     margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 1px solid #ddd;
 }
 
-.wpids-ci-title {
+.utilgp-ci-title {
     display: block;
     font-weight: 600;
     font-size: 14px;
@@ -24,7 +24,7 @@
     margin-bottom: 4px;
 }
 
-.wpids-ci-subtitle {
+.utilgp-ci-subtitle {
     display: block;
     color: #666;
     font-size: 12px;
@@ -32,11 +32,11 @@
 }
 
 /* ── Section ──────────────────────────────────────── */
-.wpids-ci-section {
+.utilgp-ci-section {
     margin-bottom: 18px;
 }
 
-.wpids-ci-label {
+.utilgp-ci-label {
     display: block;
     font-weight: 600;
     font-size: 11px;
@@ -47,7 +47,7 @@
 }
 
 /* ── Textarea ─────────────────────────────────────── */
-.wpids-ci-textarea {
+.utilgp-ci-textarea {
     width: 100%;
     box-sizing: border-box;
     padding: 8px 10px;
@@ -61,13 +61,13 @@
     color: #1e1e1e;
 }
 
-.wpids-ci-textarea:focus {
+.utilgp-ci-textarea:focus {
     border-color: #2271b1;
     outline: 2px solid rgba(34, 113, 177, 0.3);
 }
 
 /* ── Buttons ──────────────────────────────────────── */
-.wpids-ci-btn {
+.utilgp-ci-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -80,7 +80,7 @@
     transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.wpids-ci-btn-primary {
+.utilgp-ci-btn-primary {
     background: #007cba;
     color: #fff;
     border-color: #007cba;
@@ -88,30 +88,30 @@
     padding: 6px 16px;
 }
 
-.wpids-ci-btn-primary:hover {
+.utilgp-ci-btn-primary:hover {
     background: #006799;
     border-color: #006799;
 }
 
-.wpids-ci-btn-primary:disabled {
+.utilgp-ci-btn-primary:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
-.wpids-ci-btn-ghost {
+.utilgp-ci-btn-ghost {
     background: transparent;
     color: #555;
     border-color: #ccc;
     padding: 6px 16px;
 }
 
-.wpids-ci-btn-ghost:hover {
+.utilgp-ci-btn-ghost:hover {
     background: #f0f0f1;
     border-color: #999;
 }
 
 /* ── Error / Status ───────────────────────────────── */
-.wpids-ci-error {
+.utilgp-ci-error {
     margin-top: 6px;
     padding: 6px 10px;
     background: #fef2f2;
@@ -121,7 +121,7 @@
     font-size: 12px;
 }
 
-.wpids-ci-status {
+.utilgp-ci-status {
     margin-top: 10px;
     padding: 6px 10px;
     border-radius: 4px;
@@ -130,7 +130,7 @@
 }
 
 /* ── Dark Mode Auto-Sync Banner ───────────────────── */
-.wpids-dark-sync-banner {
+.utilgp-dark-sync-banner {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -143,18 +143,18 @@
     color: #0366d6;
     line-height: 1.4;
 }
-.wpids-dark-sync-banner.wpids-dark-sync-off {
+.utilgp-dark-sync-banner.utilgp-dark-sync-off {
     background: #f6f8fa;
     border-color: #d0d7de;
     color: #57606a;
 }
-.wpids-dark-sync-icon {
+.utilgp-dark-sync-icon {
     font-size: 14px;
     line-height: 1;
 }
 
 /* ── Empty State ──────────────────────────────────── */
-.wpids-ci-empty {
+.utilgp-ci-empty {
     color: #999;
     font-size: 12px;
     font-style: italic;
@@ -162,7 +162,7 @@
 }
 
 /* ── Palette Grid (Fallback if Gradient Module off) ── */
-.wpids-gc-palette {
+.utilgp-gc-palette {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
@@ -170,7 +170,7 @@
 	min-height: 34px;
 }
 
-.wpids-gc-swatch {
+.utilgp-gc-swatch {
 	position: relative;
 	width: 28px;
 	height: 28px;
@@ -184,13 +184,13 @@
 	display: block;
 }
 
-.wpids-gc-swatch:hover,
-.wpids-gc-swatch.is-active {
+.utilgp-gc-swatch:hover,
+.utilgp-gc-swatch.is-active {
 	transform: scale(1.15);
 	box-shadow: 0 0 0 2px #2271b1;
 }
 
-.wpids-gc-swatch-add {
+.utilgp-gc-swatch-add {
 	width: 28px;
 	height: 28px;
 	border-radius: 50%;
@@ -207,14 +207,14 @@
 	flex-shrink: 0;
 }
 
-.wpids-gc-swatch-add:hover {
+.utilgp-gc-swatch-add:hover {
 	border-color: #2271b1;
 	color: #2271b1;
 	background: #f0f6fc;
 }
 
 /* ── Modal Overlay ────────────────────────────────── */
-.wpids-modal-overlay {
+.utilgp-modal-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.55);
@@ -225,7 +225,7 @@
     padding: 20px;
 }
 
-.wpids-modal-box {
+.utilgp-modal-box {
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -237,24 +237,24 @@
     overflow: hidden;
 }
 
-.wpids-editor-box {
+.utilgp-editor-box {
     max-width: 550px;
 }
 
 /* ── Editor Form Fields ───────────────────────────── */
-.wpids-editor-row {
+.utilgp-editor-row {
 	display: flex;
 	gap: 12px;
 	align-items: flex-start;
 }
 
-.wpids-editor-field {
+.utilgp-editor-field {
 	display: flex;
 	flex-direction: column;
 	flex: 1;
 }
 
-.wpids-ci-input {
+.utilgp-ci-input {
 	height: 28px;
 	padding: 0 8px;
 	border: 1px solid #dcdcde;
@@ -263,7 +263,7 @@
 	color: #1d2327;
 }
 
-.wpids-ci-btn-danger {
+.utilgp-ci-btn-danger {
 	background: transparent;
 	color: #b32d2e;
 	border-color: #b32d2e;
@@ -271,13 +271,13 @@
 	margin: 0;
 }
 
-.wpids-ci-btn-danger:hover {
+.utilgp-ci-btn-danger:hover {
 	background: #b32d2e;
 	color: #fff;
 }
 
 /* ── Modal Header ─────────────────────────────────── */
-.wpids-modal-header {
+.utilgp-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -286,14 +286,14 @@
     flex-shrink: 0;
 }
 
-.wpids-modal-header h3 {
+.utilgp-modal-header h3 {
     margin: 0;
     font-size: 15px;
     font-weight: 600;
     color: #1d2327;
 }
 
-.wpids-modal-close {
+.utilgp-modal-close {
     background: none;
     border: none;
     font-size: 22px;
@@ -304,26 +304,26 @@
     border-radius: 4px;
 }
 
-.wpids-modal-close:hover {
+.utilgp-modal-close:hover {
     background: #f0f0f1;
     color: #333;
 }
 
 /* ── Modal Body ───────────────────────────────────── */
-.wpids-modal-body {
+.utilgp-modal-body {
     padding: 16px 20px;
     overflow-y: auto;
     flex: 1;
 }
 
-.wpids-mapping-intro {
+.utilgp-mapping-intro {
     font-size: 12px;
     color: #666;
     margin-bottom: 14px;
 }
 
 /* ── Mapping Rows ─────────────────────────────────── */
-.wpids-map-row {
+.utilgp-map-row {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -331,11 +331,11 @@
     border-bottom: 1px solid #f0f0f1;
 }
 
-.wpids-map-row:last-child {
+.utilgp-map-row:last-child {
     border-bottom: none;
 }
 
-.wpids-map-swatch {
+.utilgp-map-swatch {
     width: 32px;
     height: 32px;
     border-radius: 6px;
@@ -343,36 +343,36 @@
     flex-shrink: 0;
 }
 
-.wpids-map-detected {
+.utilgp-map-detected {
     width: 100px;
     flex-shrink: 0;
 }
 
-.wpids-map-detected code {
+.utilgp-map-detected code {
     display: block;
     font-size: 11px;
     font-weight: 600;
 }
 
-.wpids-map-detected small {
+.utilgp-map-detected small {
     display: block;
     color: #888;
     font-size: 11px;
 }
 
-.wpids-map-arrow {
+.utilgp-map-arrow {
     color: #aaa;
     font-size: 16px;
     flex-shrink: 0;
 }
 
-.wpids-map-assign {
+.utilgp-map-assign {
     flex: 1;
     min-width: 0;
 }
 
-.wpids-map-select,
-.wpids-map-newname {
+.utilgp-map-select,
+.utilgp-map-newname {
     width: 100%;
     padding: 5px 8px;
     border: 1px solid #c3c4c7;
@@ -381,11 +381,11 @@
     box-sizing: border-box;
 }
 
-.wpids-map-newname {
+.utilgp-map-newname {
     margin-top: 4px;
 }
 
-.wpids-map-skip {
+.utilgp-map-skip {
     background: none;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -396,26 +396,26 @@
     flex-shrink: 0;
 }
 
-.wpids-map-skip:hover,
-.wpids-map-undo:hover {
+.utilgp-map-skip:hover,
+.utilgp-map-undo:hover {
     background: #f0f0f1;
 }
 
 /* ── Options Grid ─────────────────────────────────── */
-.wpids-modal-options {
+.utilgp-modal-options {
     margin-top: 20px;
     padding-top: 16px;
     border-top: 1px solid #e2e4e7;
 }
 
-.wpids-options-grid {
+.utilgp-options-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     margin-bottom: 12px;
 }
 
-.wpids-option-check {
+.utilgp-option-check {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -423,7 +423,7 @@
     cursor: pointer;
 }
 
-.wpids-dark-sync-row {
+.utilgp-dark-sync-row {
     background: #f0f4ff;
     padding: 8px 10px;
     border-radius: 4px;
@@ -431,7 +431,7 @@
 }
 
 /* ── Modal Footer ─────────────────────────────────── */
-.wpids-modal-footer {
+.utilgp-modal-footer {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
@@ -441,7 +441,7 @@
 }
 
 /* ── Editor Preview List (Circle Swatch + Copy CSS) ─ */
-.wpids-editor-preview-list {
+.utilgp-editor-preview-list {
     display: grid;
 	grid-template-columns: 1fr 1fr;
     gap: 8px;
@@ -450,7 +450,7 @@
 	padding-right: 4px;
 }
 
-.wpids-ep-item {
+.utilgp-ep-item {
     display: flex;
     flex-direction: row;
     align-items: stretch;
@@ -459,7 +459,7 @@
     border-radius: 2px;
 }
 
-.wpids-ep-swatch {
+.utilgp-ep-swatch {
 	width: 20px;
 	height: 20px;
 	border-radius: 50%;
@@ -468,7 +468,7 @@
 	margin: auto 0 auto 6px;
 }
 
-.wpids-ep-item code {
+.utilgp-ep-item code {
     flex: 1;
     border: none;
     background: none;
@@ -480,7 +480,7 @@
     align-items: center;
 }
 
-.wpids-ep-copy-btn {
+.utilgp-ep-copy-btn {
     background: none;
     border: none;
     border-left: 1px solid #dcdcde;
@@ -493,17 +493,17 @@
     transition: all 0.15s;
 }
 
-.wpids-ep-copy-btn:hover {
+.utilgp-ep-copy-btn:hover {
     color: #2271b1;
     background: #f6f7f7;
 }
 
-.wpids-ep-copy-btn.is-copied {
+.utilgp-ep-copy-btn.is-copied {
     color: #00a32a;
     background: #edfaef;
 }
 
-.wpids-ep-copy-btn .dashicons {
+.utilgp-ep-copy-btn .dashicons {
     font-size: 14px;
     width: 14px;
     height: 14px;

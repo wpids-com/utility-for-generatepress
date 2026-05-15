@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class WPIDS_Color_Module {
+class UTILGP_Color_Module {
 
 	public function init() {
 		// Customizer section
@@ -25,15 +25,15 @@ class WPIDS_Color_Module {
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_customizer_assets' ) );
 
 		// AJAX endpoints
-		add_action( 'wp_ajax_wpids_parse_colors', array( $this, 'ajax_parse_colors' ) );
-		add_action( 'wp_ajax_wpids_expand_colors', array( $this, 'ajax_expand_colors' ) );
-		add_action( 'wp_ajax_wpids_save_expanded', array( $this, 'ajax_save_expanded' ) );
-		add_action( 'wp_ajax_wpids_sync_dark_auto', array( $this, 'ajax_sync_all_dark' ) );
+		add_action( 'wp_ajax_utilgp_parse_colors', array( $this, 'ajax_parse_colors' ) );
+		add_action( 'wp_ajax_utilgp_expand_colors', array( $this, 'ajax_expand_colors' ) );
+		add_action( 'wp_ajax_utilgp_save_expanded', array( $this, 'ajax_save_expanded' ) );
+		add_action( 'wp_ajax_utilgp_sync_dark_auto', array( $this, 'ajax_sync_all_dark' ) );
 
 		// CSS injection
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_styles' ), 15 );
 
-		// ── Core filter: merge WPIDS colors into GP Global Colors on every read ──
+		// ── Core filter: merge UTILGP colors into GP Global Colors on every read ──
 		// This ensures GP React Color picker, Customizer, and GB editor ALWAYS see
 		// our expanded + gradient colors without needing a page reload or DB patch.
 		// Priority 20 = after GP's own filters (default priority 10).
@@ -43,7 +43,7 @@ class WPIDS_Color_Module {
 	public function enqueue_frontend_styles() {
 		$css = $this->get_expanded_css();
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'wpids-utility-frontend', $css );
+			wp_add_inline_style( 'utilgp-utility-frontend', wp_strip_all_tags( $css ) );
 		}
 	}
 
@@ -51,7 +51,7 @@ class WPIDS_Color_Module {
 	 * Build expanded color variables CSS.
 	 */
 	private function get_expanded_css() {
-		$expanded = get_option( 'wpids_expanded_colors', array() );
+		$expanded = get_option( 'utilgp_expanded_colors', array() );
 
 		if ( empty( $expanded ) || ! is_array( $expanded ) ) {
 			return '';
@@ -78,7 +78,7 @@ class WPIDS_Color_Module {
 	}
 
 	// ─────────────────────────────────────────
-	// CORE FILTER: Merge WPIDS → GP Global Colors
+	// CORE FILTER: Merge UTILGP → GP Global Colors
 	// ─────────────────────────────────────────
 
 	/**
@@ -127,7 +127,7 @@ class WPIDS_Color_Module {
 		}
 
 		// ── Merge 1: Expanded/imported solid colors ──
-		$expanded = get_option( 'wpids_expanded_colors', array() );
+		$expanded = get_option( 'utilgp_expanded_colors', array() );
 		if ( is_array( $expanded ) ) {
 			foreach ( $expanded as $set ) {
 				$slug = $set['slug'] ?? '';
@@ -171,17 +171,17 @@ class WPIDS_Color_Module {
 	public function register_customizer( $wp_customize ) {
 		// Section: Color Management (below Dark Mode, priority 20)
 		$wp_customize->add_section(
-			'wpids_color_management',
+			'utilgp_color_management',
 			array(
 				'title'    => 'Color Management',
-				'panel'    => 'wpids_utility_panel',
+				'panel'    => 'utilgp_utility_panel',
 				'priority' => 10,
 			)
 		);
 
 		// Setting: stores the array of expanded color sets
 		$wp_customize->add_setting(
-			'wpids_expanded_colors',
+			'utilgp_expanded_colors',
 			array(
 				'default'           => array(),
 				'type'              => 'option',
@@ -191,14 +191,14 @@ class WPIDS_Color_Module {
 		);
 
 		// Custom control
-		require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-color-import-control.php';
+		require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-color-import-control.php';
 		$wp_customize->add_control(
-			new WPIDS_Color_Import_Control(
+			new UTILGP_Color_Import_Control(
 				$wp_customize,
-				'wpids_expanded_colors',
+				'utilgp_expanded_colors',
 				array(
 					'label'   => 'Color Import & Expansion',
-					'section' => 'wpids_color_management',
+					'section' => 'utilgp_color_management',
 				)
 			)
 		);
@@ -206,17 +206,17 @@ class WPIDS_Color_Module {
 
 	public function enqueue_customizer_assets() {
 		wp_enqueue_style(
-			'wpids-color-module',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/css/wpids-color-module.css',
+			'utilgp-color-module',
+			UTILGP_PLUGIN_URL . 'assets/css/utilgp-color-module.css',
 			array(),
-			WPIDS_UTILITY_VERSION
+			UTILGP_VERSION
 		);
 
 		wp_enqueue_script(
-			'wpids-color-module',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/js/wpids-color-module.js',
+			'utilgp-color-module',
+			UTILGP_PLUGIN_URL . 'assets/js/utilgp-color-module.js',
 			array( 'jquery', 'customize-controls', 'wp-element', 'wp-components' ),
-			WPIDS_UTILITY_VERSION,
+			UTILGP_VERSION,
 			true
 		);
 
@@ -235,14 +235,14 @@ class WPIDS_Color_Module {
 			}
 		}
 
-		$saved = get_option( 'wpids_expanded_colors', array() );
+		$saved = get_option( 'utilgp_expanded_colors', array() );
 
 		wp_localize_script(
-			'wpids-color-module',
-			'wpidsColorModule',
+			'utilgp-color-module',
+			'utilgpColorModule',
 			array(
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'nonce'         => wp_create_nonce( 'wpids_color_module' ),
+				'nonce'         => wp_create_nonce( 'utilgp_color_module' ),
 				'gpColors'      => $existing_gp_colors,
 				'savedExpanded' => is_array( $saved ) ? $saved : array(),
 			)
@@ -258,7 +258,7 @@ class WPIDS_Color_Module {
 	 * Used to populate the mapping wizard modal.
 	 */
 	public function ajax_parse_colors() {
-		check_ajax_referer( 'wpids_color_module', 'nonce' );
+		check_ajax_referer( 'utilgp_color_module', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( 'Unauthorized' );
@@ -269,7 +269,7 @@ class WPIDS_Color_Module {
 			wp_send_json_error( 'Empty input' );
 		}
 
-		$parsed = WPIDS_Color_Math::parse_import( $raw );
+		$parsed = UTILGP_Color_Math::parse_import( $raw );
 
 		if ( empty( $parsed ) ) {
 			wp_send_json_error( 'No valid colors found. Supported formats: hex list, CSS variables (--slug: #hex), or JSON.' );
@@ -284,7 +284,7 @@ class WPIDS_Color_Module {
 	 * Now also accepts 'gp_replace' flag — true means this slug exists in GP Global Colors.
 	 */
 	public function ajax_expand_colors() {
-		check_ajax_referer( 'wpids_color_module', 'nonce' );
+		check_ajax_referer( 'utilgp_color_module', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( 'Unauthorized' );
@@ -315,7 +315,7 @@ class WPIDS_Color_Module {
 				continue;
 			}
 
-			$expanded = WPIDS_Color_Math::expand_color( $slug, $hex, $options );
+			$expanded = UTILGP_Color_Math::expand_color( $slug, $hex, $options );
 
 			$result[] = array(
 				'slug'              => $slug,
@@ -323,7 +323,7 @@ class WPIDS_Color_Module {
 				'gp_replace'        => $gp_replace,
 				'options'           => $options,
 				'variables'         => array_filter( $expanded, fn( $k ) => strpos( $k, '__dark__' ) !== 0, ARRAY_FILTER_USE_KEY ),
-				'dark_counterparts' => WPIDS_Color_Math::extract_dark_counterparts( $expanded ),
+				'dark_counterparts' => UTILGP_Color_Math::extract_dark_counterparts( $expanded ),
 			);
 		}
 
@@ -336,7 +336,7 @@ class WPIDS_Color_Module {
 	 * This ensures the GP color variable is truly replaced at the source.
 	 */
 	public function ajax_save_expanded() {
-		check_ajax_referer( 'wpids_color_module', 'nonce' );
+		check_ajax_referer( 'utilgp_color_module', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( 'Unauthorized' );
@@ -350,7 +350,7 @@ class WPIDS_Color_Module {
 
 		// Sanitize and save
 		$sanitized = $this->sanitize_expanded_colors( $expanded );
-		update_option( 'wpids_expanded_colors', $sanitized );
+		update_option( 'utilgp_expanded_colors', $sanitized );
 
 		// Update GP Global Colors for items flagged as 'gp_replace'
 		$gp_replaced = $this->sync_gp_colors( $sanitized );
@@ -358,7 +358,7 @@ class WPIDS_Color_Module {
 		// Auto-sync dark counterparts:
 		// Always run if Dark Mode module is active (both modules active = auto-managed).
 		// Falls back to manual flag check otherwise.
-		$dark_mode_active = ( class_exists( 'WPIDS_Dark_Mode' ) );
+		$dark_mode_active = ( class_exists( 'UTILGP_Dark_Mode' ) );
 		$updated_dark_colors = array();
 		if ( $dark_mode_active || ! empty( $_POST['sync_dark'] ) ) {
 			$updated_dark_colors = $this->sync_dark_counterparts( $sanitized );
@@ -446,13 +446,13 @@ class WPIDS_Color_Module {
 	 * Only available when both Color + Dark Mode modules are active.
 	 */
 	public function ajax_sync_all_dark() {
-		check_ajax_referer( 'wpids_color_module', 'nonce' );
+		check_ajax_referer( 'utilgp_color_module', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( 'Unauthorized' );
 		}
 
-		$expanded = get_option( 'wpids_expanded_colors', array() );
+		$expanded = get_option( 'utilgp_expanded_colors', array() );
 		if ( empty( $expanded ) ) {
 			wp_send_json_error( 'No expanded colors found.' );
 		}
@@ -467,10 +467,10 @@ class WPIDS_Color_Module {
 
 	/**
 	 * Push all dark counterparts from expanded colors into
-	 * wpids_dark_global_colors theme_mod (used by Dark Mode CSS injection).
+	 * utilgp_dark_global_colors theme_mod (used by Dark Mode CSS injection).
 	 */
 	private function sync_dark_counterparts( $expanded ) {
-		$existing_dark = get_theme_mod( 'wpids_dark_global_colors', array() );
+		$existing_dark = get_theme_mod( 'utilgp_dark_global_colors', array() );
 		if ( ! is_array( $existing_dark ) ) {
 			$existing_dark = array();
 		}
@@ -498,7 +498,7 @@ class WPIDS_Color_Module {
 
 		// Re-save as indexed array
 		$final_dark_colors = array_values( $dark_map );
-		set_theme_mod( 'wpids_dark_global_colors', $final_dark_colors );
+		set_theme_mod( 'utilgp_dark_global_colors', $final_dark_colors );
 		
 		return $final_dark_colors;
 	}

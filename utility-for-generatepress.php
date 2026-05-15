@@ -11,7 +11,7 @@
  * Text Domain:       utility-for-generatepress
  * Domain Path:       /languages
  * Requires at least: 6.0
- * Tested up to: 6.5
+ * Tested up to: 6.9
  * Requires PHP:      7.4
  */
 
@@ -20,38 +20,38 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WPIDS_UTILITY_VERSION', '1.0.16' );
-define( 'WPIDS_UTILITY_FILE', __FILE__ );
-define( 'WPIDS_UTILITY_PLUGIN_DIR', plugin_dir_path( WPIDS_UTILITY_FILE ) );
-define( 'WPIDS_UTILITY_PLUGIN_URL', plugin_dir_url( WPIDS_UTILITY_FILE ) );
+define( 'UTILGP_VERSION', '1.0.16' );
+define( 'UTILGP_FILE', __FILE__ );
+define( 'UTILGP_PLUGIN_DIR', plugin_dir_path( UTILGP_FILE ) );
+define( 'UTILGP_PLUGIN_URL', plugin_dir_url( UTILGP_FILE ) );
 
 /**
  * Load Core Class
  */
-require_once WPIDS_UTILITY_PLUGIN_DIR . 'includes/class-wpids-utility-core.php';
+require_once UTILGP_PLUGIN_DIR . 'includes/class-utilgp-core.php';
 
 /**
  * Initialize the plugin.
  */
-function wpids_utility_init() {
+function utilgp_init() {
 	// Check if GeneratePress theme is active
 	$theme = wp_get_theme();
 	$is_gp = ( 'GeneratePress' === $theme->name || 'generatepress' === $theme->template );
 
 	if ( ! $is_gp ) {
-		add_action( 'admin_notices', 'wpids_utility_gp_missing_notice' );
+		add_action( 'admin_notices', 'utilgp_gp_missing_notice' );
 		return;
 	}
 
-	$plugin = new WPIDS_Utility_Core();
+	$plugin = new UTILGP_Core();
 	$plugin->run();
 }
-add_action( 'plugins_loaded', 'wpids_utility_init' );
+add_action( 'plugins_loaded', 'utilgp_init' );
 
 /**
  * Show notice if GeneratePress is missing
  */
-function wpids_utility_gp_missing_notice() {
+function utilgp_gp_missing_notice() {
 	$theme_slug = 'generatepress';
 	$theme = wp_get_theme( $theme_slug );
 	

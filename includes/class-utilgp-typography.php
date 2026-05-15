@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class WPIDS_Typography {
+class UTILGP_Typography {
 
 	public function init() {
 		// Register Customizer settings
@@ -18,26 +18,40 @@ class WPIDS_Typography {
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_customizer_assets' ) );
 
 		// CSS injection
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_styles' ), 10 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_styles' ), 20 );
 
 		// Inject CSS variables into the editor
-		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_styles' ) );
+		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_styles' ), 20 );
 
 		// Filter GP settings to apply fluid sizes
 		add_filter( 'option_generate_settings', array( $this, 'filter_gp_typography' ), 25 );
 	}
 
+	/**
+	 * Helper to get settings correctly in Customizer and Frontend
+	 */
+	public function get_setting( $id, $default = '' ) {
+		global $wp_customize;
+		if ( is_customize_preview() && isset( $wp_customize ) ) {
+			$setting = $wp_customize->get_setting( $id );
+			if ( $setting ) {
+				return $setting->value();
+			}
+		}
+		return get_option( $id, $default );
+	}
+
 	public function enqueue_frontend_styles() {
 		$css = $this->get_typography_css();
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'wpids-utility-frontend', $css );
+			wp_add_inline_style( 'utilgp-utility-frontend', wp_strip_all_tags( $css ) );
 		}
 	}
 
 	public function enqueue_editor_styles() {
 		$css = $this->get_typography_css();
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'wpids-utility-editor', $css );
+			wp_add_inline_style( 'utilgp-utility-editor', wp_strip_all_tags( $css ) );
 		}
 	}
 
@@ -45,38 +59,38 @@ class WPIDS_Typography {
 	 * Build the typography CSS string.
 	 */
 	private function get_typography_css() {
-		if ( ! get_option( 'wpids_fluid_typo_enabled', false ) ) {
+		if ( ! $this->get_setting( 'utilgp_fluid_typo_enabled', false ) ) {
 			return '';
 		}
 
-		$base   = get_option( 'wpids_typo_base_size', 16 );
-		$unit   = get_option( 'wpids_typo_base_unit', 'px' );
-		$min_vw = get_option( 'wpids_typo_min_vw', 320 );
-		$max_vw = get_option( 'wpids_typo_max_vw', 1280 );
-		$ratio  = get_option( 'wpids_typo_scale_ratio', '1.250' );
+		$base   = $this->get_setting( 'utilgp_typo_base_size', 16 );
+		$unit   = $this->get_setting( 'utilgp_typo_base_unit', 'px' );
+		$min_vw = $this->get_setting( 'utilgp_typo_min_vw', 320 );
+		$max_vw = $this->get_setting( 'utilgp_typo_max_vw', 1280 );
+		$ratio  = $this->get_setting( 'utilgp_typo_scale_ratio', '1.250' );
 		
 		if ( $ratio === 'custom' ) {
-			$ratio = floatval( get_option( 'wpids_typo_custom_ratio', '1.2' ) );
+			$ratio = floatval( $this->get_setting( 'utilgp_typo_custom_ratio', '1.2' ) );
 		} else {
 			$ratio = floatval( $ratio );
 		}
 
 		$css = ":root {\n";
 		for ( $i = -1; $i <= 8; $i++ ) {
-			$var_name = "--wpids-step-{$i}";
+			$var_name = "--utilgp-step-{$i}";
 			$fluid_val = self::calculate_fluid( $base, $ratio, $i, $min_vw, $max_vw, $unit );
 			$css .= "\t" . esc_html( $var_name ) . ": " . esc_html( $fluid_val ) . ";\n";
 		}
 		$css .= "}\n";
 
-		// Global Overrides
-		$css .= "body { font-size: var(--wpids-step-0) !important; }\n";
-		$css .= "h6, .h6 { font-size: var(--wpids-step-1) !important; }\n";
-		$css .= "h5, .h5 { font-size: var(--wpids-step-2) !important; }\n";
-		$css .= "h4, .h4 { font-size: var(--wpids-step-3) !important; }\n";
-		$css .= "h3, .h3 { font-size: var(--wpids-step-4) !important; }\n";
-		$css .= "h2, .h2 { font-size: var(--wpids-step-5) !important; }\n";
-		$css .= "h1, .h1 { font-size: var(--wpids-step-6) !important; }\n";
+		// Global Overrides - Scoped to frontend only by excluding admin/customizer body classes
+		$css .= "body:not(.wp-admin):not(.wp-customizer) { font-size: var(--utilgp-step-0) !important; }\n";
+		$css .= "body:not(.wp-admin):not(.wp-customizer) h6, body:not(.wp-admin):not(.wp-customizer) .h6 { font-size: var(--utilgp-step-1) !important; }\n";
+		$css .= "body:not(.wp-admin):not(.wp-customizer) h5, body:not(.wp-admin):not(.wp-customizer) .h5 { font-size: var(--utilgp-step-2) !important; }\n";
+		$css .= "body:not(.wp-admin):not(.wp-customizer) h4, body:not(.wp-admin):not(.wp-customizer) .h4 { font-size: var(--utilgp-step-3) !important; }\n";
+		$css .= "body:not(.wp-admin):not(.wp-customizer) h3, body:not(.wp-admin):not(.wp-customizer) .h3 { font-size: var(--utilgp-step-4) !important; }\n";
+		$css .= "body:not(.wp-admin):not(.wp-customizer) h2, body:not(.wp-admin):not(.wp-customizer) .h2 { font-size: var(--utilgp-step-5) !important; }\n";
+		$css .= "body:not(.wp-admin):not(.wp-customizer) h1, body:not(.wp-admin):not(.wp-customizer) .h1 { font-size: var(--utilgp-step-6) !important; }\n";
 
 		return $css;
 	}
@@ -84,24 +98,24 @@ class WPIDS_Typography {
 	public function enqueue_customizer_assets() {
 		// Global Plugin Admin CSS
 		wp_enqueue_style(
-			'wpids-admin-common',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/css/wpids-admin-common.css',
+			'utilgp-admin-common',
+			UTILGP_PLUGIN_URL . 'assets/css/utilgp-admin-common.css',
 			array(),
-			WPIDS_UTILITY_VERSION
+			UTILGP_VERSION
 		);
 
 		wp_enqueue_style(
-			'wpids-typography-admin',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/css/wpids-typography-admin.css',
+			'utilgp-typography-admin',
+			UTILGP_PLUGIN_URL . 'assets/css/utilgp-typography-admin.css',
 			array(),
-			WPIDS_UTILITY_VERSION
+			UTILGP_VERSION
 		);
 
 		wp_enqueue_script(
-			'wpids-typography',
-			WPIDS_UTILITY_PLUGIN_URL . 'assets/js/wpids-typography.js',
+			'utilgp-typography',
+			UTILGP_PLUGIN_URL . 'assets/js/utilgp-typography.js',
 			array( 'jquery', 'customize-controls' ),
-			WPIDS_UTILITY_VERSION,
+			UTILGP_VERSION,
 			true
 		);
 	}
@@ -122,16 +136,16 @@ class WPIDS_Typography {
 
 	public function register_customizer( $wp_customize ) {
 		$wp_customize->add_section(
-			'wpids_typography_section',
+			'utilgp_typography_section',
 			array(
 				'title'    => 'Fluid Typography',
-				'panel'    => 'wpids_utility_panel',
+				'panel'    => 'utilgp_utility_panel',
 				'priority' => 30,
 			)
 		);
 
 		$wp_customize->add_setting(
-			'wpids_fluid_typo_enabled',
+			'utilgp_fluid_typo_enabled',
 			array(
 				'default'           => false,
 				'type'              => 'option',
@@ -141,35 +155,35 @@ class WPIDS_Typography {
 		);
 
 		$wp_customize->add_control(
-			'wpids_fluid_typo_enabled',
+			'utilgp_fluid_typo_enabled',
 			array(
 				'label'    => __( 'Enable Fluid Typography', 'utility-for-generatepress' ),
-				'section'  => 'wpids_typography_section',
+				'section'  => 'utilgp_typography_section',
 				'type'     => 'checkbox',
 				'priority' => 10,
 			)
 		);
 
-		$wp_customize->add_setting( 'wpids_typo_grid_ui', array( 'type' => 'hidden' ) );
+		$wp_customize->add_setting( 'utilgp_typo_grid_ui', array( 'type' => 'hidden' ) );
 		$wp_customize->add_control(
-			new WPIDS_Fluid_Typography_Control(
+			new UTILGP_Fluid_Typography_Control(
 				$wp_customize,
-				'wpids_typo_grid_ui',
+				'utilgp_typo_grid_ui',
 				array(
 					'label'    => __( 'Typography Scale Settings', 'utility-for-generatepress' ),
-					'section'  => 'wpids_typography_section',
+					'section'  => 'utilgp_typography_section',
 					'priority' => 20,
 				)
 			)
 		);
 
-		$wp_customize->add_setting( 'wpids_typo_base_size', array( 'default' => 16, 'type' => 'option', 'sanitize_callback' => 'absint', 'transport' => 'refresh' ) );
-		$wp_customize->add_setting( 'wpids_typo_base_unit', array( 'default' => 'px', 'type' => 'option', 'sanitize_callback' => 'sanitize_text_field', 'transport' => 'refresh' ) );
-		$wp_customize->add_setting( 'wpids_typo_min_vw', array( 'default' => 320, 'type' => 'option', 'sanitize_callback' => 'absint', 'transport' => 'refresh' ) );
-		$wp_customize->add_setting( 'wpids_typo_max_vw', array( 'default' => 1280, 'type' => 'option', 'sanitize_callback' => 'absint', 'transport' => 'refresh' ) );
+		$wp_customize->add_setting( 'utilgp_typo_base_size', array( 'default' => 16, 'type' => 'option', 'sanitize_callback' => 'absint', 'transport' => 'refresh' ) );
+		$wp_customize->add_setting( 'utilgp_typo_base_unit', array( 'default' => 'px', 'type' => 'option', 'sanitize_callback' => 'sanitize_text_field', 'transport' => 'refresh' ) );
+		$wp_customize->add_setting( 'utilgp_typo_min_vw', array( 'default' => 320, 'type' => 'option', 'sanitize_callback' => 'absint', 'transport' => 'refresh' ) );
+		$wp_customize->add_setting( 'utilgp_typo_max_vw', array( 'default' => 1280, 'type' => 'option', 'sanitize_callback' => 'absint', 'transport' => 'refresh' ) );
 
 		$wp_customize->add_setting(
-			'wpids_typo_scale_ratio',
+			'utilgp_typo_scale_ratio',
 			array(
 				'default'           => '1.250',
 				'type'              => 'option',
@@ -179,10 +193,10 @@ class WPIDS_Typography {
 		);
 
 		$wp_customize->add_control(
-			'wpids_typo_scale_ratio',
+			'utilgp_typo_scale_ratio',
 			array(
 				'label'    => __( 'Type Scale Ratio', 'utility-for-generatepress' ),
-				'section'  => 'wpids_typography_section',
+				'section'  => 'utilgp_typography_section',
 				'type'     => 'select',
 				'choices'  => self::get_scales(),
 				'priority' => 30,
@@ -190,7 +204,7 @@ class WPIDS_Typography {
 		);
 
 		$wp_customize->add_setting(
-			'wpids_typo_custom_ratio',
+			'utilgp_typo_custom_ratio',
 			array(
 				'default'           => '1.2',
 				'type'              => 'option',
@@ -200,20 +214,20 @@ class WPIDS_Typography {
 		);
 
 		$wp_customize->add_control(
-			'wpids_typo_custom_ratio',
+			'utilgp_typo_custom_ratio',
 			array(
 				'label'           => __( 'Custom Ratio', 'utility-for-generatepress' ),
-				'section'         => 'wpids_typography_section',
+				'section'         => 'utilgp_typography_section',
 				'type'            => 'text',
 				'priority'        => 31,
-				'active_callback' => function() {
-					return get_option( 'wpids_typo_scale_ratio' ) === 'custom';
+				'active_callback' => function( $control ) {
+					return $control->manager->get_setting( 'utilgp_typo_scale_ratio' )->value() === 'custom';
 				},
 			)
 		);
 
 		$wp_customize->add_setting(
-			'wpids_typo_preview_text',
+			'utilgp_typo_preview_text',
 			array(
 				'default'           => 'The quick brown fox jumps over the lazy dog',
 				'type'              => 'option',
@@ -223,23 +237,23 @@ class WPIDS_Typography {
 		);
 
 		$wp_customize->add_control(
-			'wpids_typo_preview_text',
+			'utilgp_typo_preview_text',
 			array(
 				'label'    => __( 'Preview Text', 'utility-for-generatepress' ),
-				'section'  => 'wpids_typography_section',
+				'section'  => 'utilgp_typography_section',
 				'type'     => 'text',
 				'priority' => 50,
 			)
 		);
 
-		$wp_customize->add_setting( 'wpids_typo_wizard_trigger', array( 'type' => 'hidden' ) );
+		$wp_customize->add_setting( 'utilgp_typo_wizard_trigger', array( 'type' => 'hidden' ) );
 		$wp_customize->add_control(
 			new WP_Customize_Control(
 				$wp_customize,
-				'wpids_typo_wizard_trigger',
+				'utilgp_typo_wizard_trigger',
 				array(
 					'label'       => '', 
-					'section'     => 'wpids_typography_section',
+					'section'     => 'utilgp_typography_section',
 					'type'        => 'hidden',
 					'priority'    => 60,
 				)
@@ -262,7 +276,7 @@ class WPIDS_Typography {
 	}
 
 	public function filter_gp_typography( $settings ) {
-		if ( ! get_option( 'wpids_fluid_typo_enabled', false ) ) {
+		if ( ! $this->get_setting( 'utilgp_fluid_typo_enabled', false ) ) {
 			return $settings;
 		}
 
@@ -270,10 +284,10 @@ class WPIDS_Typography {
 			return $settings;
 		}
 
-		$base   = get_option( 'wpids_typo_base_size', 16 );
-		$ratio  = get_option( 'wpids_typo_scale_ratio', '1.250' );
+		$base   = $this->get_setting( 'utilgp_typo_base_size', 16 );
+		$ratio  = $this->get_setting( 'utilgp_typo_scale_ratio', '1.250' );
 		if ( $ratio === 'custom' ) {
-			$ratio = floatval( get_option( 'wpids_typo_custom_ratio', '1.2' ) );
+			$ratio = floatval( $this->get_setting( 'utilgp_typo_custom_ratio', '1.2' ) );
 		} else {
 			$ratio = floatval( $ratio );
 		}
@@ -292,8 +306,8 @@ class WPIDS_Typography {
 			'site-description' => -1,
 		);
 
-		$min_vw = get_option( 'wpids_typo_min_vw', 320 );
-		$max_vw = get_option( 'wpids_typo_max_vw', 1280 );
+		$min_vw = get_option( 'utilgp_typo_min_vw', 320 );
+		$max_vw = get_option( 'utilgp_typo_max_vw', 1280 );
 
 		foreach ( $settings['typography'] as &$typo ) {
 			$selector = strtolower( $typo['selector'] ?? '' );
@@ -314,23 +328,23 @@ class WPIDS_Typography {
  * Custom Control for Fluid Typography Grid
  */
 if ( class_exists( 'WP_Customize_Control' ) ) {
-	class WPIDS_Fluid_Typography_Control extends WP_Customize_Control {
-		public $type = 'wpids_fluid_grid';
+	class UTILGP_Fluid_Typography_Control extends WP_Customize_Control {
+		public $type = 'utilgp_fluid_grid';
 
 		public function render_content() {
-			$base_size = get_option( 'wpids_typo_base_size', 16 );
-			$base_unit = get_option( 'wpids_typo_base_unit', 'px' );
-			$min_vw    = get_option( 'wpids_typo_min_vw', 320 );
-			$max_vw    = get_option( 'wpids_typo_max_vw', 1280 );
+			$base_size = get_option( 'utilgp_typo_base_size', 16 );
+			$base_unit = get_option( 'utilgp_typo_base_unit', 'px' );
+			$min_vw    = get_option( 'utilgp_typo_min_vw', 320 );
+			$max_vw    = get_option( 'utilgp_typo_max_vw', 1280 );
 			?>
-			<div class="wpids-fluid-grid-container">
-				<div class="wpids-grid-layout">
-					<div class="wpids-grid-row">
-						<div class="wpids-grid-item">
+			<div class="utilgp-fluid-grid-container">
+				<div class="utilgp-grid-layout">
+					<div class="utilgp-grid-row">
+						<div class="utilgp-grid-item">
 							<label><?php esc_html_e( 'Base Size', 'utility-for-generatepress' ); ?></label>
-							<div class="wpids-input-group">
-								<input type="number" class="wpids-grid-input" data-setting="wpids_typo_base_size" value="<?php echo esc_attr( $base_size ); ?>">
-								<select class="wpids-grid-select" data-setting="wpids_typo_base_unit">
+							<div class="utilgp-input-group">
+								<input type="number" class="utilgp-grid-input" data-setting="utilgp_typo_base_size" value="<?php echo esc_attr( $base_size ); ?>">
+								<select class="utilgp-grid-select" data-setting="utilgp_typo_base_unit">
 									<option value="px" <?php selected( $base_unit, 'px' ); ?>>px</option>
 									<option value="rem" <?php selected( $base_unit, 'rem' ); ?>>rem</option>
 									<option value="em" <?php selected( $base_unit, 'em' ); ?>>em</option>
@@ -339,18 +353,18 @@ if ( class_exists( 'WP_Customize_Control' ) ) {
 						</div>
 					</div>
 
-					<div class="wpids-grid-row">
-						<div class="wpids-grid-item">
+					<div class="utilgp-grid-row">
+						<div class="utilgp-grid-item">
 							<label><?php esc_html_e( 'Min Viewport', 'utility-for-generatepress' ); ?></label>
-							<input type="number" class="wpids-grid-input" data-setting="wpids_typo_min_vw" value="<?php echo esc_attr( $min_vw ); ?>">
+							<input type="number" class="utilgp-grid-input" data-setting="utilgp_typo_min_vw" value="<?php echo esc_attr( $min_vw ); ?>">
 						</div>
-						<div class="wpids-grid-item">
+						<div class="utilgp-grid-item">
 							<label><?php esc_html_e( 'Max Viewport', 'utility-for-generatepress' ); ?></label>
-							<input type="number" class="wpids-grid-input" data-setting="wpids_typo_max_vw" value="<?php echo esc_attr( $max_vw ); ?>">
+							<input type="number" class="utilgp-grid-input" data-setting="utilgp_typo_max_vw" value="<?php echo esc_attr( $max_vw ); ?>">
 						</div>
 					</div>
 
-					<div class="wpids-grid-description">
+					<div class="utilgp-grid-description">
 						<?php 
 						echo wp_kses( 
 							__( 'Uses the CSS <code>clamp()</code> property to dynamically control font growth between viewports.', 'utility-for-generatepress' ), 

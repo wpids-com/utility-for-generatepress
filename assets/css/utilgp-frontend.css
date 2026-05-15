@@ -1,18 +1,18 @@
-/* WPIDS Utility Frontend CSS */
+/* UTILGP Utility Frontend CSS */
 
 /* --- Base Typography --- */
 body {
-    background-color: var(--wpids-bg-base);
-    color: var(--wpids-text-base);
+    background-color: var(--utilgp-bg-base);
+    color: var(--utilgp-text-base);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* --- Utilities --- */
 
 /* Text Gradient */
-.wpids-text-gradient,
+.utilgp-text-gradient,
 .text-gradient {
-    background-image: linear-gradient(var(--grad-angle, 90deg), var(--wpids-grad-1), var(--wpids-grad-2));
+    background-image: linear-gradient(var(--grad-angle, 90deg), var(--utilgp-grad-1), var(--utilgp-grad-2));
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
@@ -21,7 +21,7 @@ body {
 }
 
 /* Animated Text Gradient */
-@keyframes wpids-gradient-spin {
+@keyframes utilgp-gradient-spin {
     0% {
         --grad-angle: 0deg;
     }
@@ -30,33 +30,33 @@ body {
     }
 }
 
-.wpids-text-gradient.animated,
+.utilgp-text-gradient.animated,
 .text-gradient.animated {
-    animation: wpids-gradient-spin 4s linear infinite;
+    animation: utilgp-gradient-spin 4s linear infinite;
 }
 
 /* Border Gradient */
-.wpids-border-gradient,
+.utilgp-border-gradient,
 .border-gradient {
     border: 4px solid transparent;
     background-clip: padding-box, border-box;
     background-origin: padding-box, border-box;
     background-image: 
-        linear-gradient(var(--wpids-bg-base), var(--wpids-bg-base)),
-        linear-gradient(var(--grad-angle, 90deg), var(--wpids-grad-1), var(--wpids-grad-2));
+        linear-gradient(var(--utilgp-bg-base), var(--utilgp-bg-base)),
+        linear-gradient(var(--grad-angle, 90deg), var(--utilgp-grad-1), var(--utilgp-grad-2));
 }
 
-.wpids-border-gradient.animated,
+.utilgp-border-gradient.animated,
 .border-gradient.animated {
-    animation: wpids-gradient-spin 4s linear infinite;
+    animation: utilgp-gradient-spin 4s linear infinite;
 }
 
 /* --- Dark Mode Toggle Button Styles --- */
-.wpids-dark-mode-toggle {
+.utilgp-dark-mode-toggle {
     background: transparent;
     border: none;
     cursor: pointer;
-    color: var(--wpids-text-base);
+    color: var(--utilgp-text-base);
     width: 2rem;
     height: 2rem;
     display: flex;
@@ -64,30 +64,30 @@ body {
     justify-content: center;
     border-radius: 9999px;
     padding: 0.5rem;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s x ease;
 }
 
-.wpids-dark-mode-toggle:hover {
-    background-color: var(--wpids-bg-surface);
+.utilgp-dark-mode-toggle:hover {
+    background-color: var(--utilgp-bg-surface);
 }
 
-.wpids-dark-mode-toggle svg {
+.utilgp-dark-mode-toggle svg {
     width: 1.5rem;
     height: 1.5rem;
 }
 
-html.dark .wpids-icon-sun {
+html.dark .utilgp-icon-sun {
     display: none;
 }
 
-html.dark .wpids-icon-moon {
+html.dark .utilgp-icon-moon {
     display: block !important;
 }
 
-html:not(.dark) .wpids-icon-moon {
+html:not(.dark) .utilgp-icon-moon {
     display: none;
 }
 
-html:not(.dark) .wpids-icon-sun {
+html:not(.dark) .utilgp-icon-sun {
     display: block !important;
 }
