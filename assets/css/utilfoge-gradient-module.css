@@ -1,0 +1,499 @@
+/* =====================================================
+   UTILFOGE Gradient Control — GP React Color Style
+   ===================================================== */
+
+.utilfoge-gc-wrap {
+	font-size: 12px;
+	color: #1d2327;
+}
+
+/* ── Palette Grid ── */
+.utilfoge-gc-palette {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 8px 0 4px;
+	min-height: 34px;
+}
+
+/* Each gradient swatch */
+.utilfoge-gc-swatch {
+	position: relative;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	cursor: pointer;
+	border: 1px solid rgba(0,0,0,0.12);
+	overflow: hidden;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	flex-shrink: 0;
+}
+
+.utilfoge-gc-swatch:hover,
+.utilfoge-gc-swatch.is-active {
+	transform: scale(1.15);
+	box-shadow: 0 0 0 2px #2271b1;
+}
+
+/* The "+" add button — same circle style as GP color swatches */
+.utilfoge-gc-swatch-add {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 1px dashed #b2b9c4;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	line-height: 1;
+	color: #8c8f94;
+	background: #fff;
+	transition: all 0.15s;
+	flex-shrink: 0;
+}
+
+.utilfoge-gc-swatch-add:hover {
+	border-color: #2271b1;
+	color: #2271b1;
+	background: #f0f6fc;
+}
+
+/* Empty state */
+.utilfoge-gc-empty {
+	font-size: 11px;
+	color: #8c8f94;
+	font-style: italic;
+	padding: 4px 0;
+}
+
+/* ── Editor Panel ── */
+.utilfoge-gc-editor {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+	padding: 12px;
+	margin-top: 12px;
+	position: relative;
+}
+
+.utilfoge-gc-editor-caret {
+	position: absolute;
+	top: -6px;
+	width: 10px;
+	height: 10px;
+	background: #fff;
+	border-top: 1px solid #dcdcde;
+	border-left: 1px solid #dcdcde;
+	transform: translateX(-50%) rotate(45deg);
+	transition: left 0.3s ease;
+}
+
+/* Header: back / name / delete */
+.utilfoge-gc-editor-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+
+.utilfoge-gc-back-btn,
+.utilfoge-gc-delete-btn {
+	background: none;
+	border: none;
+	padding: 2px 4px;
+	cursor: pointer;
+	color: #646970;
+	border-radius: 2px;
+	transition: color 0.15s, background 0.15s;
+	line-height: 1;
+}
+
+.utilfoge-gc-back-btn:hover { color: #2271b1; background: #f0f6fc; }
+.utilfoge-gc-delete-btn { color: #b32d2e; margin-left: auto; }
+.utilfoge-gc-delete-btn:hover { background: #fbeaea; }
+
+.utilfoge-gc-name-input {
+	flex: 1;
+	height: 28px;
+	padding: 0 8px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	color: #1d2327;
+}
+
+.utilfoge-gc-name-input:focus {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: none;
+}
+
+/* Gradient preview bar (like GB) */
+.utilfoge-gc-preview-bar {
+	height: 24px;
+	border-radius: 3px;
+	border: 1px solid rgba(0,0,0,0.1);
+	margin-bottom: 12px;
+	background: linear-gradient(135deg, #e0e0e0, #fff);
+}
+
+/* Type + Angle row */
+.utilfoge-gc-row {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.utilfoge-gc-field {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	flex: 1;
+}
+
+.utilfoge-gc-field label {
+	font-size: 11px;
+	font-weight: 500;
+	color: #646970;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.utilfoge-gc-select,
+.utilfoge-gc-num {
+	height: 28px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	padding: 0 6px;
+	color: #1d2327;
+	background: #fff;
+}
+
+.utilfoge-gc-select:focus,
+.utilfoge-gc-num:focus {
+	border-color: #2271b1;
+	outline: none;
+}
+
+.utilfoge-gc-angle-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.utilfoge-gc-angle-group .utilfoge-gc-num {
+	width: 56px;
+}
+
+/* ── Color Stops ── */
+.utilfoge-gc-stops {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.utilfoge-gc-stop-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* The color circle swatch (like GB's stop dot) */
+.utilfoge-gc-stop-swatch {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	border: 1px solid rgba(0,0,0,0.15);
+	cursor: pointer;
+	flex-shrink: 0;
+	position: relative;
+}
+
+.utilfoge-gc-stop-swatch:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px #2271b1;
+}
+
+/* Position slider */
+.utilfoge-gc-stop-slider {
+	flex: 1;
+	height: 3px;
+	-webkit-appearance: none;
+	appearance: none;
+	background: #dcdcde;
+	border-radius: 2px;
+	cursor: pointer;
+}
+
+.utilfoge-gc-stop-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #2271b1;
+	cursor: pointer;
+	border: 2px solid #fff;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Position number input */
+.utilfoge-gc-stop-pos {
+	width: 42px;
+	height: 26px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	padding: 0 4px;
+	text-align: center;
+	color: #1d2327;
+}
+
+/* Remove stop button */
+.utilfoge-gc-stop-remove {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: #b32d2e;
+	padding: 2px;
+	font-size: 14px;
+	line-height: 1;
+	border-radius: 2px;
+	flex-shrink: 0;
+	transition: background 0.15s;
+}
+
+.utilfoge-gc-stop-remove:hover { background: #fbeaea; }
+
+/* Add stop button */
+.utilfoge-gc-add-stop {
+	font-size: 11px !important;
+	height: 26px !important;
+	line-height: 24px !important;
+	padding: 0 8px !important;
+	margin-bottom: 10px;
+}
+
+/* Utility class hint */
+.utilfoge-gc-utility-hint {
+	display: flex;
+	align-items: flex-start;
+	gap: 4px;
+	background: #f0f6fc;
+	border: 1px solid #c2d4ee;
+	border-radius: 2px;
+	padding: 6px 8px;
+	margin-bottom: 10px;
+	font-size: 11px;
+	color: #2271b1;
+	word-break: break-all;
+}
+
+.utilfoge-gc-utility-hint .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+/* Actions */
+.utilfoge-gc-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.utilfoge-gc-save-status {
+	font-size: 11px;
+	color: #00a32a;
+	font-weight: 500;
+}
+
+/* ── Border Settings Section ── */
+.utilfoge-gb-settings {
+	margin-top: 16px;
+	padding-top: 14px;
+	border-top: 1px solid #dcdcde;
+}
+
+.utilfoge-gb-settings-title {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #646970;
+	margin-bottom: 10px;
+}
+
+.utilfoge-gb-custom-radius { margin-top: 8px; }
+
+.utilfoge-gb-radius-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
+.utilfoge-gb-radius-header label {
+	font-size: 11px;
+	font-weight: 500;
+	color: #646970;
+	text-transform: uppercase;
+	flex: 1;
+}
+
+.utilfoge-gb-radius-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.utilfoge-gb-unit-select {
+	height: 24px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 11px;
+	padding: 0 4px;
+	color: #1d2327;
+	background: #fff;
+}
+
+.utilfoge-gb-link-btn {
+	background: none;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #8c8f94;
+	transition: all 0.15s;
+	padding: 0;
+}
+
+.utilfoge-gb-link-btn.is-linked {
+	background: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+}
+
+.utilfoge-gb-link-btn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+.utilfoge-gb-radius-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+}
+
+.utilfoge-gb-radius-field {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.utilfoge-gb-radius-field label {
+	font-size: 10px;
+	color: #8c8f94;
+}
+
+.utilfoge-gb-r-input {
+	height: 28px;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	font-size: 12px;
+	padding: 0 6px;
+	text-align: center;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.utilfoge-gb-r-input:focus {
+	border-color: #2271b1;
+	outline: none;
+}
+
+/* Usage / class list */
+.utilfoge-gb-usage {
+	margin: 12px 0 10px;
+	padding: 8px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+}
+
+.utilfoge-gb-usage-title {
+	font-weight: 600;
+	font-size: 11px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin: 0 0 4px;
+	color: #1d2327;
+}
+
+.utilfoge-gb-usage p {
+	font-size: 11px;
+	color: #646970;
+	margin: 0 0 6px;
+}
+
+.utilfoge-gb-class-item {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	margin-bottom: 6px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+}
+
+.utilfoge-gb-class-item code {
+	flex: 1;
+	border: none;
+	background: none;
+	padding: 4px 8px;
+	font-size: 10px;
+	color: #2271b1;
+	word-break: break-all;
+	display: flex;
+	align-items: center;
+}
+
+.utilfoge-gb-copy-btn {
+	background: none;
+	border: none;
+	border-left: 1px solid #dcdcde;
+	cursor: pointer;
+	color: #8c8f94;
+	padding: 0 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.15s;
+}
+
+.utilfoge-gb-copy-btn:hover {
+	color: #2271b1;
+	background: #f6f7f7;
+}
+
+.utilfoge-gb-copy-btn.is-copied {
+	color: #00a32a;
+	background: #edfaef;
+}
+
+.utilfoge-gb-copy-btn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
