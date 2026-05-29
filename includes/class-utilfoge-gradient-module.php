@@ -397,8 +397,14 @@ class UTILFOGE_Gradient_Module {
 
 		switch ( $gradient['type'] ?? 'linear' ) {
 			case 'radial':
-				$shape = $gradient['shape'] ?? 'ellipse';
-				$at    = $gradient['at'] ?? 'center';
+				$shape = sanitize_key( $gradient['shape'] ?? 'ellipse' );
+				if ( ! in_array( $shape, array( 'circle', 'ellipse' ), true ) ) {
+					$shape = 'ellipse';
+				}
+				$at = sanitize_text_field( $gradient['at'] ?? 'center' );
+				if ( ! preg_match( '/^[a-zA-Z0-9\s%]+$/', $at ) ) {
+					$at = 'center';
+				}
 				return "radial-gradient({$shape} at {$at}, {$stops_str})";
 			case 'conic':
 				$angle = intval( $gradient['angle'] ?? 0 );
@@ -442,13 +448,23 @@ class UTILFOGE_Gradient_Module {
 				}
 			}
 
+			$shape = sanitize_key( $g['shape'] ?? 'ellipse' );
+			if ( ! in_array( $shape, array( 'circle', 'ellipse' ), true ) ) {
+				$shape = 'ellipse';
+			}
+
+			$at = sanitize_text_field( $g['at'] ?? 'center' );
+			if ( ! preg_match( '/^[a-zA-Z0-9\s%]+$/', $at ) ) {
+				$at = 'center';
+			}
+
 			$clean[] = array(
 				'slug'       => $slug,
 				'name'       => $name,
 				'type'       => $type,
 				'angle'      => intval( $g['angle'] ?? 135 ),
-				'shape'      => sanitize_text_field( $g['shape'] ?? 'ellipse' ),
-				'at'         => sanitize_text_field( $g['at'] ?? 'center' ),
+				'shape'      => $shape,
+				'at'         => $at,
 				'stops'      => $stops,
 				'dark_stops' => $dark_stops,
 			);

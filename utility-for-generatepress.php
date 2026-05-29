@@ -3,7 +3,7 @@
  * Plugin Name:       Utility for GeneratePress
  * Plugin URI:        https://wpids.com/utility-for-generatepress
  * Description:       Color Management, Gradient Variables, Advanced Fluid Typography, Dark Mode support, and Editor Sync for GeneratePress.
- * Version:           1.0.17
+ * Version:           1.0.18
  * Author:            WPIDS
  * Author URI:        https://wpids.com
  * License:           GPL-2.0+
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UTILFOGE_VERSION', '1.0.17' );
+define( 'UTILFOGE_VERSION', '1.0.18' );
 define( 'UTILFOGE_FILE', __FILE__ );
 define( 'UTILFOGE_PLUGIN_DIR', plugin_dir_path( UTILFOGE_FILE ) );
 define( 'UTILFOGE_PLUGIN_URL', plugin_dir_url( UTILFOGE_FILE ) );
