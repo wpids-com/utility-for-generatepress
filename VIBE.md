@@ -1,4 +1,4 @@
-# Built with Vibe Coding 🌊
+﻿# Built with Vibe Coding 🌊
 
 This plugin, **GeneratePress Utility**, was developed using the **Vibe Coding** methodology—a collaborative process between a human architect and an AI coding assistant.
 

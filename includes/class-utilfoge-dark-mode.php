@@ -21,106 +21,11 @@ class UTILFOGE_Dark_Mode {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ), 20 );
 		
 		// Customizer UI Restrictions (Lock GP React Control)
-		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customizer_dashboard_assets' ) );
+		add_action( 'customize_controls_print_styles', array( $this, 'customizer_ui_restrictions' ) );
+		add_action( 'customize_controls_print_footer_scripts', array( $this, 'customizer_ui_js_restrictions' ) );
 
 		// Auto-sync data structural array
 		add_filter( 'theme_mod_utilfoge_dark_global_colors', array( $this, 'sync_dark_colors_with_gp' ) );
-	}
-
-	public function customizer_dashboard_assets() {
-		// 1. CSS Restrictions
-		$css = "
-			#customize-control-utilfoge_dark_global_colors .generate-color-manager--add-color,
-			#customize-control-utilfoge_dark_global_colors .generate-color-manager--remove,
-			#customize-control-utilfoge_dark_global_colors button[aria-label*='Lock'],
-			#customize-control-utilfoge_dark_global_colors button[aria-label*='Unlock'],
-			#customize-control-utilfoge_dark_global_colors .generate-color-input--css-var-name-wrapper button {
-				display: none !important;
-			}
-		";
-		wp_add_inline_style( 'customize-controls', wp_strip_all_tags( $css ) );
-
-		// 2. JS Restrictions
-		$js = "
-			document.addEventListener('DOMContentLoaded', function() {
-				if (typeof wp !== 'undefined' && wp.customize) {
-					wp.customize.bind('ready', function() {
-						var gpColorsSetting = wp.customize('generate_settings[global_colors]');
-						var darkColorsSetting = wp.customize('utilfoge_dark_global_colors');
-						
-						if (gpColorsSetting && darkColorsSetting) {
-							var syncColors = function() {
-								var gpColors = gpColorsSetting.get() || [];
-								var darkColors = darkColorsSetting.get() || [];
-								var updated = false;
-								
-								if (!Array.isArray(darkColors)) darkColors = [];
-								if (!Array.isArray(gpColors)) gpColors = [];
-								
-								var newDarkColors = [];
-								
-								gpColors.forEach(function(gpColor) {
-									if (!gpColor.slug) return;
-									
-									var existingDark = darkColors.find(function(dc) { return dc.slug === gpColor.slug; });
-									
-									if (existingDark) {
-										if (existingDark.name !== gpColor.name) {
-											existingDark.name = gpColor.name;
-											updated = true;
-										}
-										newDarkColors.push(existingDark);
-									} else {
-										newDarkColors.push({
-											name: gpColor.name,
-											slug: gpColor.slug,
-											color: gpColor.color
-										});
-										updated = true;
-									}
-								});
-								
-								if (darkColors.length !== newDarkColors.length) {
-									updated = true;
-								}
-								
-								if (updated) {
-									darkColorsSetting.set(newDarkColors);
-								}
-							};
-							
-							gpColorsSetting.bind(syncColors);
-							setTimeout(syncColors, 500); 
-						}
-					});
-				}
-
-				setInterval(function() {
-					var container = document.getElementById('customize-control-utilfoge_dark_global_colors');
-					if (!container) return;
-
-					var inputs = container.querySelectorAll('.generate-color-input--css-var-name-wrapper');
-					inputs.forEach(function(input) {
-						if (!input.disabled) {
-							input.disabled = true;
-							input.style.opacity = '0.6';
-						}
-					});
-
-					var buttons = container.querySelectorAll('.components-button, .generate-color-manager--delete-color');
-					buttons.forEach(function(btn) {
-						var svg = btn.querySelector('svg');
-						if (svg && btn.getAttribute('aria-label') && (btn.getAttribute('aria-label').indexOf('Lock') !== -1 || btn.getAttribute('aria-label').indexOf('Unlock') !== -1)) {
-							btn.style.display = 'none';
-						}
-						if (btn.classList.contains('generate-color-manager--delete-color')) {
-							btn.style.display = 'none';
-						}
-					});
-				}, 1000);
-			});
-		";
-		wp_add_inline_script( 'customize-controls', $js );
 	}
 
 	public function enqueue_frontend_assets() {
@@ -129,11 +34,22 @@ class UTILFOGE_Dark_Mode {
 			return;
 		}
 
-		// Enqueue FOUC script at the top
+		// Pass PHP settings to the FOUC script via inline script (before FOUC JS loads)
+		$default_mode = get_theme_mod( 'utilfoge_dark_mode_default', 'light' );
+		$inline_config = 'window.utilfogeDarkConfig = ' . wp_json_encode(
+			array(
+				'defaultMode' => $default_mode, // 'user_choice' | 'dark' | 'light' | 'system'
+			)
+		) . ';';
+		wp_register_script( 'utilfoge-dark-mode-config', '', array(), UTILFOGE_VERSION, false );
+		wp_enqueue_script( 'utilfoge-dark-mode-config' );
+		wp_add_inline_script( 'utilfoge-dark-mode-config', $inline_config );
+
+		// Enqueue FOUC script at the top (after config)
 		wp_enqueue_script(
 			'utilfoge-dark-mode-fouc',
 			UTILFOGE_PLUGIN_URL . 'assets/js/utilfoge-dark-mode-fouc.js',
-			array(),
+			array( 'utilfoge-dark-mode-config' ),
 			UTILFOGE_VERSION,
 			false // In head
 		);
@@ -141,13 +57,13 @@ class UTILFOGE_Dark_Mode {
 		// Inject Dark Mode CSS
 		$css = $this->get_dark_mode_css();
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'utilfoge-utility-frontend', wp_strip_all_tags( $css ) );
+			wp_add_inline_style( 'utilfoge-utility-frontend', $css );
 		}
 
 		// Inject Toggle styles
 		$toggle_css = $this->get_toggle_css();
 		if ( ! empty( $toggle_css ) ) {
-			wp_add_inline_style( 'utilfoge-utility-frontend', wp_strip_all_tags( $toggle_css ) );
+			wp_add_inline_style( 'utilfoge-utility-frontend', $toggle_css );
 		}
 	}
 
@@ -157,7 +73,7 @@ class UTILFOGE_Dark_Mode {
 	private function get_dark_mode_css() {
 		$dark_colors = array();
 
-		if ( class_exists( 'UTILFOGE_Color_Module' ) ) {
+		if ( class_exists( 'utilfoge_Color_Module' ) ) {
 			$expanded = get_option( 'utilfoge_expanded_colors', array() );
 			if ( ! empty( $expanded ) && is_array( $expanded ) ) {
 				foreach ( $expanded as $set ) {
@@ -183,7 +99,7 @@ class UTILFOGE_Dark_Mode {
 			}
 		}
 
-		if ( ! class_exists( 'UTILFOGE_Color_Module' ) || empty( $dark_colors ) ) {
+		if ( ! class_exists( 'utilfoge_Color_Module' ) || empty( $dark_colors ) ) {
 			$defaults = array(
 				'contrast'   => '#f9fafb',
 				'contrast-2' => '#e5e7eb',
@@ -299,6 +215,7 @@ class UTILFOGE_Dark_Mode {
 				outline: none;
 				color: #1f2937 !important;
 				transition: color 0.3s ease;
+				line-height: 1;
 			}
 			.utilfoge-dark-mode-toggle svg {
 				width: 22px;
@@ -331,14 +248,14 @@ class UTILFOGE_Dark_Mode {
 				fill: #818cf8;
 				stroke: #6366f1;
 			}
-			@keyframes utilfogeSpinSun { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(45deg) scale(1.1); } }
-			@keyframes utilfogeSwingMoon { 0% { transform: rotate(0deg) scale(1.15); } 100% { transform: rotate(-15deg) scale(1.25); } }
-			.utilfoge-dark-mode-toggle:hover svg.utilfoge-icon-sun { animation: utilfogeSpinSun 0.4s ease forwards; }
-			.utilfoge-dark-mode-toggle:hover svg.utilfoge-icon-moon { animation: utilfogeSwingMoon 0.4s ease forwards; }
+			@keyframes UTILFOGESpinSun { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(45deg) scale(1.1); } }
+			@keyframes UTILFOGESwingMoon { 0% { transform: rotate(0deg) scale(1.15); } 100% { transform: rotate(-15deg) scale(1.25); } }
+			.utilfoge-dark-mode-toggle:hover svg.utilfoge-icon-sun { animation: UTILFOGESpinSun 0.4s ease forwards; }
+			.utilfoge-dark-mode-toggle:hover svg.utilfoge-icon-moon { animation: UTILFOGESwingMoon 0.4s ease forwards; }
+
+			/* Floating style base */
 			.utilfoge-dark-mode-toggle.is-floating {
 				position: fixed;
-				bottom: 25px;
-				right: 25px;
 				z-index: 99999;
 				background-color: #ffffff !important;
 				color: #1f2937 !important;
@@ -348,6 +265,14 @@ class UTILFOGE_Dark_Mode {
 				box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
 				transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 			}
+			.utilfoge-dark-mode-toggle.is-floating-right {
+				bottom: 25px;
+				right: 25px;
+			}
+			.utilfoge-dark-mode-toggle.is-floating-left {
+				bottom: 25px;
+				left: 25px;
+			}
 			.utilfoge-dark-mode-toggle.is-floating:hover {
 				transform: translateY(-3px);
 				box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
@@ -356,7 +281,126 @@ class UTILFOGE_Dark_Mode {
 				background-color: #1f2937 !important;
 				color: #f9fafb !important;
 			}
+
+			@media (max-width: 768px) {
+				.utilfoge-dark-mode-toggle.is-floating-right {
+					bottom: 15px;
+					right: 15px;
+				}
+				.utilfoge-dark-mode-toggle.is-floating-left {
+					bottom: 15px;
+					left: 15px;
+				}
+			}
+
+			/* --- Mobile Menu Integration (Non-Floating) --- */
+			.utilfoge-dark-toggle-nav-wrapper {
+				display: inline-flex;
+				align-items: center;
+			}
+			/* GP menu-bar-items will natively handle the placement left of the burger icon on mobile */
 		";
+	}
+
+	public function customizer_ui_restrictions() {
+		$css = "
+			#customize-control-utilfoge_dark_global_colors .generate-color-manager--add-color,
+			#customize-control-utilfoge_dark_global_colors .generate-color-manager--remove,
+			#customize-control-utilfoge_dark_global_colors button[aria-label*='Lock'],
+			#customize-control-utilfoge_dark_global_colors button[aria-label*='Unlock'],
+			#customize-control-utilfoge_dark_global_colors .generate-color-input--css-var-name-wrapper button {
+				display: none !important;
+			}
+		";
+		?>
+		<style id="utilfoge-dark-mode-customizer-css">
+			<?php echo esc_html( $css ); ?>
+		</style>
+		<?php
+	}
+
+	public function customizer_ui_js_restrictions() {
+		?>
+		<script id="utilfoge-dark-mode-customizer-js">
+			document.addEventListener('DOMContentLoaded', function() {
+				if (typeof wp !== 'undefined' && wp.customize) {
+					wp.customize.bind('ready', function() {
+						var gpColorsSetting = wp.customize('generate_settings[global_colors]');
+						var darkColorsSetting = wp.customize('utilfoge_dark_global_colors');
+						
+						if (gpColorsSetting && darkColorsSetting) {
+							var syncColors = function() {
+								var gpColors = gpColorsSetting.get() || [];
+								var darkColors = darkColorsSetting.get() || [];
+								var updated = false;
+								
+								if (!Array.isArray(darkColors)) darkColors = [];
+								if (!Array.isArray(gpColors)) gpColors = [];
+								
+								var newDarkColors = [];
+								
+								gpColors.forEach(function(gpColor) {
+									if (!gpColor.slug) return;
+									
+									var existingDark = darkColors.find(function(dc) { return dc.slug === gpColor.slug; });
+									
+									if (existingDark) {
+										if (existingDark.name !== gpColor.name) {
+											existingDark.name = gpColor.name;
+											updated = true;
+										}
+										newDarkColors.push(existingDark);
+									} else {
+										newDarkColors.push({
+											name: gpColor.name,
+											slug: gpColor.slug,
+											color: gpColor.color
+										});
+										updated = true;
+									}
+								});
+								
+								if (darkColors.length !== newDarkColors.length) {
+									updated = true;
+								}
+								
+								if (updated) {
+									darkColorsSetting.set(newDarkColors);
+								}
+							};
+							
+							gpColorsSetting.bind(syncColors);
+							setTimeout(syncColors, 500); 
+						}
+					});
+				}
+
+				setInterval(function() {
+					var container = document.getElementById('customize-control-utilfoge_dark_global_colors');
+					if (!container) return;
+
+					var inputs = container.querySelectorAll('.generate-color-input--css-var-name-wrapper');
+					inputs.forEach(function(input) {
+						if (!input.disabled) {
+							input.disabled = true;
+							input.style.opacity = '0.6';
+						}
+					});
+
+					var buttons = container.querySelectorAll('.components-button, .generate-color-manager--delete-color');
+					buttons.forEach(function(btn) {
+						var svg = btn.querySelector('svg');
+						if (svg && btn.getAttribute('aria-label') && (btn.getAttribute('aria-label').indexOf('Lock') !== -1 || btn.getAttribute('aria-label').indexOf('Unlock') !== -1)) {
+							btn.style.display = 'none';
+						}
+						if (btn.classList.contains('generate-color-manager--delete-color')) {
+							btn.style.display = 'none';
+						}
+					});
+				}, 1000);
+			});
+		</script>
+		<?php
 	}
 
 	public function setup_frontend_hooks() {
@@ -365,19 +409,43 @@ class UTILFOGE_Dark_Mode {
 		}
 
 		$position = get_theme_mod( 'utilfoge_dark_mode_position', 'after_nav' );
-		if ( 'inside_nav' === $position ) {
-			add_action( 'generate_inside_navigation', array( __CLASS__, 'render_toggle_hook' ) );
+		
+		if ( 'custom' === $position ) {
+			return; // Do nothing. Let the user use the shortcode manually.
 		} elseif ( 'floating' === $position ) {
 			add_action( 'wp_footer', array( __CLASS__, 'render_toggle_hook' ) );
 		} else {
-			add_action( 'generate_after_navigation', array( __CLASS__, 'render_toggle_hook' ) );
+			// Native GP Flexbox integration: menu_bar_items perfectly handles desktop alignment 
+			// and automatically places the item left of the burger icon on mobile.
+			if ( function_exists( 'generate_is_using_flexbox' ) && generate_is_using_flexbox() ) {
+				add_action( 'generate_menu_bar_items', array( __CLASS__, 'render_toggle_hook_menu_bar_item' ) );
+			} else {
+				// Fallback for legacy float structure
+				if ( 'inside_nav' === $position ) {
+					add_action( 'generate_inside_navigation', array( __CLASS__, 'render_toggle_hook' ) );
+				} else {
+					add_action( 'generate_after_navigation', array( __CLASS__, 'render_toggle_hook' ) );
+				}
+			}
 		}
+	}
+
+	public static function render_toggle_hook_menu_bar_item() {
+		echo '<span class="menu-bar-item utilfoge-dark-toggle-menu-item">';
+		self::render_toggle_hook();
+		echo '</span>';
 	}
 
 	public static function render_toggle_hook() {
 		echo wp_kses( 
 			self::render_toggle(), 
 			array(
+				'span'   => array(
+					'class' => array(),
+				),
+				'div'    => array(
+					'class' => array(),
+				),
 				'button' => array(
 					'type'       => array(),
 					'class'      => array(),
@@ -441,14 +509,89 @@ class UTILFOGE_Dark_Mode {
 		$wp_customize->add_control(
 			'utilfoge_dark_mode_position_control',
 			array(
-				'label'   => __( 'Toggle Position', 'utility-for-generatepress' ),
-				'section' => 'utilfoge_dark_mode_section',
-				'settings'=> 'utilfoge_dark_mode_position',
-				'type'    => 'select',
-				'choices' => array(
-					'after_nav'  => __( 'After Navigation', 'utility-for-generatepress' ),
-					'inside_nav' => __( 'Inside Navigation', 'utility-for-generatepress' ),
-					'floating'   => __( 'Floating (Stand-alone)', 'utility-for-generatepress' ),
+				'label'       => __( 'Toggle Position', 'utility-for-generatepress' ),
+				'section'     => 'utilfoge_dark_mode_section',
+				'settings'    => 'utilfoge_dark_mode_position',
+				'type'        => 'select',
+				'choices'     => array(
+					'after_nav'     => __( 'After Navigation', 'utility-for-generatepress' ),
+					'inside_nav'    => __( 'Inside Navigation', 'utility-for-generatepress' ),
+					'floating'      => __( 'Floating (Stand-alone)', 'utility-for-generatepress' ),
+					'custom'        => __( 'Custom (Shortcode)', 'utility-for-generatepress' ),
+				),
+				'active_callback' => array( $this, 'is_dark_mode_enabled' ),
+			)
+		);
+
+		// --- Custom Shortcode Notice Control ---
+		$wp_customize->add_setting( 'utilfoge_dark_mode_custom_notice_setting', array( 'sanitize_callback' => 'sanitize_text_field' ) );
+		$wp_customize->add_control(
+			'utilfoge_dark_mode_custom_notice_control',
+			array(
+				'label'       => '',
+				'section'     => 'utilfoge_dark_mode_section',
+				'settings'    => 'utilfoge_dark_mode_custom_notice_setting',
+				'type'        => 'text',
+				'description' => '<div style="padding: 12px; background: #e0f2fe; border-left: 4px solid #0284c7; color: #0c4a6e; font-size: 13px; margin-top: -10px; border-radius: 2px;">' . __( 'Use the shortcode <strong>[utilfoge_dark_mode_toggle]</strong> anywhere on your site, including GeneratePress Elements (GP Element) or widgets.', 'utility-for-generatepress' ) . '</div>',
+				'input_attrs' => array(
+					'style' => 'display:none;',
+				),
+				'active_callback' => function() {
+					return get_theme_mod( 'utilfoge_dark_mode_enable', 'off' ) === 'on' && get_theme_mod( 'utilfoge_dark_mode_position', 'after_nav' ) === 'custom';
+				},
+			)
+		);
+
+		// --- Floating Alignment ---
+		$wp_customize->add_setting(
+			'utilfoge_dark_mode_floating_align',
+			array(
+				'default'           => 'right',
+				'transport'         => 'refresh',
+				'sanitize_callback' => 'sanitize_key',
+			)
+		);
+
+		$wp_customize->add_control(
+			'utilfoge_dark_mode_floating_align_control',
+			array(
+				'label'       => __( 'Floating Alignment', 'utility-for-generatepress' ),
+				'section'     => 'utilfoge_dark_mode_section',
+				'settings'    => 'utilfoge_dark_mode_floating_align',
+				'type'        => 'select',
+				'choices'     => array(
+					'left'  => __( 'Left', 'utility-for-generatepress' ),
+					'right' => __( 'Right', 'utility-for-generatepress' ),
+				),
+				'active_callback' => function() {
+					return get_theme_mod( 'utilfoge_dark_mode_enable', 'off' ) === 'on' && get_theme_mod( 'utilfoge_dark_mode_position', 'after_nav' ) === 'floating';
+				},
+			)
+		);
+
+		// --- Setting: Default Mode ---
+		$wp_customize->add_setting(
+			'utilfoge_dark_mode_default',
+			array(
+				'default'           => 'light',
+				'transport'         => 'refresh',
+				'sanitize_callback' => 'sanitize_key',
+			)
+		);
+
+		$wp_customize->add_control(
+			'utilfoge_dark_mode_default_control',
+			array(
+				'label'       => __( 'Default Mode', 'utility-for-generatepress' ),
+				/* translators: Explanation for Default Mode setting choices. */
+				'description' => __( 'Set the initial mode when a visitor first opens the site.', 'utility-for-generatepress' ),
+				'section'     => 'utilfoge_dark_mode_section',
+				'settings'    => 'utilfoge_dark_mode_default',
+				'type'        => 'select',
+				'choices'     => array(
+					'light'       => __( 'Default (Light Mode)', 'utility-for-generatepress' ),
+					'dark'        => __( 'Dark Mode', 'utility-for-generatepress' ),
+					'system'      => __( 'OS System Preference', 'utility-for-generatepress' ),
 				),
 				'active_callback' => array( $this, 'is_dark_mode_enabled' ),
 			)
@@ -556,26 +699,83 @@ class UTILFOGE_Dark_Mode {
 	public static function render_toggle() {
 		$icon_style = get_theme_mod( 'utilfoge_dark_mode_icon', 'outlined' );
 		$position   = get_theme_mod( 'utilfoge_dark_mode_position', 'after_nav' );
-		
-		$classes = 'utilfoge-dark-mode-toggle style-' . esc_attr( $icon_style );
+
+		$btn_classes = 'utilfoge-dark-mode-toggle style-' . esc_attr( $icon_style );
 		if ( 'floating' === $position ) {
-			$classes .= ' is-floating';
+			$align = get_theme_mod( 'utilfoge_dark_mode_floating_align', 'right' );
+			$btn_classes .= ' is-floating is-floating-' . esc_attr( $align );
 		}
 
+		// Untuk non-floating, bungkus dalam wrapper agar posisi flex bisa diatur
+		$use_wrapper    = ( 'floating' !== $position );
+		$wrapper_class  = 'utilfoge-dark-toggle-nav-wrapper';
+
 		ob_start();
-		?>
-		<button type="button" class="<?php echo esc_attr( $classes ); ?>" aria-label="Toggle Dark Mode">
+		if ( $use_wrapper ) : ?>
+		<div class="<?php echo esc_attr( $wrapper_class ); ?>">
+		<?php endif; ?>
+		<button type="button" class="<?php echo esc_attr( $btn_classes ); ?>" aria-label="<?php esc_attr_e( 'Toggle Dark Mode', 'utility-for-generatepress' ); ?>">
 			<svg class="utilfoge-icon-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
 			<svg class="utilfoge-icon-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg>
 		</button>
-		<?php
+		<?php if ( $use_wrapper ) : ?>
+		</div>
+		<?php endif;
 		return ob_get_clean();
 	}
+	/**
+	 * Sync Dark Mode global colors with GeneratePress Global Colors.
+	 * 
+	 * This ensures that if a color is added/removed in GP, 
+	 * it is reflected in the Dark Mode settings.
+	 *
+	 * @param mixed $value The theme_mod value.
+	 * @return array
+	 */
+	public function sync_dark_colors_with_gp( $value ) {
+		$gp_settings = get_option( 'generate_settings', array() );
+		$gp_colors   = isset( $gp_settings['global_colors'] ) ? $gp_settings['global_colors'] : array();
 
-	public function sync_dark_colors_with_gp( $dark_colors ) {
-		return $dark_colors;
+		if ( ! is_array( $value ) ) {
+			$value = array();
+		}
+
+		if ( empty( $gp_colors ) ) {
+			return $value;
+		}
+
+		$current_dark_map = array();
+		foreach ( $value as $index => $color_data ) {
+			if ( isset( $color_data['slug'] ) ) {
+				$current_dark_map[ $color_data['slug'] ] = $index;
+			}
+		}
+
+		$new_value = array();
+		foreach ( $gp_colors as $gp_color ) {
+			if ( empty( $gp_color['slug'] ) ) {
+				continue;
+			}
+
+			$slug = $gp_color['slug'];
+
+			if ( isset( $current_dark_map[ $slug ] ) ) {
+				// Keep existing dark color
+				$new_value[] = $value[ $current_dark_map[ $slug ] ];
+			} else {
+				// Add new color from GP with its default color as dark counterpart
+				$new_value[] = array(
+					'name'  => isset( $gp_color['name'] ) ? $gp_color['name'] : $slug,
+					'slug'  => $slug,
+					'color' => isset( $gp_color['color'] ) ? $gp_color['color'] : '',
+				);
+			}
+		}
+
+		return $new_value;
 	}
 }
 
 // Register shortcode for the toggle
-add_shortcode( 'utilfoge_dark_mode_toggle', array( 'UTILFOGE_Dark_Mode', 'render_toggle' ) );
+add_shortcode( 'utilfoge_dark_mode_toggle', array( 'utilfoge_Dark_Mode', 'render_toggle' ) );
+

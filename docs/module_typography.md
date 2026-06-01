@@ -1,4 +1,4 @@
-# Fluid Typography Module
+﻿# Fluid Typography Module
 
 ## Overview
 The Fluid Typography module enhances GeneratePress by replacing static font sizes with fully responsive `clamp()` functions. It automatically calculates the minimum and maximum font sizes based on viewport widths, ensuring typography scales smoothly across all devices.
@@ -18,7 +18,7 @@ The Fluid Typography module enhances GeneratePress by replacing static font size
 
 4. **Architecture / Files**:
    - `includes/class-wpids-typography-module.php`: Core logic for calculating clamps and modifying GP settings.
-   - Settings are stored in the main `wpids_utility_options` array.
+   - Settings are stored in the main `UTILFOGE_utility_options` array.
 
 ## Core Formula
 `clamp( MinSize, (MinSize + (MaxSize - MinSize) * ((100vw - MinViewport) / (MaxViewport - MinViewport))), MaxSize )`

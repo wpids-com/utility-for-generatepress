@@ -44,14 +44,14 @@ class UTILFOGE_Typography {
 	public function enqueue_frontend_styles() {
 		$css = $this->get_typography_css();
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'utilfoge-utility-frontend', wp_strip_all_tags( $css ) );
+			wp_add_inline_style( 'utilfoge-utility-frontend', $css );
 		}
 	}
 
 	public function enqueue_editor_styles() {
 		$css = $this->get_typography_css();
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'utilfoge-utility-editor', wp_strip_all_tags( $css ) );
+			wp_add_inline_style( 'utilfoge-utility-editor', $css );
 		}
 	}
 
@@ -59,7 +59,7 @@ class UTILFOGE_Typography {
 	 * Build the typography CSS string.
 	 */
 	private function get_typography_css() {
-		if ( ! $this->get_setting( 'utilfoge_fluid_typo_enabled', false ) ) {
+		if ( 'on' !== $this->get_setting( 'utilfoge_fluid_typo_enabled', 'off' ) ) {
 			return '';
 		}
 
@@ -134,6 +134,10 @@ class UTILFOGE_Typography {
 		);
 	}
 
+	public function is_typo_enabled( $control ) {
+		return 'on' === $control->manager->get_setting( 'utilfoge_fluid_typo_enabled' )->value();
+	}
+
 	public function register_customizer( $wp_customize ) {
 		$wp_customize->add_section(
 			'utilfoge_typography_section',
@@ -147,9 +151,9 @@ class UTILFOGE_Typography {
 		$wp_customize->add_setting(
 			'utilfoge_fluid_typo_enabled',
 			array(
-				'default'           => false,
+				'default'           => 'off',
 				'type'              => 'option',
-				'sanitize_callback' => 'wp_validate_boolean',
+				'sanitize_callback' => 'sanitize_key',
 				'transport'         => 'refresh',
 			)
 		);
@@ -157,9 +161,13 @@ class UTILFOGE_Typography {
 		$wp_customize->add_control(
 			'utilfoge_fluid_typo_enabled',
 			array(
-				'label'    => __( 'Enable Fluid Typography', 'utility-for-generatepress' ),
+				'label'    => __( 'Fluid Typography', 'utility-for-generatepress' ),
 				'section'  => 'utilfoge_typography_section',
-				'type'     => 'checkbox',
+				'type'     => 'select',
+				'choices'  => array(
+					'off' => __( 'Off', 'utility-for-generatepress' ),
+					'on'  => __( 'On', 'utility-for-generatepress' ),
+				),
 				'priority' => 10,
 			)
 		);
@@ -173,6 +181,7 @@ class UTILFOGE_Typography {
 					'label'    => __( 'Typography Scale Settings', 'utility-for-generatepress' ),
 					'section'  => 'utilfoge_typography_section',
 					'priority' => 20,
+					'active_callback' => array( $this, 'is_typo_enabled' ),
 				)
 			)
 		);
@@ -200,6 +209,7 @@ class UTILFOGE_Typography {
 				'type'     => 'select',
 				'choices'  => self::get_scales(),
 				'priority' => 30,
+				'active_callback' => array( $this, 'is_typo_enabled' ),
 			)
 		);
 
@@ -221,7 +231,7 @@ class UTILFOGE_Typography {
 				'type'            => 'text',
 				'priority'        => 31,
 				'active_callback' => function( $control ) {
-					return $control->manager->get_setting( 'utilfoge_typo_scale_ratio' )->value() === 'custom';
+					return 'on' === $control->manager->get_setting( 'utilfoge_fluid_typo_enabled' )->value() && $control->manager->get_setting( 'utilfoge_typo_scale_ratio' )->value() === 'custom';
 				},
 			)
 		);
@@ -241,21 +251,21 @@ class UTILFOGE_Typography {
 			array(
 				'label'    => __( 'Preview Text', 'utility-for-generatepress' ),
 				'section'  => 'utilfoge_typography_section',
-				'type'     => 'text',
+				'type'     => 'textarea',
 				'priority' => 50,
+				'active_callback' => array( $this, 'is_typo_enabled' ),
 			)
 		);
 
 		$wp_customize->add_setting( 'utilfoge_typo_wizard_trigger', array( 'type' => 'hidden' ) );
 		$wp_customize->add_control(
-			new WP_Customize_Control(
+			new UTILFOGE_Typography_Wizard_Button(
 				$wp_customize,
 				'utilfoge_typo_wizard_trigger',
 				array(
-					'label'       => '', 
 					'section'     => 'utilfoge_typography_section',
-					'type'        => 'hidden',
 					'priority'    => 60,
+					'active_callback' => array( $this, 'is_typo_enabled' ),
 				)
 			)
 		);
@@ -276,7 +286,7 @@ class UTILFOGE_Typography {
 	}
 
 	public function filter_gp_typography( $settings ) {
-		if ( ! $this->get_setting( 'utilfoge_fluid_typo_enabled', false ) ) {
+		if ( 'on' !== $this->get_setting( 'utilfoge_fluid_typo_enabled', 'off' ) ) {
 			return $settings;
 		}
 
@@ -374,6 +384,17 @@ if ( class_exists( 'WP_Customize_Control' ) ) {
 					</div>
 				</div>
 			</div>
+			<?php
+		}
+	}
+
+	class UTILFOGE_Typography_Wizard_Button extends WP_Customize_Control {
+		public $type = 'utilfoge_wizard_btn';
+		public function render_content() {
+			?>
+			<button type="button" class="button button-primary" id="utilfoge-launch-wizard-btn" style="width: 100%; text-align: center; margin-top: 5px;">
+				<?php esc_html_e( 'Launch Live Preview', 'utility-for-generatepress' ); ?>
+			</button>
 			<?php
 		}
 	}

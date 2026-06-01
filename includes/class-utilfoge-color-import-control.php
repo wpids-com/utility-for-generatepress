@@ -51,11 +51,11 @@ class UTILFOGE_Color_Import_Control extends WP_Customize_Control {
 			</div>
 
 			<!-- Dark Mode Auto-Sync Status Banner -->
-			<?php if ( class_exists( 'UTILFOGE_Dark_Mode' ) ) : ?>
+			<?php if ( class_exists( 'utilfoge_Dark_Mode' ) ) : ?>
 			<div class="utilfoge-dark-sync-banner">
 				<span class="utilfoge-dark-sync-icon">&#9790;</span>
 				<span>Dark Mode auto-sync is <strong>active</strong>. Math-derived dark colors override defaults automatically.</span>
-				<button type="button" id="utilfoge-resync-dark-btn" class="utilfoge-ci-btn utilfoge-ci-btn-ghost" style="margin:0;padding:3px 10px;font-size:11px;">Re-sync All</button>
+				<button type="button" id="utilfoge-resync-dark-btn" class="button" style="margin:0;padding:0 10px;height:24px;line-height:22px;font-size:11px;">Re-sync All</button>
 			</div>
 			<?php else : ?>
 			<div class="utilfoge-dark-sync-banner utilfoge-dark-sync-off">
@@ -140,37 +140,43 @@ class UTILFOGE_Color_Import_Control extends WP_Customize_Control {
 				</div>
 
 				<div class="utilfoge-modal-body">
-					<div class="utilfoge-editor-row">
-						<div class="utilfoge-editor-field">
-							<label class="utilfoge-ci-label">Name</label>
-							<input type="text" id="utilfoge-edit-name" class="utilfoge-ci-input" />
+					<div class="utilfoge-editor-main">
+						<div class="utilfoge-editor-fields">
+							<div class="utilfoge-editor-field">
+								<label class="utilfoge-ci-label">Variable Name</label>
+								<input type="text" id="utilfoge-edit-name" class="utilfoge-ci-input" placeholder="e.g. accent-color" />
+							</div>
+							
+							<div class="utilfoge-editor-field" style="margin-top: 15px;">
+								<label class="utilfoge-ci-label">Color Value</label>
+								<div id="utilfoge-react-color-picker-root" class="utilfoge-picker-container"></div>
+								<input type="hidden" id="utilfoge-edit-hex" />
+							</div>
 						</div>
-						<div class="utilfoge-editor-field">
-							<label class="utilfoge-ci-label">Color</label>
-							<div id="utilfoge-react-color-picker-root"></div>
-							<input type="hidden" id="utilfoge-edit-hex" />
-						</div>
-						<div class="utilfoge-editor-field" style="flex:0; display:flex; align-items:flex-end;">
-							<button type="button" id="utilfoge-edit-delete" class="utilfoge-ci-btn utilfoge-ci-btn-danger" title="Delete from GP">Delete</button>
-						</div>
-					</div>
 
-					<!-- Math Options -->
-					<div class="utilfoge-modal-options" style="margin-top:16px;">
-						<label class="utilfoge-ci-label">Generate Derivatives</label>
-						<div class="utilfoge-options-grid">
-							<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-scale"> Lightness Scale (–10 to –90)</label>
-							<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-complementary"> Complementary (–comp)</label>
-							<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-triadic"> Triadic (–tri-a, –tri-b)</label>
-							<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-analogous"> Analogous (–ana-a, –ana-b)</label>
-							<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-split-comp"> Split-Complementary (–sc-a, –sc-b)</label>
-							<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-dark"> Auto Dark Counterpart</label>
+						<div class="utilfoge-editor-sidebar">
+							<!-- Math Options -->
+							<div class="utilfoge-modal-options">
+								<label class="utilfoge-ci-label">Generate Derivatives</label>
+								<div class="utilfoge-options-list">
+									<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-scale"> Lightness Scale</label>
+									<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-complementary"> Complementary</label>
+									<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-triadic"> Triadic Variants</label>
+									<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-analogous"> Analogous Variants</label>
+									<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-split-comp"> Split-Complementary</label>
+									<label class="utilfoge-option-check"><input type="checkbox" id="utilfoge-edit-opt-dark"> Auto Dark Counterpart</label>
+								</div>
+							</div>
+
+							<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f0f0f1;">
+								<button type="button" id="utilfoge-edit-delete" class="utilfoge-ci-btn utilfoge-ci-btn-danger" style="width:100%; justify-content:center;">Delete Variable</button>
+							</div>
 						</div>
 					</div>
 
 					<!-- Live Preview / Variables List -->
-					<div class="utilfoge-editor-preview-wrap" style="margin-top:16px;">
-						<label class="utilfoge-ci-label">Generated Variables (Click to copy CSS)</label>
+					<div class="utilfoge-editor-preview-wrap" style="margin-top:20px; border-top: 1px solid #e2e4e7; padding-top: 15px;">
+						<label class="utilfoge-ci-label">Generated Variables (CSS Root)</label>
 						<div id="utilfoge-editor-preview-list" class="utilfoge-editor-preview-list"></div>
 					</div>
 				</div>

@@ -1,4 +1,4 @@
-# Utility for GeneratePress
+﻿# Utility for GeneratePress
 
 **Utility for GeneratePress** is a powerful WordPress plugin designed to enhance the [GeneratePress](https://generatepress.com) ecosystem with advanced design tools and performance-oriented utilities. It is built to be secure, compliant with WordPress.org standards, and lightweight.
 

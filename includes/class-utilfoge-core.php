@@ -25,6 +25,7 @@ class UTILFOGE_Core {
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-gradient-module.php';
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-typography.php';
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-dark-mode.php';
+		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-export-import.php';
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-settings.php';
 	}
 
@@ -35,7 +36,7 @@ class UTILFOGE_Core {
 		$settings = new UTILFOGE_Settings();
 		$settings->init();
 
-		$options = get_option( 'utilfoge_utility_options' );
+		$options = get_option( 'utilfoge_utility_options', array() );
 		// 1. Color Management (import, expansion, harmony variants)
 		$is_color_management = isset( $options['enable_color_manager'] ) ? $options['enable_color_manager'] : true;
 		if ( $is_color_management ) {
@@ -66,6 +67,13 @@ class UTILFOGE_Core {
 
 		// 4. Editor CSS Sync is handled via enqueue_editor_assets() below
 
+		// 5. Export Import
+		$is_export_import = isset( $options['enable_export_import'] ) ? $options['enable_export_import'] : true;
+		if ( $is_export_import ) {
+			$export_import = new UTILFOGE_Export_Import();
+			$export_import->init();
+		}
+
 		// Enqueue global assets
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
@@ -83,8 +91,10 @@ class UTILFOGE_Core {
 	 * Enqueue Admin & Customizer Assets.
 	 */
 	public function enqueue_admin_assets( $hook = '' ) {
-		// Only load on our settings page to prevent breaking other GP dashboards
-		if ( 'appearance_page_utilfoge-utility' !== $hook ) {
+		$is_customizer = is_customize_preview() || did_action( 'customize_controls_enqueue_scripts' ) || ( function_exists( 'is_customize_preview' ) && is_customize_preview() );
+
+		// Only load on our settings page or inside Customizer panel to prevent breaking other GP dashboards
+		if ( 'appearance_page_utilfoge-utility' !== $hook && ! $is_customizer ) {
 			return;
 		}
 
@@ -152,7 +162,7 @@ class UTILFOGE_Core {
 			'all'
 		);
 
-		$options = get_option( 'utilfoge_utility_options' );
+		$options = get_option( 'utilfoge_utility_options', array() );
 		$is_editor_sync = isset( $options['enable_editor_sync'] ) ? $options['enable_editor_sync'] : true;
 
 		if ( $is_editor_sync ) {
@@ -168,8 +178,7 @@ class UTILFOGE_Core {
 			// 2. Sync Customizer "Additional CSS" to Editor
 			$custom_css = wp_get_custom_css();
 			if ( ! empty( $custom_css ) ) {
-				// Escape CSS late.
-				wp_add_inline_style( 'utilfoge-utility-editor', wp_strip_all_tags( $custom_css ) );
+				wp_add_inline_style( 'utilfoge-utility-editor', $custom_css );
 			}
 		}
 
@@ -177,15 +186,13 @@ class UTILFOGE_Core {
 		// This makes var(--slug) work in GenerateBlocks for gradients and variant colors
 		$css_vars = $this->build_css_variables_string();
 		if ( ! empty( $css_vars ) ) {
-			// Escape CSS late.
-			wp_add_inline_style( 'utilfoge-utility-editor', wp_strip_all_tags( $css_vars ) );
+			wp_add_inline_style( 'utilfoge-utility-editor', $css_vars );
 		}
 
 		// 4. Inject gradient utility classes to editor (enables .has-[slug]-gradient-text live preview)
 		$gradient_utils = UTILFOGE_Gradient_Module::build_utility_css( 'editor' );
 		if ( ! empty( $gradient_utils ) ) {
-			// Escape CSS late.
-			wp_add_inline_style( 'utilfoge-utility-editor', wp_strip_all_tags( $gradient_utils ) );
+			wp_add_inline_style( 'utilfoge-utility-editor', $gradient_utils );
 		}
 	}
 

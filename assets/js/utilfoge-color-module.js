@@ -1,11 +1,11 @@
-/**
+﻿/**
  * UTILFOGE Color Module — Customizer JS
  * Handles: Parse colors, Mapping wizard modal, Preview modal, Save/Delete sets.
  */
 (function ($, wp) {
     'use strict';
 
-    var cfg = window.utilfogeColorModule || {};
+    var cfg = window.UTILFOGEColorModule || {};
     var gpColors = cfg.gpColors || [];      // existing GP global colors
     var savedSets = cfg.savedExpanded || []; // already saved color sets
 
@@ -328,21 +328,38 @@
         if (wp && wp.element && wp.components && wp.components.ColorPicker) {
             var el = wp.element.createElement;
             var ColorPicker = wp.components.ColorPicker;
+            var useState = wp.element.useState;
+            var node = document.getElementById('utilfoge-react-color-picker-root');
 
-            // Render React Color Picker
-            wp.element.render(
-                el(ColorPicker, {
-                    color: colorVal,
+            var PickerContainer = function() {
+                var state = useState(colorVal);
+                var color = state[0];
+                var setColor = state[1];
+
+                return el(ColorPicker, {
+                    color: color,
                     enableAlpha: true,
+                    colors: gpColors.map(function(c) { return { name: c.name, color: c.color }; }),
                     onChange: function(val) {
-                        var newColor = typeof val === 'string' ? val : 
-                            (val.rgb ? 'rgba(' + val.rgb.r + ',' + val.rgb.g + ',' + val.rgb.b + ',' + (val.rgb.a !== undefined ? val.rgb.a : 1) + ')' : 
-                            (val.hex || '#000000'));
-                        $hexInput.val(newColor);
+                        var next = '';
+                        if (typeof val === 'string') {
+                            next = val;
+                        } else if (val && val.hex) {
+                            if (val.rgb && val.rgb.a !== undefined && val.rgb.a < 1) {
+                                next = 'rgba(' + val.rgb.r + ',' + val.rgb.g + ',' + val.rgb.b + ',' + val.rgb.a + ')';
+                            } else {
+                                next = val.hex;
+                            }
+                        }
+                        if (next) {
+                            setColor(next);
+                            $hexInput.val(next);
+                        }
                     }
-                }),
-                document.getElementById('utilfoge-react-color-picker-root')
-            );
+                });
+            };
+
+            wp.element.render(el(PickerContainer), node);
         } else {
             // Fallback to plain text input if React is somehow missing
             document.getElementById('utilfoge-react-color-picker-root').innerHTML = 

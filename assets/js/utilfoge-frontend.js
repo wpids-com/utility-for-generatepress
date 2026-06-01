@@ -1,4 +1,4 @@
-/**
+﻿/**
  * UTILFOGE Utility Frontend Script
  */
 

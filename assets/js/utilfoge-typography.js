@@ -1,15 +1,8 @@
-(function($, wp) {
+﻿(function($, wp) {
     'use strict';
 
     wp.customize.bind('ready', function() {
         var $section = $('#sub-section-utilfoge_typography_section');
-        
-        // 1. Inject Launch Button at the bottom
-        var $btnContainer = $('<div class="utilfoge-wizard-launcher" style="padding: 10px 0; margin-top: 15px;"></div>');
-        var $btn = $('<button type="button" class="utilfoge-btn-primary" style="width:100%;">Launch Preview Scale</button>');
-        
-        $btnContainer.append($btn);
-        $('#customize-control-utilfoge_typo_preview_text').after($btnContainer);
 
         // 2. Create Modal Structure
         var $modal = $([
@@ -47,6 +40,7 @@
 
         $('body').append($modal.hide());
 
+        // 3. Logic to update Modal Content
         // 3. Logic to update Modal Content
         function renderModalContent() {
             var getVal = function(id, fallback) {
@@ -117,7 +111,7 @@
         }
 
         // 4. Modal Interactions
-        $btn.on('click', function() {
+        $(document).on('click', '#utilfoge-launch-wizard-btn', function() {
             $modal.fadeIn(200);
             renderModalContent();
         });

@@ -1,4 +1,4 @@
-# Dark Mode Module
+﻿# Dark Mode Module
 
 ## Overview
 A comprehensive Dark Mode solution for GeneratePress. It provides a toggle for users on the frontend, automatically shifts colors based on CSS variables, and swaps logo/images when dark mode is active.

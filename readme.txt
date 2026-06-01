@@ -1,103 +1,66 @@
 === Utility for GeneratePress ===
 Contributors: wpids
-Tags: generatepress, fluid typography, customizer, css, gutenberg
+Tags: generatepress, generateblocks, dark mode, fluid typography, gradient
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.18
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Advanced utilities for GeneratePress: Dark Mode, Fluid Typography, Color Management, and Editor CSS Sync.
+The ultimate underrated helper tool for GeneratePress & GenerateBlocks. Empower your site with Dark Mode, Fluid Typography, advanced Color Management, custom CSS Gradients, and seamless Export/Import backups.
 
 == Description ==
 
-Enhance your GeneratePress experience with advanced utilities. This plugin adds Dark Mode feature, Fluid Typography (using CSS clamp), a refined Color Manager, and seamless CSS synchronization between the Customizer and Gutenberg editor.
+Unlock the full power of your WordPress website with the most **underrated helper tool for GeneratePress & GenerateBlocks**. Designed specifically for developers, designers, and site builders, this plugin bridges gaps and adds powerhouse features to the GP ecosystem with absolute performance and zero overhead.
 
-= Features =
-* **Dark Mode**: Enable your GP site with Dark Mode as modern website standard.
-* **Fluid Typography**: Create truly responsive text using a dynamic scale wizard.
-* **Editor CSS Sync**: Automatically sync your Customizer and Child Theme CSS to the Gutenberg editor.
-* **Color Manager**: Advanced gradient and CSS variable management.
-* **GP-Style Dashboard**: A native-feeling admin experience that blends perfectly with GeneratePress.
+Whether you are using GeneratePress Premium or the free theme, this lightweight utility integrates perfectly into the Customizer and block editor to deliver a native-feel administration dashboard.
+
+= 🚀 Main Features =
+
+* **Dynamic Dark Mode**: Turn your site into a modern, eye-friendly experience. Built with mathematical HSL auto-derivatives, contrast-boosting logic, and real-time customizer previewing. Completely overrides original global variables in `.dark` scope for a clean CSS footprint.
+* **Fluid Typography Wizard**: Automatically calculate and generate responsive typography using the CSS `clamp()` function. Easily configure dynamic scale ratios to eliminate tedious media queries.
+* **Advanced Color & Gradient Management**: Overhauled gradient builder that lets you easily create, drag-and-drop, and manage custom CSS gradient variables. Fully integrates with Gutenberg and theme.json native palettes.
+* **Seamless Export / Import Module**: Backup, migrate, and transfer all your **GeneratePress** settings, custom **GP Elements**, and full **GenerateBlocks** layouts (including Global Styles, Local Patterns, SVG shapes, icons, display conditions, and overlay panels) with automated CSS cache-rebuilding.
+* **Editor CSS Sync**: Achieve a true WYSIWYG experience in Gutenberg. Automatically enqueues and synchronizes your Child Theme or Customizer CSS directly into the editor canvas.
+
+= ⚡ Performance-First Philosophy =
+We hate bloat as much as you do. This plugin enqueues minimal vanilla CSS and JS, utilizes native WordPress Gutenberg components, and does not rely on heavy external frameworks, keeping your Google PageSpeed scores at 100%.
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/utility-for-generatepress` directory, or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Navigate to Appearance > Utility to configure your settings.
+1. Upload the plugin files to the `/wp-content/plugins/utility-for-generatepress` directory, or install through the WordPress Plugins screen.
+2. Activate the plugin.
+3. Navigate to **Appearance > Utility** in your WordPress dashboard to toggle your desired modules.
 
 == Frequently Asked Questions ==
 
 = Does this require GeneratePress Premium? =
-No, it works perfectly with the free version of GeneratePress. However, it is built to complement both the free and premium ecosystems.
+No! It works beautifully with the free version of GeneratePress. However, it is built to complement both the free and premium ecosystems perfectly.
 
-= How does Fluid Typography work? =
-The plugin uses the CSS `clamp()` function. It calculates a dynamic font size based on your base size and scale ratio, which then grows smoothly between your defined minimum and maximum viewport widths. This eliminates the need for multiple media queries.
+= How does the GenerateBlocks Export/Import work? =
+Our Export/Import module natively supports **GenerateBlocks**. When you run an export, it bundles all your local patterns, global styles, asset library SVGs, and overlays. When imported on a new site, it automatically re-syncs all block styles and refreshes the CSS cache so your design loads perfectly instantly.
 
-= What is Editor CSS Sync? =
-By default, the WordPress Block Editor (Gutenberg) doesn't always reflect the custom CSS you write in the Customizer or your Child Theme. This module synchronizes those styles directly into the editor canvas, giving you a true WYSIWYG experience.
+= What makes this the most underrated helper tool? =
+Most utilities only focus on one minor aspect. **Utility for GeneratePress** combines typography, advanced math-based dark mode, theme.json gradient injection, and a robust migration engine in a single lightweight package that operates under a unified design system.
 
-= Will this plugin slow down my site? =
-Absolutely not. We prioritize performance. The plugin only enqueues minimal Vanilla JS and CSS. There are no heavy external libraries or frameworks included.
-
-= Can I use this with GenerateBlocks? =
-Yes! The CSS variables generated by our Color Manager and Typography modules can be easily used within GenerateBlocks' local and global styles.
+= Will this plugin slow down my Gutenberg editor? =
+No. The Editor CSS Sync enqueues your styles via native WordPress editor styles hooks, ensuring they only load inside the Gutenberg frame without any blocking scripts.
 
 == Changelog ==
 
+= 1.1.0 =
+* Stable Release: Consolidation of all major modules into a production-ready stable build.
+* Feature: Added powerful Export/Import backup and migration module with native support for GenerateBlocks Pro settings, elements, global styles, and SVG libraries.
+* Security: Backported strict radial gradient shape whitelisting and position regex validation to prevent any potential CSS injection.
+* UI: Updated Settings Dashboard to inherit native '--wp-admin-theme-color' for a flawless WordPress integration.
+* Fixed: Removed invisible UTF-8 BOM bytes that caused Customizer saving/publishing failures.
+
 = 1.0.18 =
-* Security: Implemented strict validation and whitelisting for radial gradient shape ('circle' or 'ellipse') and positioning parameters, completely neutralizing arbitrary CSS injection vectors from user-controlled inputs.
-* Maintenance: Incremented version to ensure fresh deployments for review.
+* Security: Implemented strict shape whitelisting (circle, ellipse) and regex-based position validation for radial gradients.
 
 = 1.0.17 =
-* Refactor: Resolved WordPress.org prefix collision by migrating from generic `utilgp_` to a completely unique `utilfoge_` namespace.
-* Fix: Addressed naive option prefix warnings by dynamically referencing third-party theme options (`generate_settings`), ensuring proper plugin-theme syncing.
-* Fix: Addressed a synchronization bug where Customizer modules remained active despite being disabled in the Settings Dashboard.
-* Compatibility: Tested and marked compatible with WordPress 7.0.
-
-= 1.0.16 =
-* Refactor: Systematically renamed all legacy wpids_/WPIDS_ prefixes and asset filenames to utilfoge_/UTILFOGE_ for full repository compliance.
-* Fixed: Critical fatal error in Dark Mode class and fluid typography live refresh calculation.
-* Fixed: CSS bleed issue where typography styles were affecting WordPress Admin/Customizer UI.
-* Branding: Finalized rename to "Utility for GeneratePress" to comply with repository rules.
-* Security: Removed legacy "Raw CSS" injection feature as requested by the plugin review team.
-
-= 1.0.15 =
-* UI Upgrade: Achieved 100% visual parity with GeneratePress Premium 3.x dashboard.
-* UI: Implemented "Sovereign GPU" design system with zero CSS conflicts.
-* Feature: Added transient flash messages for module activation/deactivation.
-* UI: Added section headers ("Utilities") and refined module list layout.
-* UI: Implemented dynamic status indicators using native GP inline shadow logic.
-
-= 1.0.14 =
-* Feature: Moved Custom CSS settings to be part of the Editor CSS Sync module.
-* Maintenance: Optimized CSS injection logic for better performance.
-
-= 1.0.13 =
-* Improvement: Enhanced Dark Mode Contrast algorithm with "Contrast Boosting" logic.
-* Fix: Updated color validation regex to support RGBA and Hex8 color formats.
-* Improvement: Added auto-desaturation to dark mode colors for better eye comfort.
-
-= 1.0.12 =
-* Feature: Added visual-only Dark Mode preview in the Massive Menu Editor.
-* UI: Improved variable list display with descriptive labels for Dark Mode overrides.
-
-= 1.0.11 =
-* Fix: Resolved Customizer React sync issue for Dark Mode colors.
-* Improvement: Enabled real-time UI updates for the Dark Mode palette without page refresh.
-
-= 1.0.10 =
-* UI Upgrade: Migrated Color Picker to native WordPress React ColorPicker.
-* Feature: Added full support for Alpha Channel / Opacity slider in the UI.
-
-= 1.0.9 =
-* Core: Major refactor of the Color Math Engine to support 8-character hex and RGBA strings.
-* Core: All color derivative functions (shades/tints) now preserve original alpha transparency.
+* Maintenance: Cleaned up legacy translation strings and finalized prefix migration to 'utilfoge_'.
 
 = 1.0.0 =
-* Initial release.
-* Added Dark Mode module.
-* Added Fluid Typography module.
-* Added Editor CSS Sync.
-* Added Color Management system.
+* Initial release of the GeneratePress utility suite.

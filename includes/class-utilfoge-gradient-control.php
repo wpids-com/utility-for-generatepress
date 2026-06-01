@@ -34,12 +34,17 @@ class UTILFOGE_Gradient_Control extends WP_Customize_Control {
 					<button type="button" class="utilfoge-gc-back-btn" id="utilfoge-gc-back">
 						<span class="dashicons dashicons-arrow-left-alt2"></span>
 					</button>
-					<input type="text" class="utilfoge-gc-name-input" id="utilfoge-gc-name"
-						placeholder="<?php esc_attr_e( 'Gradient name…', 'utility-for-generatepress' ); ?>">
+					<span class="utilfoge-gc-header-title"><?php esc_html_e( 'Edit Gradient', 'utility-for-generatepress' ); ?></span>
 					<button type="button" class="utilfoge-gc-delete-btn" id="utilfoge-gc-delete"
 						title="<?php esc_attr_e( 'Delete gradient', 'utility-for-generatepress' ); ?>">
 						<span class="dashicons dashicons-trash"></span>
 					</button>
+				</div>
+
+				<!-- Name -->
+				<div class="utilfoge-gc-field">
+					<label><?php esc_html_e( 'NAME', 'utility-for-generatepress' ); ?></label>
+					<input type="text" id="utilfoge-gc-name" class="utilfoge-ci-input" placeholder="e.g. Primary Gradient" />
 				</div>
 
 				<!-- Gradient live preview bar -->
@@ -48,7 +53,7 @@ class UTILFOGE_Gradient_Control extends WP_Customize_Control {
 				<!-- Type + Angle row -->
 				<div class="utilfoge-gc-row">
 					<div class="utilfoge-gc-field">
-						<label><?php esc_html_e( 'Type', 'utility-for-generatepress' ); ?></label>
+						<label><?php esc_html_e( 'TYPE', 'utility-for-generatepress' ); ?></label>
 						<select id="utilfoge-gc-type" class="utilfoge-gc-select">
 							<option value="linear"><?php esc_html_e( 'Linear', 'utility-for-generatepress' ); ?></option>
 							<option value="radial"><?php esc_html_e( 'Radial', 'utility-for-generatepress' ); ?></option>
@@ -56,38 +61,57 @@ class UTILFOGE_Gradient_Control extends WP_Customize_Control {
 						</select>
 					</div>
 					<div class="utilfoge-gc-field" id="utilfoge-gc-angle-wrap">
-						<label><?php esc_html_e( 'Angle', 'utility-for-generatepress' ); ?></label>
+						<label><?php esc_html_e( 'ANGLE', 'utility-for-generatepress' ); ?></label>
 						<div class="utilfoge-gc-angle-group">
 							<input type="number" id="utilfoge-gc-angle" class="utilfoge-gc-num" min="0" max="360" value="135">
-							<span>°</span>
+							<div class="utilfoge-gc-angle-dial" id="utilfoge-gc-angle-dial">
+								<div class="utilfoge-gc-angle-pointer"></div>
+							</div>
 						</div>
 					</div>
 				</div>
 
 				<!-- Color stops list -->
-				<div class="utilfoge-gc-stops" id="utilfoge-gc-stops">
-					<!-- Each stop rendered by JS:
-					     [color swatch] [────slider────] [position input] [×] -->
-				</div>
+				<div class="utilfoge-gc-stops" id="utilfoge-gc-stops"></div>
 
-				<button type="button" class="button utilfoge-gc-add-stop" id="utilfoge-gc-add-stop">
-					<?php esc_html_e( '+ Add Color Stop', 'utility-for-generatepress' ); ?>
+				<button type="button" class="utilfoge-gc-add-stop" id="utilfoge-gc-add-stop">
+					<?php esc_html_e( 'Add Color', 'utility-for-generatepress' ); ?>
 				</button>
 
-				<!-- Utility class reference -->
-				<div class="utilfoge-gc-utility-hint" id="utilfoge-gc-utility-hint" style="display:none;">
-					<span class="dashicons dashicons-info-outline"></span>
-					<span id="utilfoge-gc-hint-text"></span>
+				<!-- Blend Mode -->
+				<div class="utilfoge-gc-field">
+					<label><?php esc_html_e( 'BLEND MODE', 'utility-for-generatepress' ); ?></label>
+					<select id="utilfoge-gc-blend-mode" class="utilfoge-gc-select">
+						<option value="normal">Normal</option>
+						<option value="multiply">Multiply</option>
+						<option value="screen">Screen</option>
+						<option value="overlay">Overlay</option>
+						<option value="darken">Darken</option>
+						<option value="lighten">Lighten</option>
+						<option value="color-dodge">Color-dodge</option>
+						<option value="color-burn">Color-burn</option>
+						<option value="hard-light">Hard-light</option>
+						<option value="soft-light">Soft-light</option>
+						<option value="difference">Difference</option>
+						<option value="exclusion">Exclusion</option>
+						<option value="hue">Hue</option>
+						<option value="saturation">Saturation</option>
+						<option value="color">Color</option>
+						<option value="luminosity">Luminosity</option>
+					</select>
 				</div>
 
 				<!-- Actions -->
-				<div class="utilfoge-gc-actions">
-					<button type="button" class="button button-primary utilfoge-gc-save-btn" id="utilfoge-gc-save">
-						<?php esc_html_e( 'Save', 'utility-for-generatepress' ); ?>
+				<div class="utilfoge-gc-actions" style="display:flex; gap:10px; margin-top:20px;">
+					<button type="button" class="button utilfoge-gc-apply-btn" id="utilfoge-gc-apply" style="flex:1; justify-content:center; height:36px; display:flex; align-items:center;">
+						<?php esc_html_e( 'Apply', 'utility-for-generatepress' ); ?>
 					</button>
-					<span class="utilfoge-gc-save-status" id="utilfoge-gc-status"></span>
+					<button type="button" class="button button-primary utilfoge-gc-save-btn" id="utilfoge-gc-save" style="flex:1; justify-content:center; height:36px; display:flex; align-items:center;">
+						<span class="dashicons dashicons-saved" style="margin-right:8px;"></span>
+						<?php esc_html_e( 'Save & Close', 'utility-for-generatepress' ); ?>
+					</button>
 				</div>
-
+				<span class="utilfoge-gc-save-status" id="utilfoge-gc-status" style="display:block; margin-top:10px; text-align:center;"></span>
 			</div><!-- /.utilfoge-gc-editor -->
 
 		<!-- ── BORDER SETTINGS (global, below palette) ── -->

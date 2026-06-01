@@ -1,4 +1,4 @@
-/* UTILFOGE Utility Frontend CSS */
+﻿/* UTILFOGE Utility Frontend CSS */
 
 /* --- Base Typography --- */
 body {
@@ -64,7 +64,7 @@ body {
     justify-content: center;
     border-radius: 9999px;
     padding: 0.5rem;
-    transition: background-color 0.2s x ease;
+    transition: background-color 0.2s ease;
 }
 
 .utilfoge-dark-mode-toggle:hover {

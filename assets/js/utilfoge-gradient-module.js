@@ -1,12 +1,12 @@
-/**
+﻿/**
  * UTILFOGE Gradient Module — Customizer Control JS
  */
 ( function( $ ) {
 	'use strict';
 
-	if ( typeof utilfogeGradientModule === 'undefined' ) return;
+	if ( typeof UTILFOGEGradientModule === 'undefined' ) return;
 
-	var data        = utilfogeGradientModule;
+	var data        = UTILFOGEGradientModule;
 	var gradients   = data.saved ? JSON.parse( JSON.stringify( data.saved ) ) : [];
 	var editIndex   = -1;
 	var pickers     = {};
@@ -109,8 +109,10 @@
 		$( '#utilfoge-gc-name' ).val( g.name );
 		$( '#utilfoge-gc-type' ).val( g.type || 'linear' );
 		$( '#utilfoge-gc-angle' ).val( g.angle || 135 );
+		$( '#utilfoge-gc-blend-mode' ).val( g.blendMode || 'normal' );
 		toggleAngleField( g.type || 'linear' );
 		renderStops( g.stops );
+		updateAngleDial( g.angle || 135 );
 
 		if ( index !== -1 && g.slug ) {
 			$( '#utilfoge-gc-hint-text' ).text( '.has-' + g.slug + '-gradient-text | .has-' + g.slug + '-gradient-border' );
@@ -122,6 +124,43 @@
 		$( '#utilfoge-gb-settings, #utilfoge-gt-settings' ).slideUp( 200 );
 		$( '#utilfoge-gc-editor' ).slideDown( 250 );
 	}
+
+	function updateAngleDial( angle ) {
+		var $pointer = $( '#utilfoge-gc-angle-dial .utilfoge-gc-angle-pointer' );
+		$pointer.css( 'transform', 'rotate(' + angle + 'deg) translate(0, -9px)' );
+	}
+
+	$( document ).on( 'mousedown', '#utilfoge-gc-angle-dial', function( e ) {
+		var $dial = $( this );
+		var offset = $dial.offset();
+		var center = {
+			x: offset.left + $dial.width() / 2,
+			y: offset.top + $dial.height() / 2
+		};
+
+		function update( e ) {
+			var dx = e.pageX - center.x;
+			var dy = e.pageY - center.y;
+			var angle = Math.round( Math.atan2( dx, -dy ) * ( 180 / Math.PI ) );
+			if ( angle < 0 ) angle += 360;
+			$( '#utilfoge-gc-angle' ).val( angle ).trigger( 'input' );
+		}
+
+		$( document ).on( 'mousemove.utilfoge_dial', update );
+		$( document ).on( 'mouseup.utilfoge_dial', function() {
+			$( document ).off( '.utilfoge_dial' );
+		} );
+		update( e );
+	} );
+
+	$( document ).on( 'input', '#utilfoge-gc-angle', function() {
+		updateAngleDial( parseInt( $( this ).val() ) || 0 );
+		updatePreviewBar();
+	} );
+
+	$( document ).on( 'change', '#utilfoge-gc-blend-mode', function() {
+		updatePreviewBar();
+	} );
 
 	function closeEditor() {
 		destroyPickers();
@@ -137,28 +176,67 @@
 		$wrap.empty();
 		destroyPickers();
 		stops.forEach( function( stop, i ) { $wrap.append( buildStopRow( stop, i ) ); } );
-		stops.forEach( function( stop, i ) { initStopPicker( i, stop.color ); } );
 		updatePreviewBar();
 	}
 
 	function buildStopRow( stop, i ) {
-		var $row    = $( '<div class="utilfoge-gc-stop-row" data-stop="' + i + '">' );
-		var $input  = $( '<input type="text" class="utilfoge-gc-stop-color" data-stop="' + i + '">' ).val( stop.color );
-		var $slider = $( '<input type="range" class="utilfoge-gc-stop-slider" min="0" max="100" data-stop="' + i + '">' ).val( stop.position );
+		var $container = $( '<div class="utilfoge-gc-stop-container" data-stop="' + i + '">' );
+		var $row       = $( '<div class="utilfoge-gc-stop-row">' );
+		var $swatch    = $( '<button type="button" class="utilfoge-gc-stop-swatch" style="background-color:' + stop.color + ';" data-stop="' + i + '"></button>' );
+
+		// Custom slider
+		var $track  = $( '<div class="utilfoge-gc-slider-track" data-stop="' + i + '">' );
+		var $thumb  = $( '<div class="utilfoge-gc-slider-thumb"></div>' );
+		$track.append( $thumb );
+
 		var $pos    = $( '<input type="number" class="utilfoge-gc-stop-pos" min="0" max="100" data-stop="' + i + '">' ).val( stop.position );
 		var $rm     = $( '<button type="button" class="utilfoge-gc-stop-remove">&times;</button>' );
 
-		$slider.on( 'input', function() {
-			$pos.val( this.value );
-			getCurrentStops()[ i ].position = parseInt( this.value );
-			updatePreviewBar();
-		} );
-		$pos.on( 'input', function() {
+		// Inline Picker Container (Accordion)
+		var $pickerInline = $( '<div class="utilfoge-gc-stop-picker-inline" id="utilfoge-gc-picker-' + i + '">' +
+			'<div class="utilfoge-gc-stop-picker-content"></div>' +
+		'</div>' );
+
+		// Set initial thumb position
+		$thumb.css( 'left', stop.position + '%' );
+
+		// Sync: number input → slider thumb
+		$pos.on( 'input change', function() {
 			var v = Math.min( 100, Math.max( 0, parseInt( this.value ) || 0 ) );
-			$slider.val( v );
-			getCurrentStops()[ i ].position = v;
-			updatePreviewBar();
+			$thumb.css( 'left', v + '%' );
+			var s = getCurrentStops();
+			if ( s[ i ] ) { s[ i ].position = v; updatePreviewBar(); }
 		} );
+
+		// Custom drag logic
+		$track.on( 'mousedown', function( e ) {
+			e.preventDefault(); e.stopPropagation();
+			var trackEl = $track[ 0 ];
+			function getValueFromEvent( ev ) {
+				var rect = trackEl.getBoundingClientRect();
+				var ratio = Math.max( 0, Math.min( 1, ( ev.clientX - rect.left ) / rect.width ) );
+				return Math.round( ratio * 100 );
+			}
+			var v = getValueFromEvent( e );
+			$thumb.css( 'left', v + '%' ); $pos.val( v );
+			var s = getCurrentStops();
+			if ( s[ i ] ) { s[ i ].position = v; updatePreviewBar(); }
+
+			function onMove( ev ) {
+				ev.preventDefault();
+				var vv = getValueFromEvent( ev );
+				$thumb.css( 'left', vv + '%' ); $pos.val( vv );
+				var ss = getCurrentStops();
+				if ( ss[ i ] ) { ss[ i ].position = vv; updatePreviewBar(); }
+			}
+			function onUp() { $( document ).off( 'mousemove.slider_' + i ).off( 'mouseup.slider_' + i ); }
+			$( document ).on( 'mousemove.slider_' + i, onMove ).on( 'mouseup.slider_' + i, onUp );
+		} );
+
+		$swatch.on( 'click', function() {
+			toggleStopPicker( i, $swatch, $pickerInline );
+		} );
+
 		$rm.on( 'click', function() {
 			var s = getCurrentStops();
 			if ( s.length <= 2 ) return;
@@ -166,30 +244,105 @@
 			renderStops( s );
 		} );
 
-		return $row.append( $input, $slider, $pos, $rm );
+		$row.append( $swatch, $track, $pos, $rm );
+		return $container.append( $row, $pickerInline );
 	}
 
-	function initStopPicker( i, color ) {
-		var $input = $( '#utilfoge-gc-stops .utilfoge-gc-stop-color[data-stop="' + i + '"]' );
-		if ( ! $input.length || ! $.fn.wpColorPicker ) return;
-		$input.wpColorPicker( {
-			defaultColor: color,
-			change: function( e, ui ) { getCurrentStops()[ i ].color = ui.color.toString(); updatePreviewBar(); },
-			clear: function() { getCurrentStops()[ i ].color = '#000000'; updatePreviewBar(); }
+	var activeStopIndex = -1;
+
+	function toggleStopPicker( i, $swatch, $pickerInline ) {
+		if ( activeStopIndex === i ) {
+			hideStopPicker();
+			return;
+		}
+
+		hideStopPicker(); // Close others
+		activeStopIndex = i;
+		$swatch.addClass( 'is-active' );
+		$pickerInline.addClass( 'is-open' ).slideDown( 200 );
+
+		var currentStops = getCurrentStops();
+		var color = currentStops[ i ] ? currentStops[ i ].color : '#000000';
+
+		if ( window.wp && wp.element && wp.components && wp.components.ColorPicker ) {
+			renderPickerInNode( $pickerInline.find( '.utilfoge-gc-stop-picker-content' )[ 0 ], color, function( nextColor ) {
+				$swatch.css( 'background-color', nextColor );
+				var s = getCurrentStops();
+				if ( s[ i ] ) {
+					s[ i ].color = nextColor;
+					updatePreviewBar();
+				}
+			} );
+		}
+	}
+
+	function hideStopPicker() {
+		activeStopIndex = -1;
+		$( '.utilfoge-gc-stop-swatch' ).removeClass( 'is-active' );
+		$( '.utilfoge-gc-stop-picker-inline' ).removeClass( 'is-open' ).slideUp( 200, function() {
+			var node = $( this ).find( '.utilfoge-gc-stop-picker-content' )[ 0 ];
+			if ( node && window.wp && wp.element && wp.element.unmountComponentAtNode ) {
+				wp.element.unmountComponentAtNode( node );
+			}
+			$( this ).find( '.utilfoge-gc-stop-picker-content' ).empty();
 		} );
-		pickers[ i ] = $input;
+	}
+
+	$( document ).on( 'click', function( e ) {
+		if ( ! $( e.target ).closest( '.utilfoge-gc-stop-picker-inline, .utilfoge-gc-stop-swatch' ).length ) {
+			hideStopPicker();
+		}
+	} );
+
+	function renderPickerInNode( node, initialColor, onChange ) {
+		var el = wp.element.createElement;
+		var ColorPicker = wp.components.ColorPicker;
+		var useState = wp.element.useState;
+
+		var PickerContainer = function() {
+			var state = useState( initialColor );
+			var color = state[ 0 ];
+			var setColor = state[ 1 ];
+
+			return el( ColorPicker, {
+				color: color,
+				enableAlpha: true,
+				colors: gradients.map( function( g ) { return { name: g.name, color: buildGradientCSS( g ) }; } ).concat( 
+					data.gpColors ? data.gpColors.map( function( c ) { return { name: c.name, color: c.color }; } ) : []
+				),
+				onChange: function( val ) {
+					var next = '';
+					if ( typeof val === 'string' ) {
+						next = val;
+					} else if ( val && val.hex ) {
+						if ( val.rgb && val.rgb.a !== undefined && val.rgb.a < 1 ) {
+							next = 'rgba(' + val.rgb.r + ',' + val.rgb.g + ',' + val.rgb.b + ',' + val.rgb.a + ')';
+						} else {
+							next = val.hex;
+						}
+					}
+					if ( next ) {
+						setColor( next );
+						onChange( next );
+					}
+				}
+			} );
+		};
+
+		wp.element.render( el( PickerContainer ), node );
 	}
 
 	function destroyPickers() {
-		$.each( pickers, function( i, $el ) { try { $el.iris( 'destroy' ); } catch( e ) {} } );
-		pickers = {};
+		hideStopPicker();
 	}
 
 	function getCurrentStops() {
 		var stops = [];
-		$( '#utilfoge-gc-stops .utilfoge-gc-stop-row' ).each( function() {
+		$( '#utilfoge-gc-stops .utilfoge-gc-stop-container' ).each( function() {
+			var $swatch = $( this ).find( '.utilfoge-gc-stop-swatch' );
+			var color = $swatch.css( 'background-color' );
 			stops.push( {
-				color:    $( this ).find( '.utilfoge-gc-stop-color' ).val() || '#000000',
+				color:    color || '#000000',
 				position: parseInt( $( this ).find( '.utilfoge-gc-stop-pos' ).val() ) || 0
 			} );
 		} );
@@ -202,14 +355,19 @@
 			slug: slugify( name ), name: name,
 			type: $( '#utilfoge-gc-type' ).val(),
 			angle: parseInt( $( '#utilfoge-gc-angle' ).val() ) || 135,
+			blendMode: $( '#utilfoge-gc-blend-mode' ).val() || 'normal',
 			shape: 'ellipse', at: 'center',
 			stops: getCurrentStops(), dark_stops: []
 		};
 	}
 
 	function updatePreviewBar() {
-		var css = buildGradientCSS( getEditorGradient() );
-		$( '#utilfoge-gc-preview-bar' ).css( 'background', css || 'linear-gradient(135deg,#e0e0e0,#fff)' );
+		var grad = getEditorGradient();
+		var css = buildGradientCSS( grad );
+		$( '#utilfoge-gc-preview-bar' ).css( {
+			'background': css || 'linear-gradient(135deg,#e0e0e0,#fff)',
+			'background-blend-mode': grad.blendMode
+		} );
 		sendPreview();
 	}
 
@@ -219,7 +377,15 @@
 
 	function saveGradients( callback ) {
 		$.post( data.ajaxUrl, { action: 'utilfoge_save_gradients', nonce: data.nonce, gradients: gradients },
-			function( r ) { if ( r.success && typeof callback === 'function' ) callback(); }
+			function( r ) { 
+				if ( r.success ) {
+					// Trigger Customizer dirty state
+					if ( window.wp && wp.customize && wp.customize( 'utilfoge_gradient_palette_sync' ) ) {
+						wp.customize( 'utilfoge_gradient_palette_sync' ).set( 'sync-' + Date.now() );
+					}
+					if ( typeof callback === 'function' ) callback(); 
+				}
+			}
 		);
 	}
 
@@ -372,25 +538,51 @@
 				if ( editIndex === -1 ) { closeEditor(); return; }
 				if ( ! confirm( data.i18n.delete ) ) return;
 				gradients.splice( editIndex, 1 );
-				saveGradients( function() { closeEditor(); sendPreview(); } );
+				saveGradients( function() { 
+					closeEditor(); 
+					sendPreview(); 
+					renderPalette();
+					renderClassList();
+					$( '#utilfoge-gp-readonly-palette' ).remove();
+				} );
 			} )
 			.on( 'change', '#utilfoge-gc-type', function() { toggleAngleField( $( this ).val() ); updatePreviewBar(); } )
 			.on( 'input', '#utilfoge-gc-angle, #utilfoge-gc-name', updatePreviewBar )
 			.on( 'click', '#utilfoge-gc-add-stop', function() {
 				var s = getCurrentStops(); s.push( { color: '#ffffff', position: 100 } ); renderStops( s );
 			} )
+			.on( 'click', '#utilfoge-gc-apply', function() {
+				var g = getEditorGradient();
+				if ( g.stops.length < 2 ) { alert( data.i18n.needStops || 'Need at least 2 colour stops.' ); return; }
+				if ( editIndex === -1 ) { gradients.push( g ); editIndex = gradients.length - 1; } 
+                else { gradients[ editIndex ] = g; }
+				var $btn = $( this ).prop( 'disabled', true );
+				saveGradients( function() {
+					sendPreview(); $btn.prop( 'disabled', false );
+					$( '#utilfoge-gc-status' ).text( 'Applied' );
+					setTimeout( function() { $( '#utilfoge-gc-status' ).text( '' ); }, 2000 );
+					renderPalette();
+				} );
+			} )
 			.on( 'click', '#utilfoge-gc-save', function() {
 				var g = getEditorGradient();
 				if ( g.stops.length < 2 ) { alert( data.i18n.needStops || 'Need at least 2 colour stops.' ); return; }
-				if ( editIndex === -1 ) { gradients.push( g ); } else { gradients[ editIndex ] = g; }
-				$( '#utilfoge-gc-hint-text' ).text( '.has-' + g.slug + '-gradient-text | .has-' + g.slug + '-gradient-border' );
-				$( '#utilfoge-gc-utility-hint' ).show();
+				
+				if ( editIndex === -1 ) { 
+					gradients.push( g ); 
+					editIndex = gradients.length - 1;
+				} else { 
+					gradients[ editIndex ] = g; 
+				}
+				
 				var $btn = $( this ).prop( 'disabled', true );
 				saveGradients( function() {
 					sendPreview(); $btn.prop( 'disabled', false );
 					$( '#utilfoge-gc-status' ).text( data.i18n.saved );
 					setTimeout( function() { $( '#utilfoge-gc-status' ).text( '' ); }, 2000 );
+					renderPalette();
 					renderClassList();
+					closeEditor();
 				} );
 			} );
 	}

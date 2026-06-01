@@ -1,4 +1,4 @@
-# Gradient Variables Module
+﻿# Gradient Variables Module
 
 ## Overview
 Allows users to create, manage, and implement CSS gradients as native WordPress variables (`--wp--preset--gradient--[slug]`). This integrates gradients seamlessly into the GenerateBlocks editor and provides advanced usage features like gradient text and gradient borders.

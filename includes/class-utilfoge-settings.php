@@ -28,32 +28,6 @@ class UTILFOGE_Settings {
 			array(),
 			UTILFOGE_VERSION
 		);
-
-		// Register a dummy script to attach inline JS
-		wp_register_script( 'utilfoge-dashboard-js', false, array(), UTILFOGE_VERSION, true );
-		wp_enqueue_script( 'utilfoge-dashboard-js' );
-
-		$inline_js = "
-		(function() {
-			// Hide flash messages after 3 seconds
-			var flashMessages = document.querySelectorAll('.utilfoge-module-message__show');
-			if ( flashMessages.length > 0 ) {
-				setTimeout(function() {
-					flashMessages.forEach(function(msg) {
-						msg.style.opacity = '0';
-						msg.style.transition = 'opacity 0.5s ease';
-						setTimeout(function() { msg.style.display = 'none'; }, 500);
-					});
-					var url = new URL(window.location.href);
-					url.searchParams.delete('message');
-					url.searchParams.delete('module_id');
-					url.searchParams.delete('msg_nonce');
-					window.history.replaceState({}, '', url);
-				}, 3000);
-			}
-		})();
-		";
-		wp_add_inline_script( 'utilfoge-dashboard-js', $inline_js );
 	}
 
 	/**
@@ -85,9 +59,13 @@ class UTILFOGE_Settings {
 				'name' => __( 'Editor CSS Sync', 'utility-for-generatepress' ),
 				'desc' => __( 'Sync Customizer & Theme CSS to Gutenberg.', 'utility-for-generatepress' )
 			),
+			'enable_export_import' => array(
+				'name' => __( 'Export Import', 'utility-for-generatepress' ),
+				'desc' => __( 'Export and import GeneratePress & GenerateBlocks content.', 'utility-for-generatepress' ),
+			),
 		);
 
-		return apply_filters( 'utilfoge_utility_modules', $modules );
+		return apply_filters( 'utilfoge_modules', $modules );
 	}
 
 	public function add_admin_menu() {
@@ -107,6 +85,10 @@ class UTILFOGE_Settings {
 
 	public function handle_toggles() {
 		if ( isset( $_GET['page'] ) && $_GET['page'] === 'utilfoge-utility' && isset( $_GET['action'] ) && $_GET['action'] === 'toggle_module' && isset( $_GET['module'] ) && isset( $_GET['_wpnonce'] ) ) {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'Unauthorized action.', 'utility-for-generatepress' ) );
+			}
+
 			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 			
 			if ( wp_verify_nonce( $nonce, 'utilfoge_toggle_module' ) ) {
@@ -165,8 +147,9 @@ class UTILFOGE_Settings {
 				/**
 				 * Hook for Elite License Box
 				 */
-				do_action( 'utilfoge_utility_dashboard_before_modules' ); 
+				do_action( 'utilfoge_dashboard_before_modules' ); 
 				?>
+
 
 				<div class="utilfoge-section-title">
 					<h2><?php esc_html_e( 'Utilities', 'utility-for-generatepress' ); ?></h2>
@@ -179,10 +162,10 @@ class UTILFOGE_Settings {
 						$is_active = isset( $options[ $id ] ) ? $options[ $id ] : $default_state;
 						$toggle_url = wp_nonce_url( admin_url( 'themes.php?page=utilfoge-utility&action=toggle_module&module=' . $id ), 'utilfoge_toggle_module' );
 						
-						$shadow_color = $is_active ? '#007cba' : 'rgb(221, 221, 221)';
+						$shadow_color = $is_active ? 'var(--wp-admin-theme-color, #007cba)' : 'rgb(221, 221, 221)';
 						$row_style = "box-shadow: {$shadow_color} -5px 0px 0px;";
 					?>
-					<div class="utilfoge-module-row <?php echo $is_active ? 'utilfoge-active' : 'utilfoge-inactive'; ?>" style="<?php echo esc_attr( $row_style ); ?>">
+					<div class="utilfoge-module-row <?php echo esc_attr( $is_active ? 'utilfoge-active' : 'utilfoge-inactive' ); ?>" style="<?php echo esc_attr( $row_style ); ?>">
 						<div class="utilfoge-module-info">
 							<h3>
 								<?php echo esc_html( $module['name'] ); ?>
@@ -225,8 +208,37 @@ class UTILFOGE_Settings {
 					<?php endforeach; ?>
 				</div>
 
+				<?php
+				// Render Import / Export section if module is active.
+				$ei_active = isset( $options['enable_export_import'] ) ? $options['enable_export_import'] : true;
+				if ( $ei_active && class_exists( 'UTILFOGE_Export_Import' ) ) {
+					settings_errors( 'utilfoge_import' );
+					UTILFOGE_Export_Import::render_dashboard_section();
+				}
+				?>
+
 			</div> <!-- .utilfoge-dashboard-content -->
 		</div> <!-- .wrap -->
+		
+		<script>
+		(function() {
+			// Hide flash messages after 3 seconds
+			var flashMessages = document.querySelectorAll('.utilfoge-module-message__show');
+			if ( flashMessages.length > 0 ) {
+				setTimeout(function() {
+					flashMessages.forEach(function(msg) {
+						msg.style.opacity = '0';
+						msg.style.transition = 'opacity 0.5s ease';
+						setTimeout(function() { msg.style.display = 'none'; }, 500);
+					});
+					var url = new URL(window.location.href);
+					url.searchParams.delete('message');
+					url.searchParams.delete('module_id');
+					window.history.replaceState({}, '', url);
+				}, 3000);
+			}
+		})();
+		</script>
 		<?php
 	}
 }

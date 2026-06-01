@@ -5,74 +5,58 @@ All notable changes to the **Utility for GeneratePress** plugin will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.16] - 2026-05-08
-### Added
-- **Rebranding:** Renamed plugin to **Utility for GeneratePress** to comply with trademark guidelines.
-- **Modern Asset Loading:** Switched from direct `wp_head` injection to proper WordPress enqueuing APIs (`wp_add_inline_style` and `wp_add_inline_script`).
-- **FOUC Prevention Script:** Dedicated JS asset for Dark Mode theme-switching to ensure high-performance execution.
-
-### Changed
-- **Standardization:** Updated all slugs, text domains, and internal prefixes to `utility-for-generatepress` and `wpids_`.
-- **Folder Structure:** Renamed plugin directory to match the official slug.
-
-### Removed
-- **Security:** Completely removed the "Advanced Raw CSS" injection feature to eliminate arbitrary code risks and meet WordPress.org security standards.
-
-## [1.0.15] - 2026-05-05
-### Added
-- **Sovereign GPU UI:** Complete dashboard overhaul to achieve 100% visual parity with GeneratePress Premium 3.x.
-- **Flash Messages:** Transient activation/deactivation feedback for modules with auto-hide and URL cleanup.
-- **Structural Headers:** Added "Utilities" and "Advanced CSS" section headers for improved information hierarchy.
-- **Dynamic Indicators:** Implemented pixel-perfect left-shadow indicators using native GP inline style logic.
-
-### Changed
-- Refactored module registration into a centralized `get_modules()` helper to ensure state consistency.
-- Improved module row borders (internal only, excluding last-child) for a cleaner list appearance.
-- Refined button components (`is-primary`, `is-secondary`, `is-tertiary`) to match modern WordPress/GP standards.
+## [1.1.0-RC3] - 2026-05-29
+This is the third Release Candidate (RC3) for the 1.1.0 branch. It implements a critical security patch from v1.0.18 stable.
 
 ### Fixed
-- **Functional:** Resolved a critical bug where modules with `false` default state (like Elite Importer) could not be toggled correctly.
+- **Gradient Security Patch:** Menerapkan strict whitelisting dan regex validation untuk parameter bentuk (shape) dan posisi (at) pada gradien radial guna mencegah celah CSS Injection.
 
-## [1.0.14] - 2026-05-04
+## [1.1.0-RC2] - 2026-05-21
+This is the second Release Candidate (RC2) for the 1.1.0 branch. It resolves minor styling issues, improves admin color theme consistency, and fixes critical Customizer AJAX/publish issues.
+
 ### Added
-- "Advanced Raw CSS" textarea is now conditionally rendered based on the **Editor CSS Sync** module status.
-- Added `CHANGELOG.md` for better version tracking on GitHub.
-
-### Changed
-- Moved Custom CSS settings into the **Editor Sync** module logic.
-- Optimized CSS injection priority (9999) to ensure overrides always win over theme defaults.
-- Cleaned up plugin headers and meta tags for better WordPress.org compatibility.
+- **Dynamic WP Theme Colors:** Added support for the native `--wp-admin-theme-color` variable across all dashboard modules, accents, and active status states.
 
 ### Fixed
-- **Security:** Escaped all dynamic outputs using `wp_kses_post`, `esc_html`, and `absint` to satisfy WordPress security standards.
-- **Security:** Upgraded `strip_tags()` to `wp_strip_all_tags()` for more comprehensive sanitization.
-- **I18n:** Added missing `translators:` comments for strings containing placeholders.
-- **Readme:** Fixed "too many tags" warning and missing short description for the WordPress parser.
+- **BOM Byte Cleanups:** Stripped invisible UTF-8 BOM characters across all core files, which resolved a visual "empty text gap" in the WP Admin headers and restored perfect Customizer AJAX saving/publishing capabilities.
+- **Customizer UI Alignment:** Resolved minor layout bugs including sizing/responsive bounds on the React Color Picker, scrollable max-height modal boundaries, and Dashicon line-height vertical alignments.
+- **Saturation Swatch Bug:** Fixed a collapsing layout bug on the React Color Picker's saturation block to ensure its color area is always fully visible at 100% width.
 
-## [1.0.13] - 2026-05-03
+## [1.1.0-RC1] - 2026-05-21
+This is our first Release Candidate (RC1) for the 1.1.0 branch. It consolidates all recent beta improvements, bringing massive enhancements to the Dark Mode engine, a brand new Export/Import module, and a complete UI overhaul to perfectly match GeneratePress Premium.
+
+### Added
+- **Gradient Palette Elite:** Completely overhauled the Gradient Builder UI to match GenerateBlocks Pro standards, including a custom drag-and-drop Color Stop slider and Accordion-style React Color Pickers.
+- **Blend Modes:** Added support for CSS `background-blend-mode` within gradients.
+- **Export/Import Module:** Powerful new utility to backup and migrate all GeneratePress settings, Elements, and GenerateBlocks Pro assets.
+- **Smart UI Injection:** The Export/Import box is seamlessly injected into native CPT dashboards (Elements, Global Styles, Local Patterns, Conditions, Overlay Panels, Asset Library, Font Library) perfectly inheriting native responsive wrappers.
+- **Micro-Interactions:** Added real-time feedback messages ("Exported", "Importing...") and smart redirection for a native app feel.
+- **Sovereign GPU UI:** Implemented a conflict-free design system for the admin dashboard achieving 100% visual parity with GeneratePress Premium 3.x.
+- **React Color Picker:** Migrated to the native WordPress React ColorPicker with full support for Alpha Channel (Opacity) and Hex8/RGBA color formats.
+- **Dark Mode Preview:** Added visual-only Dark Mode preview capability inside the Massive Menu Editor.
+- **Status Indicators:** Implemented dynamic module status indicators using native GP inline shadow logic.
+
 ### Changed
-- Refined the **Dark Mode Contrast** algorithm with "Contrast Boosting" (Aggressive shift +/- 15% from median).
-- Implemented automatic desaturation (10%) for dark mode colors to improve perceptual comfort.
+- **Gradient Persistence:** Improved the sanitization engine to support RGBA strings and implemented real-time dirty-state syncing to activate the Customizer "Publish" button instantly.
+- **Dark Mode Math Engine:** Major refactor of the Color Math Engine. All color derivative functions (shades/tints) now preserve original alpha transparency.
+- **Contrast Boosting:** Enhanced Dark Mode algorithm with "Contrast Boosting" and auto-desaturation logic for significantly better eye comfort.
+- **Live Sync:** Enabled real-time UI updates in the Customizer for the Dark Mode palette without requiring a page refresh.
+- **Performance:** Automated CSS regeneration and GP cache resetting upon importing data to prevent visual glitches.
+- **Branding:** Officially finalized the plugin name to "Utility for GeneratePress" to comply with repository rules.
 
 ### Fixed
-- Updated color validation regex to correctly support `rgba()` and 8-character hex codes in the Color Expansion module.
+- **Typography:** Fixed fluid typography math scale calculations and live refresh issues in the Customizer.
+- **CSS Bleed:** Resolved an issue where typography styles were bleeding into the WordPress Customizer sidebar UI.
+- **I18n:** Cleaned up legacy text domains across all modules for seamless translation compatibility.
+- **Security:** Escaped output in the Dark Mode toggle hook and removed legacy "Raw CSS" injection features as requested by the plugin review team.
 
-## [1.0.10] - [1.0.12]
+## [1.0.0] - 2026-04-25
 ### Added
-- Implemented **Visual Dark Mode Preview** in the Massive Menu Editor (visual-only, does not pollute CSS variables).
-- Real-time synchronization between Color Management and Dark Mode palette in the WordPress Customizer.
-
-### Changed
-- **UI Upgrade:** Migrated the custom color picker to the native **WordPress React ColorPicker**.
-- Full support for **Alpha Channel (Opacity)** in all color selection tools.
-
-## [1.0.0] - [1.0.9]
-### Added
-- Initial Release.
-- **Fluid Typography:** Scale-based typography using CSS `clamp()`.
-- **Dark Mode:** Automatic and manual dark mode toggle system.
-- **Color Manager:** CSS variable generation and import/export wizard.
-- **Editor Sync:** Automatic synchronization of theme/customizer CSS to the Gutenberg block editor.
+- Initial release.
+- Added Dark Mode module.
+- Added Fluid Typography module.
+- Added Editor CSS Sync.
+- Added Color Management system.
 
 ---
 *Generated by Antigravity AI Coding Assistant.*

@@ -1,5 +1,5 @@
 /**
- * UTILFOGE Dashboard Styles
+ * GP Utility (GPU) Dashboard Styles
  * A sovereign design system mimicking the exact metrics of GeneratePress 3.6.1+
  */
 
@@ -43,7 +43,7 @@
 }
 
 .utilfoge-dashboard-header__nav a.utilfoge-active {
-    box-shadow: inset 0 -3px #007cba;
+    box-shadow: inset 0 -3px var(--wp-admin-theme-color, #007cba);
     font-weight: 600;
 }
 
@@ -190,7 +190,7 @@
 }
 
 .components-button.is-tertiary:hover {
-    color: #007cba;
+    color: var(--wp-admin-theme-color, #007cba);
 }
 
 .utilfoge-module-message {
@@ -217,7 +217,7 @@
     line-height: 1;
     margin-left: 10px;
     text-decoration: none;
-    color: #007cba;
+    color: var(--wp-admin-theme-color, #007cba);
 }
 
 .utilfoge-module-action:hover {
@@ -349,7 +349,7 @@
 }
 
 input:checked+.utilfoge-toggle-slider {
-    background-color: #007cba;
+    background-color: var(--wp-admin-theme-color, #007cba);
 }
 
 input:checked+.utilfoge-toggle-slider:before {
@@ -370,6 +370,51 @@ input:checked+.utilfoge-toggle-slider:before {
 .utilfoge-toggle-label-text span {
     color: #646970;
     font-size: 12px;
+}
+
+/* Beta Badge */
+.utilfoge-beta-badge {
+    background: #e14d43;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 10px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+/* Beta Notice */
+.utilfoge-beta-notice {
+    background: #fff;
+    border-left: 4px solid #e14d43;
+    display: flex;
+    align-items: flex-start;
+    padding: 15px 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.utilfoge-beta-notice__icon {
+    color: #e14d43;
+    margin-right: 15px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.utilfoge-beta-notice__content strong {
+    display: block;
+    font-size: 14px;
+    color: #1d2327;
+    margin-bottom: 4px;
+}
+
+.utilfoge-beta-notice__content p {
+    margin: 0;
+    font-size: 13px;
+    color: #646970;
 }
 
 /* Responsive */

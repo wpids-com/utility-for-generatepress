@@ -1,4 +1,4 @@
-/**
+﻿/**
  * UTILFOGE Gradient Preview JS
  * Runs inside the Customizer preview iframe.
  * Listens for gradient changes from the control sidebar

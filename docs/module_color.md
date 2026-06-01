@@ -1,4 +1,4 @@
-# Color Management Module
+﻿# Color Management Module
 
 ## Overview
 An advanced color configuration center that acts as an "enhancer" for GeneratePress's native Global Colors. It provides tools for mass importing, math-based color derivatives, and dynamic UI syncing.

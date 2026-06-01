@@ -1,79 +1,98 @@
-/* Fluid Typography Customizer - Full Grid/Flex Layout */
+﻿/* Fluid Typography Customizer - Refined UI v2 */
 
 .utilfoge-fluid-grid-container {
-    padding: 10px 0;
+    padding: 4px 0 12px;
 }
 
 .utilfoge-grid-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .utilfoge-grid-row {
     display: flex;
-    gap: 10px;
-    align-items: flex-end;
+    gap: 12px;
+    align-items: flex-start;
 }
 
 .utilfoge-grid-item {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
+/* Match Native Customizer Labels */
 .utilfoge-grid-item label {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
-    color: #50575e;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: #3c434a;
+    text-transform: none;
+    letter-spacing: normal;
+    margin: 0;
 }
 
 /* Input & Select Styling */
 .utilfoge-input-group {
     display: flex;
     width: 100%;
+    align-items: stretch;
 }
 
-.utilfoge-grid-input {
-    flex: 2;
-    border-radius: 2px 0 0 2px !important;
+/* User's requested width override */
+.utilfoge-grid-item input[type="number"], 
+.utilfoge-grid-item input[type="text"] {
+    width: 100% !important;
+    min-height: 28px;
+    padding: 0 8px;
+    box-shadow: 0 0 0 transparent;
+    transition: box-shadow .1s linear;
+}
+
+/* Refined overrides for the combined group (Base Size + Unit) */
+.utilfoge-input-group .utilfoge-grid-input {
+    flex: 1 !important;
+    width: auto !important; 
+    min-width: 0;
+    border-radius: 3px 0 0 3px !important;
 }
 
 .utilfoge-grid-select {
-    flex: 1;
-    border-radius: 0 2px 2px 0 !important;
-    background-color: #f6f7f7 !important;
+    width: 65px !important;
+    flex: none !important;
+    border-radius: 0 3px 3px 0 !important;
+    border-left: 0 !important;
+    padding-right: 20px !important;
+    min-height: 28px;
 }
 
-/* Specific item widths */
-.utilfoge-grid-item input[type="number"] {
-    width: 100%;
-    height: 30px;
+/* Focus states */
+.utilfoge-grid-item input:focus,
+.utilfoge-grid-item select:focus {
+    border-color: #2271b1 !important;
+    box-shadow: 0 0 0 1px #2271b1 !important;
+    outline: 2px solid transparent !important;
 }
 
-/* Description Box */
+/* Subtle Description Text (Matches Native WP) */
 .utilfoge-grid-description {
-    margin-top: 5px;
-    background: #f0f6fb;
-    padding: 12px;
-    border-left: 4px solid #007cba;
+    margin-top: -4px;
     font-size: 12px;
+    font-style: italic;
     line-height: 1.5;
-    color: #1d2327;
-    border-radius: 0 2px 2px 0;
+    color: #646970;
 }
 
 .utilfoge-grid-description code {
-    background: #fff;
-    padding: 1px 4px;
-    border-radius: 2px;
-    border: 1px solid #c3c4c7;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-style: normal;
+    color: #d63384;
 }
 
-/* Cleanup old LI styles */
+/* Cleanup old layout issues */
 #sub-section-utilfoge_typography_section li.customize-control {
     width: 100% !important;
     float: none !important;

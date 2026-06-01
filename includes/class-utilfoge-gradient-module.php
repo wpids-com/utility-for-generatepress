@@ -42,7 +42,7 @@ class UTILFOGE_Gradient_Module {
 	public function enqueue_frontend_styles() {
 		$css = self::build_utility_css( 'frontend' );
 		if ( ! empty( $css ) ) {
-			wp_add_inline_style( 'utilfoge-utility-frontend', wp_strip_all_tags( $css ) );
+			wp_add_inline_style( 'utilfoge-utility-frontend', $css );
 		}
 	}
 
@@ -148,7 +148,7 @@ class UTILFOGE_Gradient_Module {
 		$wp_customize->add_section(
 			'utilfoge_gradient_variables',
 			array(
-				'title'    => __( 'Gradients & Borders', 'utility-for-generatepress' ),
+				'title'    => __( 'Gradient Palette', 'utility-for-generatepress' ),
 				'panel'    => 'utilfoge_utility_panel',
 				'priority' => 20,
 			)
@@ -181,16 +181,18 @@ class UTILFOGE_Gradient_Module {
 		);
 
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-gradient-control.php';
-		$wp_customize->add_control(
-			new UTILFOGE_Gradient_Control(
-				$wp_customize,
-				'utilfoge_gradient_variables',
-				array(
-					'label'   => __( 'Gradient Palette', 'utility-for-generatepress' ),
-					'section' => 'utilfoge_gradient_variables',
-				)
-			)
-		);
+		// Add a dummy setting to trigger dirty state
+		$wp_customize->add_setting( 'utilfoge_gradient_palette_sync', array(
+			'default'           => '',
+			'sanitize_callback' => 'sanitize_text_field',
+			'transport'         => 'postMessage',
+		) );
+
+		$wp_customize->add_control( new UTILFOGE_Gradient_Control( $wp_customize, 'utilfoge_gradient_palette', array(
+			'label'    => __( 'Gradient Palette', 'utility-for-generatepress' ),
+			'section'  => 'utilfoge_gradient_variables',
+			'settings' => 'utilfoge_gradient_palette_sync',
+		) ) );
 	}
 
 	public function enqueue_customizer_assets() {
@@ -204,7 +206,7 @@ class UTILFOGE_Gradient_Module {
 		wp_enqueue_script(
 			'utilfoge-gradient-module',
 			UTILFOGE_PLUGIN_URL . 'assets/js/utilfoge-gradient-module.js',
-			array( 'jquery', 'customize-controls', 'wp-color-picker' ),
+			array( 'jquery', 'customize-controls', 'wp-element', 'wp-components' ),
 			UTILFOGE_VERSION,
 			true
 		);
@@ -235,7 +237,7 @@ class UTILFOGE_Gradient_Module {
 
 		wp_localize_script(
 			'utilfoge-gradient-module',
-			'utilfogeGradientModule',
+			'UTILFOGEGradientModule',
 			array(
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'nonce'         => wp_create_nonce( 'utilfoge_gradient_module' ),
@@ -321,19 +323,6 @@ class UTILFOGE_Gradient_Module {
 		}
 
 		wp_send_json_success( array( 'dark_stops' => $result ) );
-	}
-
-	public function ajax_save_border_settings() {
-		check_ajax_referer( 'utilfoge_gradient_module', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Unauthorized' );
-		}
-
-		$raw = isset( $_POST['borderSettings'] ) ? map_deep( wp_unslash( $_POST['borderSettings'] ), 'sanitize_text_field' ) : array();
-		$sanitized = $this->sanitize_border_settings( $raw );
-		update_option( 'utilfoge_gradient_border_settings', $sanitized );
-
-		wp_send_json_success( 'Border settings saved' );
 	}
 
 	/** Sanitize border settings (stored as JSON string via Customizer). */
@@ -431,20 +420,20 @@ class UTILFOGE_Gradient_Module {
 
 			$stops = array();
 			foreach ( (array) ( $g['stops'] ?? array() ) as $stop ) {
-				$hex = sanitize_text_field( $stop['color'] ?? '' );
-				$pos = max( 0, min( 100, intval( $stop['position'] ?? 0 ) ) );
-				if ( preg_match( '/^#[0-9a-fA-F]{3,6}$/', $hex ) ) {
-					$stops[] = array( 'color' => $hex, 'position' => $pos );
+				$color = sanitize_text_field( $stop['color'] ?? '' );
+				$pos   = max( 0, min( 100, intval( $stop['position'] ?? 0 ) ) );
+				if ( ! empty( $color ) ) {
+					$stops[] = array( 'color' => $color, 'position' => $pos );
 				}
 			}
 			if ( count( $stops ) < 2 ) continue;
 
 			$dark_stops = array();
 			foreach ( (array) ( $g['dark_stops'] ?? array() ) as $stop ) {
-				$hex = sanitize_text_field( $stop['color'] ?? '' );
-				$pos = max( 0, min( 100, intval( $stop['position'] ?? 0 ) ) );
-				if ( preg_match( '/^#[0-9a-fA-F]{3,6}$/', $hex ) ) {
-					$dark_stops[] = array( 'color' => $hex, 'position' => $pos );
+				$color = sanitize_text_field( $stop['color'] ?? '' );
+				$pos   = max( 0, min( 100, intval( $stop['position'] ?? 0 ) ) );
+				if ( ! empty( $color ) ) {
+					$dark_stops[] = array( 'color' => $color, 'position' => $pos );
 				}
 			}
 
