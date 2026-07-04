@@ -26,6 +26,10 @@ class UTILFOGE_Dark_Mode {
 
 		// Auto-sync data structural array
 		add_filter( 'theme_mod_utilfoge_dark_global_colors', array( $this, 'sync_dark_colors_with_gp' ) );
+
+		// Logo Swapping Filters
+		add_filter( 'generate_logo_output', array( $this, 'filter_logo_output' ), 10, 3 );
+		add_filter( 'generate_mobile_header_logo', array( $this, 'filter_mobile_header_logo' ), 10, 1 );
 	}
 
 	public function enqueue_frontend_assets() {
@@ -178,15 +182,15 @@ class UTILFOGE_Dark_Mode {
 				color: " . esc_attr( $contrast ) . " !important;
 			}
 
-			body.dark a { color: " . esc_attr( $accent ) . " !important; }
-			body.dark a:hover { color: " . esc_attr( $contrast2 ) . " !important; }
+			body.dark a:not(#wpadminbar *):not(#wpadminbar) { color: " . esc_attr( $accent ) . " !important; }
+			body.dark a:not(#wpadminbar *):not(#wpadminbar):hover { color: " . esc_attr( $contrast2 ) . " !important; }
 
-			body.dark .entry-meta, body.dark .entry-meta a,
+			body.dark .entry-meta, body.dark .entry-meta a:not(#wpadminbar *):not(#wpadminbar),
 			body.dark .cat-links, body.dark .tag-links {
 				color: " . esc_attr( $contrast3 ) . " !important;
 			}
 
-			body.dark input, body.dark textarea, body.dark select {
+			body.dark input:not(#wpadminbar *), body.dark textarea:not(#wpadminbar *), body.dark select:not(#wpadminbar *) {
 				background-color: " . esc_attr( $base2 ) . " !important;
 				color: " . esc_attr( $contrast ) . " !important;
 				border-color: " . esc_attr( $contrast3 ) . " !important;
@@ -299,6 +303,20 @@ class UTILFOGE_Dark_Mode {
 				align-items: center;
 			}
 			/* GP menu-bar-items will natively handle the placement left of the burger icon on mobile */
+
+			/* --- Dark Mode Logo Swaps --- */
+			img.dark-mode-logo {
+				display: none !important;
+			}
+			body.dark img.dark-mode-logo {
+				display: inline-block !important;
+			}
+			body.dark img.header-image:not(.dark-mode-logo),
+			body.dark img.mobile-logo:not(.dark-mode-logo),
+			body.dark .site-logo img:not(.dark-mode-logo),
+			body.dark .mobile-header-logo img:not(.dark-mode-logo) {
+				display: none !important;
+			}
 		";
 	}
 
@@ -546,7 +564,7 @@ class UTILFOGE_Dark_Mode {
 		$wp_customize->add_setting(
 			'utilfoge_dark_mode_floating_align',
 			array(
-				'default'           => 'right',
+				'default'           => 'left',
 				'transport'         => 'refresh',
 				'sanitize_callback' => 'sanitize_key',
 			)
@@ -619,6 +637,81 @@ class UTILFOGE_Dark_Mode {
 					'multicolor' => __( 'Multicolor', 'utility-for-generatepress' ),
 				),
 				'active_callback' => array( $this, 'is_dark_mode_enabled' ),
+			)
+		);
+
+		// --- Dark Mode Logo Enable ---
+		$wp_customize->add_setting(
+			'utilfoge_dark_mode_logo_enable',
+			array(
+				'default'           => 'off',
+				'transport'         => 'refresh',
+				'sanitize_callback' => 'sanitize_key',
+			)
+		);
+
+		$wp_customize->add_control(
+			'utilfoge_dark_mode_logo_enable_control',
+			array(
+				'label'    => __( 'Dark Mode Logo', 'utility-for-generatepress' ),
+				'section'  => 'utilfoge_dark_mode_section',
+				'settings' => 'utilfoge_dark_mode_logo_enable',
+				'type'     => 'select',
+				'choices'  => array(
+					'off' => __( 'Off', 'utility-for-generatepress' ),
+					'on'  => __( 'On', 'utility-for-generatepress' ),
+				),
+				'active_callback' => array( $this, 'is_dark_mode_enabled' ),
+			)
+		);
+
+		// --- Dark Mode Logo Upload ---
+		$wp_customize->add_setting(
+			'utilfoge_dark_mode_logo',
+			array(
+				'default'           => '',
+				'transport'         => 'refresh',
+				'sanitize_callback' => 'esc_url_raw',
+			)
+		);
+
+		$wp_customize->add_control(
+			new WP_Customize_Image_Control(
+				$wp_customize,
+				'utilfoge_dark_mode_logo_control',
+				array(
+					'label'      => __( 'Dark Mode Logo (Desktop)', 'utility-for-generatepress' ),
+					'section'    => 'utilfoge_dark_mode_section',
+					'settings'   => 'utilfoge_dark_mode_logo',
+					'active_callback' => function() {
+						return get_theme_mod( 'utilfoge_dark_mode_enable', 'off' ) === 'on' && get_theme_mod( 'utilfoge_dark_mode_logo_enable', 'off' ) === 'on';
+					},
+				)
+			)
+		);
+
+		// --- Dark Mode Logo for Mobile Upload ---
+		$wp_customize->add_setting(
+			'utilfoge_dark_mode_mobile_logo',
+			array(
+				'default'           => '',
+				'transport'         => 'refresh',
+				'sanitize_callback' => 'esc_url_raw',
+			)
+		);
+
+		$wp_customize->add_control(
+			new WP_Customize_Image_Control(
+				$wp_customize,
+				'utilfoge_dark_mode_mobile_logo_control',
+				array(
+					'label'      => __( 'Dark Mode Logo for Mobile', 'utility-for-generatepress' ),
+					'section'    => 'utilfoge_dark_mode_section',
+					'settings'   => 'utilfoge_dark_mode_mobile_logo',
+					'active_callback' => function() {
+						return get_theme_mod( 'utilfoge_dark_mode_enable', 'off' ) === 'on' && get_theme_mod( 'utilfoge_dark_mode_logo_enable', 'off' ) === 'on' && $this->is_mobile_header_enabled();
+					},
+				)
 			)
 		);
 
@@ -702,7 +795,7 @@ class UTILFOGE_Dark_Mode {
 
 		$btn_classes = 'utilfoge-dark-mode-toggle style-' . esc_attr( $icon_style );
 		if ( 'floating' === $position ) {
-			$align = get_theme_mod( 'utilfoge_dark_mode_floating_align', 'right' );
+			$align = get_theme_mod( 'utilfoge_dark_mode_floating_align', 'left' );
 			$btn_classes .= ' is-floating is-floating-' . esc_attr( $align );
 		}
 
@@ -773,6 +866,81 @@ class UTILFOGE_Dark_Mode {
 		}
 
 		return $new_value;
+	}
+
+	/**
+	 * Check if GP Premium mobile header is enabled.
+	 *
+	 * @return bool
+	 */
+	public function is_mobile_header_enabled() {
+		if ( ! function_exists( 'generate_menu_plus_get_defaults' ) ) {
+			return false;
+		}
+		$menu_plus_settings = get_option( 'generate_menu_plus_settings', array() );
+		return isset( $menu_plus_settings['mobile_header'] ) && 'enable' === $menu_plus_settings['mobile_header'];
+	}
+
+	/**
+	 * Append dark mode logo to main theme logo HTML.
+	 *
+	 * @param string $logo_html The default logo output HTML.
+	 * @param string $logo_url The logo link URL.
+	 * @param string $html_attr Logo image tag HTML attributes.
+	 * @return string
+	 */
+	public function filter_logo_output( $logo_html, $logo_url, $html_attr ) {
+		if ( 'on' !== get_theme_mod( 'utilfoge_dark_mode_enable', 'off' ) || 'on' !== get_theme_mod( 'utilfoge_dark_mode_logo_enable', 'off' ) ) {
+			return $logo_html;
+		}
+		$dark_logo = get_theme_mod( 'utilfoge_dark_mode_logo', '' );
+		if ( empty( $dark_logo ) ) {
+			return $logo_html;
+		}
+
+		$dark_img = sprintf(
+			'<img class="header-image is-logo-image dark-mode-logo" src="%1$s" alt="%2$s" />',
+			esc_url( $dark_logo ),
+			esc_attr( get_bloginfo( 'name', 'display' ) )
+		);
+
+		if ( strpos( $logo_html, '</a>' ) !== false ) {
+			$logo_html = str_replace( '</a>', $dark_img . '</a>', $logo_html );
+		} else {
+			$logo_html .= $dark_img;
+		}
+
+		return $logo_html;
+	}
+
+	/**
+	 * Append dark mode mobile logo to mobile header logo HTML.
+	 *
+	 * @param string $logo_html The default mobile logo HTML.
+	 * @return string
+	 */
+	public function filter_mobile_header_logo( $logo_html ) {
+		if ( 'on' !== get_theme_mod( 'utilfoge_dark_mode_enable', 'off' ) || 'on' !== get_theme_mod( 'utilfoge_dark_mode_logo_enable', 'off' ) ) {
+			return $logo_html;
+		}
+		$dark_logo = get_theme_mod( 'utilfoge_dark_mode_mobile_logo', '' );
+		if ( empty( $dark_logo ) ) {
+			return $logo_html;
+		}
+
+		$dark_img = sprintf(
+			'<img class="mobile-logo dark-mode-logo" src="%1$s" alt="%2$s" />',
+			esc_url( $dark_logo ),
+			esc_attr( get_bloginfo( 'name', 'display' ) )
+		);
+
+		if ( strpos( $logo_html, '</a>' ) !== false ) {
+			$logo_html = str_replace( '</a>', $dark_img . '</a>', $logo_html );
+		} else {
+			$logo_html .= $dark_img;
+		}
+
+		return $logo_html;
 	}
 }
 

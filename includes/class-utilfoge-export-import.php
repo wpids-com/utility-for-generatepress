@@ -77,6 +77,12 @@ class UTILFOGE_Export_Import {
 				'available' => post_type_exists( 'gblocks_overlay' ),
 				'source'    => 'GB Pro',
 			),
+			'gb_forms' => array(
+				'label'     => __( 'Forms', 'utility-for-generatepress' ),
+				'desc'      => __( 'GenerateBlocks Pro Forms and integrations', 'utility-for-generatepress' ),
+				'available' => post_type_exists( 'gblocks_form' ),
+				'source'    => 'GB Pro',
+			),
 		);
 	}
 
@@ -130,6 +136,12 @@ class UTILFOGE_Export_Import {
 					return 0;
 				}
 				$count = wp_count_posts( 'gblocks_overlay' );
+				return isset( $count->publish ) ? (int) $count->publish : 0;
+			case 'gb_forms':
+				if ( ! post_type_exists( 'gblocks_form' ) ) {
+					return 0;
+				}
+				$count = wp_count_posts( 'gblocks_form' );
 				return isset( $count->publish ) ? (int) $count->publish : 0;
 			default:
 				return 0;
@@ -208,6 +220,8 @@ class UTILFOGE_Export_Import {
 				return $this->export_gb_conditions();
 			case 'gb_overlays':
 				return $this->export_gb_overlays();
+			case 'gb_forms':
+				return $this->export_gb_forms();
 			default:
 				return null;
 		}
@@ -681,6 +695,8 @@ class UTILFOGE_Export_Import {
 				return $this->import_gb_conditions( $data, $conflict_mode );
 			case 'gb_overlays':
 				return $this->import_gb_overlays( $data, $conflict_mode );
+			case 'gb_forms':
+				return $this->import_gb_forms( $data, $conflict_mode );
 			default:
 				return array( 'success' => false, 'message' => '' );
 		}
@@ -1390,7 +1406,7 @@ class UTILFOGE_Export_Import {
 
 		// 4. Update GB Pro Asset Library if we just imported it
 		// (Options are already updated, but we might want to trigger internal GB hooks)
-		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Trigger native GenerateBlocks Pro integration.
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 		do_action( 'generateblocks_pro_asset_library_updated' );
 	}
 
@@ -1486,7 +1502,7 @@ class UTILFOGE_Export_Import {
 		<div id="utilfoge-injected-export-import" class="utilfoge-gp-injected-box" style="display: none; <?php echo esc_attr( $box_style ); ?>">
 			<h2 class="utilfoge-gp-injected-header">
 				<?php
-				/* translators: %s: content type label */
+				/* translators: %s: Content type label */
 				printf( esc_html__( 'Export / Import Utility for %s', 'utility-for-generatepress' ), esc_html( $ct['label'] ) );
 				?>
 			</h2>
@@ -1498,7 +1514,7 @@ class UTILFOGE_Export_Import {
 						<h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Export', 'utility-for-generatepress' ); ?></h3>
 						<p style="color: #646970; margin-bottom: 15px; font-size: 13px;">
 							<?php
-							/* translators: %s: content type label */
+							/* translators: %s: Content type label */
 							printf( esc_html__( 'Export your %s to a JSON file.', 'utility-for-generatepress' ), esc_html( $ct['label'] ) );
 							?>
 						</p>
@@ -1517,7 +1533,7 @@ class UTILFOGE_Export_Import {
 						<h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Import', 'utility-for-generatepress' ); ?></h3>
 						<p style="color: #646970; margin-bottom: 15px; font-size: 13px;">
 							<?php
-							/* translators: %s: content type label */
+							/* translators: %s: Content type label */
 							printf( esc_html__( 'Import %s from a utilfoge JSON file.', 'utility-for-generatepress' ), esc_html( $ct['label'] ) );
 							?>
 						</p>
@@ -1580,5 +1596,129 @@ class UTILFOGE_Export_Import {
 		});
 		</script>
 		<?php
+	}
+
+	/**
+	 * Export GenerateBlocks Pro Forms and integrations.
+	 *
+	 * @return array
+	 */
+	private function export_gb_forms() {
+		if ( ! post_type_exists( 'gblocks_form' ) ) {
+			return array();
+		}
+
+		$posts = get_posts(
+			array(
+				'post_type'      => 'gblocks_form',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+			)
+		);
+
+		$items = array();
+		foreach ( $posts as $post ) {
+			$meta = array();
+			$all_meta = get_post_meta( $post->ID );
+			foreach ( $all_meta as $mk => $mv ) {
+				$meta[ $mk ] = maybe_unserialize( $mv[0] );
+			}
+
+			$items[] = array(
+				'title'   => $post->post_title,
+				'name'    => $post->post_name,
+				'status'  => $post->post_status,
+				'content' => $post->post_content,
+				'meta'    => $meta,
+			);
+		}
+
+		return array(
+			'posts'        => $items,
+			'integrations' => get_option( 'generateblocks_pro_form_integrations', array() ),
+		);
+	}
+
+	/**
+	 * Import GenerateBlocks Pro Forms and integrations.
+	 *
+	 * @param array  $data          Forms data.
+	 * @param string $conflict_mode Conflict resolution mode.
+	 * @return array
+	 */
+	private function import_gb_forms( $data, $conflict_mode ) {
+		if ( ! post_type_exists( 'gblocks_form' ) || ! is_array( $data ) ) {
+			return array( 'success' => false, 'message' => __( 'Forms: GB Pro not active.', 'utility-for-generatepress' ) );
+		}
+
+		$imported = 0;
+		$skipped = 0;
+
+		$posts = isset( $data['posts'] ) ? $data['posts'] : array();
+
+		foreach ( $posts as $item ) {
+			if ( empty( $item['title'] ) ) {
+				continue;
+			}
+
+			$existing = get_posts(
+				array(
+					'post_type'   => 'gblocks_form',
+					'title'       => $item['title'],
+					'post_status' => 'any',
+					'numberposts' => 1,
+				)
+			);
+
+			if ( ! empty( $existing ) ) {
+				if ( 'skip' === $conflict_mode ) {
+					$skipped++;
+					continue;
+				} elseif ( 'overwrite' === $conflict_mode ) {
+					wp_delete_post( $existing[0]->ID, true );
+				}
+			}
+
+			$post_id = wp_insert_post(
+				array(
+					'post_type'    => 'gblocks_form',
+					'post_title'   => sanitize_text_field( $item['title'] ),
+					'post_name'    => isset( $item['name'] ) ? sanitize_title( $item['name'] ) : '',
+					'post_status'  => isset( $item['status'] ) ? sanitize_key( $item['status'] ) : 'publish',
+					'post_content' => isset( $item['content'] ) ? wp_kses_post( $item['content'] ) : '',
+				)
+			);
+
+			if ( is_wp_error( $post_id ) ) {
+				continue;
+			}
+
+			if ( ! empty( $item['meta'] ) && is_array( $item['meta'] ) ) {
+				foreach ( $item['meta'] as $mk => $mv ) {
+					if ( is_string( $mk ) ) {
+						update_post_meta( $post_id, sanitize_key( $mk ), $mv );
+					}
+				}
+			}
+
+			$imported++;
+		}
+
+		// Import global integrations option
+		if ( ! empty( $data['integrations'] ) && is_array( $data['integrations'] ) ) {
+			if ( 'skip' === $conflict_mode ) {
+				$existing_integrations = get_option( 'generateblocks_pro_form_integrations', array() );
+				$merged = array_merge( (array) $existing_integrations, $data['integrations'] );
+				update_option( 'generateblocks_pro_form_integrations', $merged );
+			} else {
+				update_option( 'generateblocks_pro_form_integrations', $data['integrations'] );
+			}
+		}
+
+		return array(
+			'success' => true,
+			/* translators: 1: imported count, 2: skipped count */
+			'message' => sprintf( __( 'Forms: %1$d imported, %2$d skipped.', 'utility-for-generatepress' ), $imported, $skipped ),
+		);
 	}
 }

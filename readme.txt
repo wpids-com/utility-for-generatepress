@@ -4,11 +4,11 @@ Tags: generatepress, generateblocks, dark mode, fluid typography, gradient
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.01
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-The ultimate underrated helper tool for GeneratePress & GenerateBlocks. Empower your site with Dark Mode, Fluid Typography, advanced Color Management, custom CSS Gradients, and seamless Export/Import backups.
+Ultimate utility for GeneratePress & GenerateBlocks. Adds dark mode, fluid typography, gradients, editor sync, and settings migration.
 
 == Description ==
 
@@ -38,16 +38,47 @@ We hate bloat as much as you do. This plugin enqueues minimal vanilla CSS and JS
 = Does this require GeneratePress Premium? =
 No! It works beautifully with the free version of GeneratePress. However, it is built to complement both the free and premium ecosystems perfectly.
 
-= How does the GenerateBlocks Export/Import work? =
-Our Export/Import module natively supports **GenerateBlocks**. When you run an export, it bundles all your local patterns, global styles, asset library SVGs, and overlays. When imported on a new site, it automatically re-syncs all block styles and refreshes the CSS cache so your design loads perfectly instantly.
+= How does the Dynamic Dark Mode contrast boosting work? =
+Our Dark Mode module uses a mathematical HSL color math engine. Instead of creating redundant CSS classes, it dynamically overrides the original global variables inside the `.dark` selector. The "Contrast Boosting" feature automatically desaturates bright colors and enhances background-to-text contrast ratios to guarantee optimal legibility and prevent eye strain.
 
-= What makes this the most underrated helper tool? =
-Most utilities only focus on one minor aspect. **Utility for GeneratePress** combines typography, advanced math-based dark mode, theme.json gradient injection, and a robust migration engine in a single lightweight package that operates under a unified design system.
+= Does Fluid Typography support custom scale ratios? =
+Yes! The Fluid Typography Wizard automatically calculates responsive text scaling using the modern CSS `clamp()` function. You can set custom minimum/maximum viewports and scale ratios, completely eliminating the need for tedious manual media queries.
+
+= How does the Gradient Builder sync with Gutenberg? =
+Our advanced Gradient Builder provides a drag-and-drop Color Stop slider using the native WordPress React ColorPicker. It automatically registers the resulting custom CSS gradients and seamlessly injects them directly into Gutenberg's block settings and native palettes via `theme.json` hooks.
+
+= How does the GenerateBlocks Export/Import work? =
+Our Export/Import module natively supports both **GeneratePress** settings (including custom Elements) and **GenerateBlocks Pro** assets (including Local Patterns, Global Styles, SVGs, custom icons, and displays). It bundles everything into a secure package and automatically rebuilds the CSS styles cache on import to ensure your pages look perfect instantly.
 
 = Will this plugin slow down my Gutenberg editor? =
-No. The Editor CSS Sync enqueues your styles via native WordPress editor styles hooks, ensuring they only load inside the Gutenberg frame without any blocking scripts.
+No. The Editor CSS Sync enqueues your styles using native WordPress editor styles hooks. This ensures they only load inside the active editor iframe frame with zero page overhead or blocking external scripts.
+
+= What makes this the most underrated helper tool? =
+Most utilities only focus on one minor feature. **Utility for GeneratePress** combines fluid typography scaling, an advanced math-based dark mode engine, dynamic theme.json gradient injection, and a robust migration engine into a single unified design system that runs with zero performance overhead.
+
+== Screenshots ==
+
+1. Utility for GeneratePress Dashboard - Easily toggle and manage your modular design extensions.
+2. Dynamic Dark Mode Wizard - Real-time dark mode palette configuration inside the Customizer.
+3. Contrast Boosting Settings - Auto-desaturate vibrant colors and boost reading legibility.
+4. Fluid Typography Panel - Automatically calculate responsive typography scaling on the fly.
+5. Fluid Viewport Configuration - Customize min/max viewports and scaling ratios.
+6. Advanced Drag-and-Drop Gradient Builder - Craft beautiful custom CSS gradients.
+7. Gutenberg Palette Integration - Syncing custom gradient variables directly into block editor controls.
+8. Secure Export / Import Module - Easily backup or migrate your elements, styles, and configurations.
+9. Seamless Element Dashboard Injection - Quick migration buttons integrated into native CPT dashboards.
+10. Gutenberg Editor CSS Sync - Real-time WYSIWYG sync of your styles inside the editor canvas.
+11. Unified Admin Branding - Perfectly matches the native premium GeneratePress look and feel.
+12. HSL Color Math Engine Options - Configure custom alpha opacity and HSL auto-derivatives.
+13. Mobile Responsive Design Preview - Beautiful fluid typography scaling on mobile viewports.
+14. System Status and Diagnostics - Clean inline indicators reflecting your active modular setup.
 
 == Changelog ==
+
+= 1.1.01 =
+* Feature: Added Dark Mode Logo support (Desktop and mobile headers).
+* Tweak: Changed default Dark Mode floating toggle position to Left.
+* Feature: Added Export/Import support for GenerateBlocks Pro 2.6.1 Forms Custom Post Type (`gblocks_form`) and form integrations option data.
 
 = 1.1.0 =
 * Stable Release: Consolidation of all major modules into a production-ready stable build.
