@@ -30,6 +30,7 @@ class UTILFOGE_Dark_Mode {
 		// Logo Swapping Filters
 		add_filter( 'generate_logo_output', array( $this, 'filter_logo_output' ), 10, 3 );
 		add_filter( 'generate_mobile_header_logo', array( $this, 'filter_mobile_header_logo' ), 10, 1 );
+		add_filter( 'generate_sticky_navigation_logo_output', array( $this, 'filter_sticky_navigation_logo' ), 10, 1 );
 	}
 
 	public function enqueue_frontend_assets() {
@@ -308,13 +309,20 @@ class UTILFOGE_Dark_Mode {
 			img.dark-mode-logo {
 				display: none !important;
 			}
+			html.dark img.dark-mode-logo,
 			body.dark img.dark-mode-logo {
 				display: inline-block !important;
 			}
+			html.dark img.header-image:not(.dark-mode-logo),
+			html.dark img.mobile-logo:not(.dark-mode-logo),
+			html.dark .site-logo img:not(.dark-mode-logo),
+			html.dark .mobile-header-logo img:not(.dark-mode-logo),
+			html.dark .sticky-navigation-logo img:not(.dark-mode-logo),
 			body.dark img.header-image:not(.dark-mode-logo),
 			body.dark img.mobile-logo:not(.dark-mode-logo),
 			body.dark .site-logo img:not(.dark-mode-logo),
-			body.dark .mobile-header-logo img:not(.dark-mode-logo) {
+			body.dark .mobile-header-logo img:not(.dark-mode-logo),
+			body.dark .sticky-navigation-logo img:not(.dark-mode-logo) {
 				display: none !important;
 			}
 		";
@@ -930,6 +938,36 @@ class UTILFOGE_Dark_Mode {
 
 		$dark_img = sprintf(
 			'<img class="mobile-logo dark-mode-logo" src="%1$s" alt="%2$s" />',
+			esc_url( $dark_logo ),
+			esc_attr( get_bloginfo( 'name', 'display' ) )
+		);
+
+		if ( strpos( $logo_html, '</a>' ) !== false ) {
+			$logo_html = str_replace( '</a>', $dark_img . '</a>', $logo_html );
+		} else {
+			$logo_html .= $dark_img;
+		}
+
+		return $logo_html;
+	}
+
+	/**
+	 * Append dark mode sticky navigation logo to sticky navigation logo HTML.
+	 *
+	 * @param string $logo_html The default sticky logo HTML.
+	 * @return string
+	 */
+	public function filter_sticky_navigation_logo( $logo_html ) {
+		if ( 'on' !== get_theme_mod( 'utilfoge_dark_mode_enable', 'off' ) || 'on' !== get_theme_mod( 'utilfoge_dark_mode_logo_enable', 'off' ) ) {
+			return $logo_html;
+		}
+		$dark_logo = get_theme_mod( 'utilfoge_dark_mode_logo', '' );
+		if ( empty( $dark_logo ) ) {
+			return $logo_html;
+		}
+
+		$dark_img = sprintf(
+			'<img class="is-logo-image dark-mode-logo" src="%1$s" alt="%2$s" />',
 			esc_url( $dark_logo ),
 			esc_attr( get_bloginfo( 'name', 'display' ) )
 		);

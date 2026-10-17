@@ -48,8 +48,8 @@ class UTILFOGE_Export_Import {
 				'source'    => 'GP Premium',
 			),
 			'gb_global_styles' => array(
-				'label'     => __( 'Global Styles', 'utility-for-generatepress' ),
-				'desc'      => __( 'GenerateBlocks Global Styles', 'utility-for-generatepress' ),
+				'label'     => __( 'Global Styles & Design Tokens', 'utility-for-generatepress' ),
+				'desc'      => __( 'GenerateBlocks Global Styles and Design Tokens', 'utility-for-generatepress' ),
 				'available' => post_type_exists( 'gblocks_styles' ),
 				'source'    => 'GB Pro',
 			),
@@ -81,6 +81,18 @@ class UTILFOGE_Export_Import {
 				'label'     => __( 'Forms', 'utility-for-generatepress' ),
 				'desc'      => __( 'GenerateBlocks Pro Forms and integrations', 'utility-for-generatepress' ),
 				'available' => post_type_exists( 'gblocks_form' ),
+				'source'    => 'GB Pro',
+			),
+			'gb_access_profiles' => array(
+				'label'     => __( 'Editor Access Profiles', 'utility-for-generatepress' ),
+				'desc'      => __( 'GenerateBlocks Pro Editor Access Profiles', 'utility-for-generatepress' ),
+				'available' => post_type_exists( 'gb_access_profile' ),
+				'source'    => 'GB Pro',
+			),
+			'gb_access_sets' => array(
+				'label'     => __( 'Editor Control Sets', 'utility-for-generatepress' ),
+				'desc'      => __( 'GenerateBlocks Pro Editor Control Sets', 'utility-for-generatepress' ),
+				'available' => post_type_exists( 'gb_access_set' ),
 				'source'    => 'GB Pro',
 			),
 		);
@@ -142,6 +154,18 @@ class UTILFOGE_Export_Import {
 					return 0;
 				}
 				$count = wp_count_posts( 'gblocks_form' );
+				return isset( $count->publish ) ? (int) $count->publish : 0;
+			case 'gb_access_profiles':
+				if ( ! post_type_exists( 'gb_access_profile' ) ) {
+					return 0;
+				}
+				$count = wp_count_posts( 'gb_access_profile' );
+				return isset( $count->publish ) ? (int) $count->publish : 0;
+			case 'gb_access_sets':
+				if ( ! post_type_exists( 'gb_access_set' ) ) {
+					return 0;
+				}
+				$count = wp_count_posts( 'gb_access_set' );
 				return isset( $count->publish ) ? (int) $count->publish : 0;
 			default:
 				return 0;
@@ -222,6 +246,10 @@ class UTILFOGE_Export_Import {
 				return $this->export_gb_overlays();
 			case 'gb_forms':
 				return $this->export_gb_forms();
+			case 'gb_access_profiles':
+				return $this->export_gb_access_profiles();
+			case 'gb_access_sets':
+				return $this->export_gb_access_sets();
 			default:
 				return null;
 		}
@@ -393,7 +421,10 @@ class UTILFOGE_Export_Import {
 			);
 		}
 
-		return $items;
+		return array(
+			'styles'         => $items,
+			'category_order' => get_option( 'generateblocks_style_category_order', array() ),
+		);
 	}
 
 	/**
@@ -697,6 +728,10 @@ class UTILFOGE_Export_Import {
 				return $this->import_gb_overlays( $data, $conflict_mode );
 			case 'gb_forms':
 				return $this->import_gb_forms( $data, $conflict_mode );
+			case 'gb_access_profiles':
+				return $this->import_gb_access_profiles( $data, $conflict_mode );
+			case 'gb_access_sets':
+				return $this->import_gb_access_sets( $data, $conflict_mode );
 			default:
 				return array( 'success' => false, 'message' => '' );
 		}
@@ -935,10 +970,17 @@ class UTILFOGE_Export_Import {
 			return array( 'success' => false, 'message' => __( 'Global Styles: GB Pro not active.', 'utility-for-generatepress' ) );
 		}
 
+		$styles_data = isset( $data['styles'] ) ? $data['styles'] : $data;
+		$category_order = isset( $data['category_order'] ) ? $data['category_order'] : null;
+
+		if ( ! empty( $category_order ) && is_array( $category_order ) ) {
+			update_option( 'generateblocks_style_category_order', $category_order );
+		}
+
 		$imported = 0;
 		$skipped = 0;
 
-		foreach ( $data as $item ) {
+		foreach ( $styles_data as $item ) {
 			if ( empty( $item['title'] ) ) {
 				continue;
 			}
@@ -952,8 +994,20 @@ class UTILFOGE_Export_Import {
 				)
 			);
 
+			$post_id = 0;
 			if ( ! empty( $existing ) ) {
-				if ( 'skip' === $conflict_mode ) {
+				if ( ':root' === $item['title'] ) {
+					// For :root style (which holds Design Tokens), update the existing post in place
+					$post_id = $existing[0]->ID;
+					if ( isset( $item['content'] ) ) {
+						wp_update_post(
+							array(
+								'ID'           => $post_id,
+								'post_content' => wp_kses_post( $item['content'] ),
+							)
+						);
+					}
+				} elseif ( 'skip' === $conflict_mode ) {
 					$skipped++;
 					continue;
 				} elseif ( 'overwrite' === $conflict_mode ) {
@@ -961,17 +1015,19 @@ class UTILFOGE_Export_Import {
 				}
 			}
 
-			$post_id = wp_insert_post(
-				array(
-					'post_type'    => 'gblocks_styles',
-					'post_title'   => sanitize_text_field( $item['title'] ),
-					'post_name'    => isset( $item['name'] ) ? sanitize_title( $item['name'] ) : '',
-					'post_status'  => isset( $item['status'] ) ? sanitize_key( $item['status'] ) : 'publish',
-					'post_content' => isset( $item['content'] ) ? wp_kses_post( $item['content'] ) : '',
-				)
-			);
+			if ( ! $post_id ) {
+				$post_id = wp_insert_post(
+					array(
+						'post_type'    => 'gblocks_styles',
+						'post_title'   => sanitize_text_field( $item['title'] ),
+						'post_name'    => isset( $item['name'] ) ? sanitize_title( $item['name'] ) : '',
+						'post_status'  => isset( $item['status'] ) ? sanitize_key( $item['status'] ) : 'publish',
+						'post_content' => isset( $item['content'] ) ? wp_kses_post( $item['content'] ) : '',
+					)
+				);
+			}
 
-			if ( is_wp_error( $post_id ) ) {
+			if ( is_wp_error( $post_id ) || ! $post_id ) {
 				continue;
 			}
 
@@ -989,7 +1045,7 @@ class UTILFOGE_Export_Import {
 		return array(
 			'success' => true,
 			/* translators: 1: imported count, 2: skipped count */
-			'message' => sprintf( __( 'Global Styles: %1$d imported, %2$d skipped.', 'utility-for-generatepress' ), $imported, $skipped ),
+			'message' => sprintf( __( 'Global Styles & Design Tokens: %1$d imported, %2$d skipped.', 'utility-for-generatepress' ), $imported, $skipped ),
 		);
 	}
 
@@ -1027,9 +1083,9 @@ class UTILFOGE_Export_Import {
 							$merged[] = $group;
 						}
 					}
-					update_option( $option_name, $merged );
+					update_option( $option_name, $merged, false );
 				} else {
-					update_option( $option_name, $data[ $key ] );
+					update_option( $option_name, $data[ $key ], false );
 				}
 				$count++;
 			}
@@ -1388,7 +1444,10 @@ class UTILFOGE_Export_Import {
 		// 1. Regenerate GenerateBlocks Pro Global Styles CSS
 		if ( class_exists( 'GenerateBlocks_Pro_Styles' ) ) {
 			if ( method_exists( 'GenerateBlocks_Pro_Styles', 'get_styles_css' ) ) {
-				GenerateBlocks_Pro_Styles::get_styles_css( false );
+				$css = GenerateBlocks_Pro_Styles::get_styles_css( false );
+				if ( ! empty( $css ) ) {
+					update_option( 'generateblocks_style_css', $css );
+				}
 			}
 		}
 
@@ -1426,6 +1485,8 @@ class UTILFOGE_Export_Import {
 			'generateblocks_page_generateblocks-asset-library' => 'gb_asset_library',
 			'generateblocks_page_generateblocks-conditions'    => 'gb_conditions',
 			'generateblocks_page_generateblocks-overlay-panels' => 'gb_overlays',
+			'generateblocks_page_generateblocks-editor-access' => 'gb_access_profiles',
+			'generateblocks_page_generateblocks-forms'         => 'gb_forms',
 			'appearance_page_generatepress-font-library'       => 'font_library',
 		);
 
@@ -1719,6 +1780,228 @@ class UTILFOGE_Export_Import {
 			'success' => true,
 			/* translators: 1: imported count, 2: skipped count */
 			'message' => sprintf( __( 'Forms: %1$d imported, %2$d skipped.', 'utility-for-generatepress' ), $imported, $skipped ),
+		);
+	}
+
+	/**
+	 * Export GenerateBlocks Pro Editor Access Profiles.
+	 *
+	 * @return array
+	 */
+	private function export_gb_access_profiles() {
+		if ( ! post_type_exists( 'gb_access_profile' ) ) {
+			return array();
+		}
+
+		$posts = get_posts(
+			array(
+				'post_type'      => 'gb_access_profile',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+			)
+		);
+
+		$items = array();
+		foreach ( $posts as $post ) {
+			$meta = array();
+			$all_meta = get_post_meta( $post->ID );
+			foreach ( $all_meta as $mk => $mv ) {
+				$meta[ $mk ] = maybe_unserialize( $mv[0] );
+			}
+
+			$items[] = array(
+				'title'   => $post->post_title,
+				'name'    => $post->post_name,
+				'status'  => $post->post_status,
+				'content' => $post->post_content,
+				'meta'    => $meta,
+			);
+		}
+
+		return array(
+			'posts' => $items,
+		);
+	}
+
+	/**
+	 * Import GenerateBlocks Pro Editor Access Profiles.
+	 *
+	 * @param array  $data          Profiles data.
+	 * @param string $conflict_mode Conflict resolution mode.
+	 * @return array
+	 */
+	private function import_gb_access_profiles( $data, $conflict_mode ) {
+		if ( ! post_type_exists( 'gb_access_profile' ) || ! is_array( $data ) ) {
+			return array( 'success' => false, 'message' => __( 'Editor Access Profiles: GB Pro not active.', 'utility-for-generatepress' ) );
+		}
+
+		$imported = 0;
+		$skipped  = 0;
+		$posts    = isset( $data['posts'] ) ? $data['posts'] : ( is_array( $data ) ? $data : array() );
+
+		foreach ( $posts as $item ) {
+			if ( empty( $item['title'] ) ) {
+				continue;
+			}
+
+			$existing = get_posts(
+				array(
+					'post_type'   => 'gb_access_profile',
+					'title'       => $item['title'],
+					'post_status' => 'any',
+					'numberposts' => 1,
+				)
+			);
+
+			if ( ! empty( $existing ) ) {
+				if ( 'skip' === $conflict_mode ) {
+					$skipped++;
+					continue;
+				} elseif ( 'overwrite' === $conflict_mode ) {
+					wp_delete_post( $existing[0]->ID, true );
+				}
+			}
+
+			$post_id = wp_insert_post(
+				array(
+					'post_type'    => 'gb_access_profile',
+					'post_title'   => sanitize_text_field( $item['title'] ),
+					'post_name'    => isset( $item['name'] ) ? sanitize_title( $item['name'] ) : '',
+					'post_status'  => isset( $item['status'] ) ? sanitize_key( $item['status'] ) : 'publish',
+					'post_content' => isset( $item['content'] ) ? wp_kses_post( $item['content'] ) : '',
+				)
+			);
+
+			if ( is_wp_error( $post_id ) ) {
+				continue;
+			}
+
+			if ( ! empty( $item['meta'] ) && is_array( $item['meta'] ) ) {
+				foreach ( $item['meta'] as $mk => $mv ) {
+					if ( is_string( $mk ) ) {
+						update_post_meta( $post_id, sanitize_key( $mk ), $mv );
+					}
+				}
+			}
+
+			$imported++;
+		}
+
+		return array(
+			'success' => true,
+			/* translators: 1: imported count, 2: skipped count */
+			'message' => sprintf( __( 'Editor Access Profiles: %1$d imported, %2$d skipped.', 'utility-for-generatepress' ), $imported, $skipped ),
+		);
+	}
+
+	/**
+	 * Export GenerateBlocks Pro Editor Control Sets.
+	 *
+	 * @return array
+	 */
+	private function export_gb_access_sets() {
+		if ( ! post_type_exists( 'gb_access_set' ) ) {
+			return array();
+		}
+
+		$posts = get_posts(
+			array(
+				'post_type'      => 'gb_access_set',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+			)
+		);
+
+		$items = array();
+		foreach ( $posts as $post ) {
+			$meta = array();
+			$all_meta = get_post_meta( $post->ID );
+			foreach ( $all_meta as $mk => $mv ) {
+				$meta[ $mk ] = maybe_unserialize( $mv[0] );
+			}
+
+			$items[] = array(
+				'title'   => $post->post_title,
+				'name'    => $post->post_name,
+				'status'  => $post->post_status,
+				'content' => $post->post_content,
+				'meta'    => $meta,
+			);
+		}
+
+		return array(
+			'posts' => $items,
+		);
+	}
+
+	/**
+	 * Import GenerateBlocks Pro Editor Control Sets.
+	 *
+	 * @param array  $data          Control Sets data.
+	 * @param string $conflict_mode Conflict resolution mode.
+	 * @return array
+	 */
+	private function import_gb_access_sets( $data, $conflict_mode ) {
+		if ( ! post_type_exists( 'gb_access_set' ) || ! is_array( $data ) ) {
+			return array( 'success' => false, 'message' => __( 'Editor Control Sets: GB Pro not active.', 'utility-for-generatepress' ) );
+		}
+
+		$imported = 0;
+		$skipped  = 0;
+		$posts    = isset( $data['posts'] ) ? $data['posts'] : ( is_array( $data ) ? $data : array() );
+
+		foreach ( $posts as $item ) {
+			if ( empty( $item['title'] ) ) {
+				continue;
+			}
+
+			$existing = get_posts(
+				array(
+					'post_type'   => 'gb_access_set',
+					'title'       => $item['title'],
+					'post_status' => 'any',
+					'numberposts' => 1,
+				)
+			);
+
+			if ( ! empty( $existing ) ) {
+				if ( 'skip' === $conflict_mode ) {
+					$skipped++;
+					continue;
+				} elseif ( 'overwrite' === $conflict_mode ) {
+					wp_delete_post( $existing[0]->ID, true );
+				}
+			}
+
+			$post_id = wp_insert_post(
+				array(
+					'post_type'    => 'gb_access_set',
+					'post_title'   => sanitize_text_field( $item['title'] ),
+					'post_name'    => isset( $item['name'] ) ? sanitize_title( $item['name'] ) : '',
+					'post_status'  => isset( $item['status'] ) ? sanitize_key( $item['status'] ) : 'publish',
+					'post_content' => isset( $item['content'] ) ? wp_kses_post( $item['content'] ) : '',
+				)
+			);
+
+			if ( is_wp_error( $post_id ) ) {
+				continue;
+			}
+
+			if ( ! empty( $item['meta'] ) && is_array( $item['meta'] ) ) {
+				foreach ( $item['meta'] as $mk => $mv ) {
+					if ( is_string( $mk ) ) {
+						update_post_meta( $post_id, sanitize_key( $mk ), $mv );
+					}
+				}
+			}
+
+			$imported++;
+		}
+
+		return array(
+			'success' => true,
+			/* translators: 1: imported count, 2: skipped count */
+			'message' => sprintf( __( 'Editor Control Sets: %1$d imported, %2$d skipped.', 'utility-for-generatepress' ), $imported, $skipped ),
 		);
 	}
 }

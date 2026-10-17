@@ -162,7 +162,7 @@ class UTILFOGE_Settings {
 						$is_active = isset( $options[ $id ] ) ? $options[ $id ] : $default_state;
 						$toggle_url = wp_nonce_url( admin_url( 'themes.php?page=utilfoge-utility&action=toggle_module&module=' . $id ), 'utilfoge_toggle_module' );
 						
-						$shadow_color = $is_active ? 'var(--wp-admin-theme-color, #007cba)' : 'rgb(221, 221, 221)';
+						$shadow_color = $is_active ? 'var(--wp-components-color-accent, var(--wp-admin-theme-color, #007cba))' : 'rgb(221, 221, 221)';
 						$row_style = "box-shadow: {$shadow_color} -5px 0px 0px;";
 					?>
 					<div class="utilfoge-module-row <?php echo esc_attr( $is_active ? 'utilfoge-active' : 'utilfoge-inactive' ); ?>" style="<?php echo esc_attr( $row_style ); ?>">

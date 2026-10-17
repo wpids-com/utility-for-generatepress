@@ -1,10 +1,10 @@
 === Utility for GeneratePress ===
 Contributors: wpids
 Tags: generatepress, generateblocks, dark mode, fluid typography, gradient
-Requires at least: 6.0
-Tested up to: 7.0
+Requires at least: 6.7
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.01
+Stable tag: 1.1.02
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,13 @@ Most utilities only focus on one minor feature. **Utility for GeneratePress** co
 14. System Status and Diagnostics - Clean inline indicators reflecting your active modular setup.
 
 == Changelog ==
+
+= 1.1.02 =
+* Compatibility: Fully tested and certified compatible with WordPress 7.1.
+* Compatibility: Added full Export/Import support for GenerateBlocks Pro 2.7.0 and 2.8.0, including Editor Access Profiles (`gb_access_profile`), Control Sets (`gb_access_set`), Design Tokens (`gb_style_tokens`), and Style Categories.
+* Compatibility: Added GeneratePress Premium 2.5.6 sticky navigation logo dark mode support via `generate_sticky_navigation_logo_output` filter.
+* Performance: Optimized SVG Asset Library import with `autoload = false` to eliminate autoload overhead.
+* Tweak: Raised minimum supported WordPress version to 6.7 following GenerateBlocks 2.5.0 core standards.
 
 = 1.1.01 =
 * Feature: Added Dark Mode Logo support (Desktop and mobile headers).

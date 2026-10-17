@@ -5,6 +5,30 @@ All notable changes to the **Utility for GeneratePress** plugin will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.02] - 2026-10-17
+This stable release brings full alignment and compatibility with WordPress 7.1, GenerateBlocks 2.5.0, GenerateBlocks Pro 2.8.0, and GP Premium 2.5.6.
+
+### Added
+- **GenerateBlocks Pro 2.7.0 & 2.8.0 Support:** Extended the Export/Import module to capture and restore Editor Access Profiles (`gb_access_profile`), Control Sets (`gb_access_set`), Design Tokens (`gb_style_tokens`), Style Categories (`gb_style_category`), and the category display order option (`generateblocks_style_category_order`).
+- **Dashboard Screen Injection:** Added Export/Import UI injection mapping for the GenerateBlocks Editor Access screen (`generateblocks_page_generateblocks-editor-access`) and Forms screen (`generateblocks_page_generateblocks-forms`).
+- **GP Premium Sticky Navigation Logo:** Added filter support (`generate_sticky_navigation_logo_output`) so that the Dark Mode logo replaces the logo during sticky navigation scroll.
+
+### Changed
+- **Asset Library SVG Autoload Optimization:** Updated `update_option()` calls for `generateblocks_svg_shapes` and `generateblocks_svg_icons` to disable autoloading (`autoload = false`), aligning with GenerateBlocks Pro 2.8.0 database memory optimizations.
+- **Minimum Requirements:** Raised minimum supported WordPress version to 6.7 to align with GenerateBlocks 2.5.0 & GenerateBlocks Pro 2.8.0.
+- **Tested Up To:** Verified and updated compatibility testing up to WordPress 7.1.
+
+### Fixed
+- **Dark Mode Logo FOUC Prevention:** Added `html.dark` selector rules to the logo replacement stylesheet, ensuring the dark mode logo is displayed immediately upon page load without blinking.
+
+## [1.1.01] - 2026-06-27
+### Added
+- **Dark Mode Logo Support:** Added settings in Customizer to specify custom logos for Dark Mode (supporting desktop and mobile headers).
+- **GB Pro Forms Support:** Added Export/Import support for GenerateBlocks Pro 2.6.1 Forms Custom Post Type (`gblocks_form`) and form integrations option data.
+
+### Changed
+- **Toggle Position:** Changed default Dark Mode floating toggle position to Left.
+
 ## [1.1.0-RC3] - 2026-05-29
 This is the third Release Candidate (RC3) for the 1.1.0 branch. It implements a critical security patch from v1.0.18 stable.
 
