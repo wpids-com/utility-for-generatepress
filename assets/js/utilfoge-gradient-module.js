@@ -1,4 +1,4 @@
-﻿/**
+/**
  * UTILFOGE Gradient Module — Customizer Control JS
  */
 ( function( $ ) {
@@ -276,13 +276,16 @@
 		}
 	}
 
+	var activeStopRoot = null;
+
 	function hideStopPicker() {
 		activeStopIndex = -1;
 		$( '.utilfoge-gc-stop-swatch' ).removeClass( 'is-active' );
 		$( '.utilfoge-gc-stop-picker-inline' ).removeClass( 'is-open' ).slideUp( 200, function() {
 			var node = $( this ).find( '.utilfoge-gc-stop-picker-content' )[ 0 ];
-			if ( node && window.wp && wp.element && wp.element.unmountComponentAtNode ) {
-				wp.element.unmountComponentAtNode( node );
+			if ( activeStopRoot && typeof activeStopRoot.unmount === 'function' ) {
+				activeStopRoot.unmount();
+				activeStopRoot = null;
 			}
 			$( this ).find( '.utilfoge-gc-stop-picker-content' ).empty();
 		} );
@@ -329,7 +332,15 @@
 			} );
 		};
 
-		wp.element.render( el( PickerContainer ), node );
+		if ( typeof wp.element.createRoot === 'function' ) {
+			if ( activeStopRoot && typeof activeStopRoot.unmount === 'function' ) {
+				activeStopRoot.unmount();
+			}
+			activeStopRoot = wp.element.createRoot( node );
+			activeStopRoot.render( el( PickerContainer ) );
+		} else {
+			wp.element.render( el( PickerContainer ), node );
+		}
 	}
 
 	function destroyPickers() {

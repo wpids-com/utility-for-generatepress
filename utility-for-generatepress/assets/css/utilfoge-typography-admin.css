@@ -1,0 +1,100 @@
+﻿/* Fluid Typography Customizer - Refined UI v2 */
+
+.utilfoge-fluid-grid-container {
+    padding: 4px 0 12px;
+}
+
+.utilfoge-grid-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.utilfoge-grid-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.utilfoge-grid-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Match Native Customizer Labels */
+.utilfoge-grid-item label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #3c434a;
+    text-transform: none;
+    letter-spacing: normal;
+    margin: 0;
+}
+
+/* Input & Select Styling */
+.utilfoge-input-group {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+/* User's requested width override */
+.utilfoge-grid-item input[type="number"], 
+.utilfoge-grid-item input[type="text"] {
+    width: 100% !important;
+    min-height: 28px;
+    padding: 0 8px;
+    box-shadow: 0 0 0 transparent;
+    transition: box-shadow .1s linear;
+}
+
+/* Refined overrides for the combined group (Base Size + Unit) */
+.utilfoge-input-group .utilfoge-grid-input {
+    flex: 1 !important;
+    width: auto !important; 
+    min-width: 0;
+    border-radius: 3px 0 0 3px !important;
+}
+
+.utilfoge-grid-select {
+    width: 65px !important;
+    flex: none !important;
+    border-radius: 0 3px 3px 0 !important;
+    border-left: 0 !important;
+    padding-right: 20px !important;
+    min-height: 28px;
+}
+
+/* Focus states */
+.utilfoge-grid-item input:focus,
+.utilfoge-grid-item select:focus {
+    border-color: #2271b1 !important;
+    box-shadow: 0 0 0 1px #2271b1 !important;
+    outline: 2px solid transparent !important;
+}
+
+/* Subtle Description Text (Matches Native WP) */
+.utilfoge-grid-description {
+    margin-top: -4px;
+    font-size: 12px;
+    font-style: italic;
+    line-height: 1.5;
+    color: #646970;
+}
+
+.utilfoge-grid-description code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-style: normal;
+    color: #d63384;
+}
+
+/* Cleanup old layout issues */
+#sub-section-utilfoge_typography_section li.customize-control {
+    width: 100% !important;
+    float: none !important;
+    clear: both !important;
+}

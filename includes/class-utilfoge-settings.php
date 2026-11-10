@@ -55,9 +55,13 @@ class UTILFOGE_Settings {
 				'desc' => __( 'Native Dark/Light Mode toggle.', 'utility-for-generatepress' ),
 				'action_link' => admin_url( 'customize.php' ),
 			),
+			// The option key enable_editor_sync is kept for backward compatibility with 1.1.02.
 			'enable_editor_sync' => array(
-				'name' => __( 'Editor CSS Sync', 'utility-for-generatepress' ),
-				'desc' => __( 'Sync Customizer & Theme CSS to Gutenberg.', 'utility-for-generatepress' )
+				'name'     => __( 'Customizer Sync', 'utility-for-generatepress' ),
+				'desc'     => UTILFOGE_Customizer_Sync::is_gb_pro_available()
+					? __( 'Sync customizer with design tokens.', 'utility-for-generatepress' )
+					: __( 'This module will be powerful for sync design tokens in GB Pro.', 'utility-for-generatepress' ),
+				'sync_now' => true,
 			),
 			'enable_export_import' => array(
 				'name' => __( 'Export Import', 'utility-for-generatepress' ),
@@ -77,6 +81,51 @@ class UTILFOGE_Settings {
 			'utilfoge-utility',
 			array( $this, 'render_settings_page' )
 		);
+
+		$this->reposition_menu();
+	}
+
+	/**
+	 * Place "Utility" above "Theme Editor", after all GeneratePress and GP Premium items.
+	 */
+	private function reposition_menu() {
+		global $submenu;
+
+		if ( empty( $submenu['themes.php'] ) || ! is_array( $submenu['themes.php'] ) ) {
+			return;
+		}
+
+		$ours   = null;
+		$others = array();
+
+		foreach ( $submenu['themes.php'] as $item ) {
+			if ( isset( $item[2] ) && 'utilfoge-utility' === $item[2] ) {
+				$ours = $item;
+			} else {
+				$others[] = $item;
+			}
+		}
+
+		if ( null === $ours ) {
+			return;
+		}
+
+		$result   = array();
+		$inserted = false;
+
+		foreach ( $others as $item ) {
+			if ( ! $inserted && isset( $item[2] ) && in_array( $item[2], array( 'theme-editor.php', 'plugin-editor.php' ), true ) ) {
+				$result[] = $ours;
+				$inserted = true;
+			}
+			$result[] = $item;
+		}
+
+		if ( ! $inserted ) {
+			$result[] = $ours;
+		}
+
+		$submenu['themes.php'] = $result; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering our own submenu entry.
 	}
 
 	public function register_settings() {
@@ -134,7 +183,6 @@ class UTILFOGE_Settings {
 			</div>
 			<div class="utilfoge-dashboard-header__nav">
 				<a href="#" class="utilfoge-active"><?php esc_html_e( 'Utilities', 'utility-for-generatepress' ); ?></a>
-				<a href="https://wpids.com/elite-utility-for-gp" target="_blank"><?php esc_html_e( 'Elite', 'utility-for-generatepress' ); ?></a>
 				<a href="https://wpids.com/documentation" target="_blank"><?php esc_html_e( 'Documentation', 'utility-for-generatepress' ); ?></a>
 				<a href="https://wpids.com/help-support" target="_blank"><?php esc_html_e( 'Support', 'utility-for-generatepress' ); ?></a>
 			</div>
@@ -145,7 +193,7 @@ class UTILFOGE_Settings {
 				
 				<?php 
 				/**
-				 * Hook for Elite License Box
+				 * Hook to render extra content above the module list.
 				 */
 				do_action( 'utilfoge_dashboard_before_modules' ); 
 				?>
@@ -176,6 +224,22 @@ class UTILFOGE_Settings {
 								<?php endif; ?>
 							</h3>
 							<p><?php echo esc_html( $module['desc'] ); ?></p>
+							<?php
+							if ( $is_active && ! empty( $module['sync_now'] ) ) :
+								$sync_status = UTILFOGE_Customizer_Sync::get_status();
+								if ( ! empty( $sync_status['message'] ) ) :
+									$sync_note = $sync_status['message'];
+									if ( ! empty( $sync_status['skipped'] ) ) {
+										$sync_note .= ' ' . sprintf(
+											/* translators: %d: number of tokens */
+											_n( '%d existing token was left untouched.', '%d existing tokens were left untouched.', (int) $sync_status['skipped'], 'utility-for-generatepress' ),
+											(int) $sync_status['skipped']
+										);
+									}
+									?>
+									<p><?php echo esc_html( $sync_note ); ?></p>
+								<?php endif; ?>
+							<?php endif; ?>
 						</div>
 						<div class="utilfoge-module-actions">
 							<?php 
@@ -198,6 +262,11 @@ class UTILFOGE_Settings {
 								</div>
 							<?php endif; ?>
 
+							<?php if ( $is_active && ! empty( $module['sync_now'] ) && UTILFOGE_Customizer_Sync::is_gb_pro_available() ) : ?>
+								<div class="utilfoge-module-settings">
+									<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=utilfoge_customizer_sync_now' ), 'utilfoge_customizer_sync_now' ) ); ?>" class="components-button is-tertiary utilfoge-sync-now-button"><?php esc_html_e( 'Sync Now', 'utility-for-generatepress' ); ?></a>
+								</div>
+							<?php endif; ?>
 							<?php if ( $is_active ) : ?>
 								<a href="<?php echo esc_url( $toggle_url ); ?>" class="components-button is-secondary"><?php esc_html_e( 'Deactivate', 'utility-for-generatepress' ); ?></a>
 							<?php else : ?>

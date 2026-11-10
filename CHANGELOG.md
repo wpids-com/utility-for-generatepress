@@ -5,6 +5,30 @@ All notable changes to the **Utility for GeneratePress** plugin will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.03] - 2026-11-10
+Production stable release. Introduces **Customizer Sync** for GenerateBlocks Pro 2.8.0+ Design Tokens alongside React 19 forward-compatibility and full WordPress.org Plugin Check compliance.
+
+### Added
+- **Customizer Sync Module (`UTILFOGE_Customizer_Sync`):**
+  - **Two-Way GeneratePress Global Colors Sync:** Saving the GeneratePress Customizer automatically syncs with Design Tokens under the `GeneratePress` category, and editing token values in GenerateBlocks Pro syncs changes directly back to your Customizer palette.
+  - **Color Variants Tokens (One-Way):** Exposes shades, tints (`10–90`), and color harmony variants from the Color Management module under the `Variants` category.
+  - **Fluid Typography Tokens (One-Way):** Exposes the `--utilfoge-step-*` modular `clamp()` scale as `unit` Design Tokens scoped to `fontSize` under the `Fluid Typography` category.
+  - **Full Border Color Scope:** Color token scope includes `color`, `backgroundColor`, `borderTopColor`, `borderRightColor`, `borderBottomColor`, and `borderLeftColor` for complete GenerateBlocks Pro color picker support.
+  - **Sync Now Button & Status Feedback:** Dedicated manual sync action directly on the dashboard card, cleanly styled and aligned.
+  - **Context-Aware Module Hint:** Displays 'Sync customizer with design tokens.' when GenerateBlocks Pro is active, or a non-intrusive hint when it is not.
+
+### Changed
+- **Editor CSS Sync Evolution:** Evolved the former Editor CSS Sync into Customizer Sync while preserving existing toggle options, child theme stylesheet enqueuing, and Customizer Additional CSS injection inside the Gutenberg editor canvas.
+- **Appearance Menu Order:** Repositioned `Appearance > Utility` directly above Theme Editor and below all GeneratePress and GP Premium menu items.
+- **Discovery & SEO Overhaul:** Updated `readme.txt` tags, feature descriptions, and FAQs to highlight Design Tokens, Customizer Sync, Global Styles, and GP / GenerateBlocks Export & Import.
+
+### Fixed
+- **React 19 Compatibility:** Replaced deprecated `ReactDOM.unmountComponentAtNode` calls with modern `wp.element.createRoot()` and `root.unmount()` across Color Management and Gradient Palette modules.
+- **WordPress.org Plugin Check Compliance:** Achieved 100% clean pass by syncing `Stable tag` to `1.1.03`, writing a standard English short description, and removing redundant `Tested up to` from the PHP header.
+
+### Removed
+- **Elite Dashboard Navigation:** Removed deprecated Elite link from the Utility dashboard header.
+- **Legacy Files:** Stripped unused legacy `utilgp-*` files from distribution.
 ## [1.1.02] - 2026-10-17
 This stable release brings full alignment and compatibility with WordPress 7.1, GenerateBlocks 2.5.0, GenerateBlocks Pro 2.8.0, and GP Premium 2.5.6.
 

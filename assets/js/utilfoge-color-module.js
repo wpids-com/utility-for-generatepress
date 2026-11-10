@@ -1,4 +1,4 @@
-﻿/**
+/**
  * UTILFOGE Color Module — Customizer JS
  * Handles: Parse colors, Mapping wizard modal, Preview modal, Save/Delete sets.
  */
@@ -300,6 +300,7 @@
     // ─── Massive Menu Editor ──────────────────────────────────────
 
     var activeSlug = '';
+    var colorPickerRoot = null;
 
     function openMassiveMenu(slug) {
         activeSlug = slug;
@@ -359,7 +360,15 @@
                 });
             };
 
-            wp.element.render(el(PickerContainer), node);
+            if (typeof wp.element.createRoot === 'function') {
+                if (colorPickerRoot && typeof colorPickerRoot.unmount === 'function') {
+                    colorPickerRoot.unmount();
+                }
+                colorPickerRoot = wp.element.createRoot(node);
+                colorPickerRoot.render(el(PickerContainer));
+            } else {
+                wp.element.render(el(PickerContainer), node);
+            }
         } else {
             // Fallback to plain text input if React is somehow missing
             document.getElementById('utilfoge-react-color-picker-root').innerHTML = 
@@ -613,10 +622,15 @@
         showStatus('Color deleted.');
     });
 
-    $(document).on('click', '#utilfoge-editor-cancel, #utilfoge-editor-close', function () {
-        if (wp && wp.element && wp.element.unmountComponentAtNode) {
-            wp.element.unmountComponentAtNode(document.getElementById('utilfoge-react-color-picker-root'));
+    function cleanupColorPicker() {
+        if (colorPickerRoot && typeof colorPickerRoot.unmount === 'function') {
+            colorPickerRoot.unmount();
+            colorPickerRoot = null;
         }
+    }
+
+    $(document).on('click', '#utilfoge-editor-cancel, #utilfoge-editor-close', function () {
+        cleanupColorPicker();
         $('#utilfoge-editor-modal').fadeOut(200);
     });
 

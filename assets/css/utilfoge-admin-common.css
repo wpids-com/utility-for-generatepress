@@ -229,6 +229,15 @@
     stroke: #1e1e1e !important;
 }
 
+.components-button.is-tertiary.utilfoge-sync-now-button {
+    width: auto;
+    padding: 0 5px !important;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
 .utilfoge-module-message {
     background: #fafafa;
     border-radius: 3px;

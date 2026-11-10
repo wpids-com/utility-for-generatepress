@@ -1,79 +1,126 @@
 === Utility for GeneratePress ===
 Contributors: wpids
-Tags: generatepress, generateblocks, dark mode, fluid typography, gradient
+Tags: generatepress, generateblocks, design tokens, dark mode, fluid typography
 Requires at least: 6.7
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.02
+Stable tag: 1.1.03
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Ultimate utility for GeneratePress & GenerateBlocks. Adds dark mode, fluid typography, gradients, editor sync, and settings migration.
+Enhance GeneratePress and GenerateBlocks with design tokens, customizer sync, dark mode, fluid typography, and site migration tools.
 
 == Description ==
 
-Unlock the full power of your WordPress website with the most **underrated helper tool for GeneratePress & GenerateBlocks**. Designed specifically for developers, designers, and site builders, this plugin bridges gaps and adds powerhouse features to the GP ecosystem with absolute performance and zero overhead.
+**Utility for GeneratePress** is the complete **GeneratePress Utility** and **GenerateBlocks** design system companion for WordPress developers, agencies, and site builders. It bridges the gap between the **GeneratePress Customizer** and **GenerateBlocks Pro Design Tokens** and **Global Styles**, while adding native **Color Management**, automatic **Color Shades**, a **Gradient Palette** builder, **Fluid Typography**, **Dark Mode**, and one-click **GP Export / GP Import** and **GenerateBlocks Export / Import** tools — with zero frontend bloat.
 
-Whether you are using GeneratePress Premium or the free theme, this lightweight utility integrates perfectly into the Customizer and block editor to deliver a native-feel administration dashboard.
+Whether you use the free GeneratePress theme, **GP Premium**, **GenerateBlocks**, or **GenerateBlocks Pro**, every module integrates directly into the native WordPress Customizer and Gutenberg block editor.
 
-= 🚀 Main Features =
+= 🔗 Customizer Sync & Design Token Sync (New!) =
 
-* **Dynamic Dark Mode**: Turn your site into a modern, eye-friendly experience. Built with mathematical HSL auto-derivatives, contrast-boosting logic, and real-time customizer previewing. Completely overrides original global variables in `.dark` scope for a clean CSS footprint.
-* **Fluid Typography Wizard**: Automatically calculate and generate responsive typography using the CSS `clamp()` function. Easily configure dynamic scale ratios to eliminate tedious media queries.
-* **Advanced Color & Gradient Management**: Overhauled gradient builder that lets you easily create, drag-and-drop, and manage custom CSS gradient variables. Fully integrates with Gutenberg and theme.json native palettes.
-* **Seamless Export / Import Module**: Backup, migrate, and transfer all your **GeneratePress** settings, custom **GP Elements**, and full **GenerateBlocks** layouts (including Global Styles, Local Patterns, SVG shapes, icons, display conditions, and overlay panels) with automated CSS cache-rebuilding.
-* **Editor CSS Sync**: Achieve a true WYSIWYG experience in Gutenberg. Automatically enqueues and synchronizes your Child Theme or Customizer CSS directly into the editor canvas.
+Keep your **GeneratePress Customizer** and **GenerateBlocks Pro Design Tokens** (`2.8.0+`) in sync without duplicate setup:
+
+* **Two-Way GP Global Colors ↔ Design Tokens Sync**: Saving the GeneratePress Customizer automatically creates and updates matching color **Design Tokens** under the `GeneratePress` category in GenerateBlocks Pro. Updating those token values in the GenerateBlocks Design Tokens panel syncs changes right back to your GeneratePress Global Colors.
+* **Color Shades & Variants Token Sync**: Automatically exposes all generated **Color Shades**, tints (`10–90`), and color harmony tokens from **Color Management** under the `Variants` category in GenerateBlocks Design Tokens.
+* **Fluid Typography Token Sync**: Automatically registers your `--utilfoge-step-*` `clamp()` scale as `unit` **Design Tokens** scoped to `fontSize` under the `Fluid Typography` category for one-click selection inside GenerateBlocks typography controls.
+* **One-Click "Sync Now" & Safe Checksum Architecture**: Trigger a manual sync anytime from **Appearance > Utility**. Built on GenerateBlocks Pro's native `:root` checksum validation and snapshot history — user-created tokens are never overwritten or deleted.
+* **Gutenberg Editor CSS Sync**: Automatically enqueues your active Child Theme stylesheet and Customizer Additional CSS inside the Gutenberg block editor for a true WYSIWYG editing experience (works with or without GenerateBlocks Pro).
+
+= 🎨 Color Management, Color Shades & Harmony Variants =
+
+Build a complete design system palette directly from your **GeneratePress Global Colors**:
+
+* **Automatic Color Shades & Tints (`10–90`)**: Generate full 9-step lightness scales (`--slug-10` through `--slug-90`) from any base color in your palette.
+* **Mathematical Color Harmonies**: Generate Complementary, Triadic, Analogous, and Split-Complementary color variables with one click.
+* **Bulk CSS Variable Import**: Paste any `:root` CSS block to parse, map, and import colors straight into GeneratePress Global Colors and **Design Tokens**.
+
+= 🌈 Gradient Palette & Native theme.json Presets =
+
+* **Visual Drag-and-Drop Gradient Palette Builder**: Create linear and radial CSS gradients using the native WordPress React ColorPicker with full alpha transparency support.
+* **Native Gutenberg & theme.json Integration**: Automatically injects custom gradients as native WordPress presets (`--wp--preset--gradient--*`) plus `.has-{slug}-gradient-text` and `.has-{slug}-gradient-border` utility classes with dark mode variant support.
+
+= 📐 Fluid Typography & Responsive clamp() Wizard =
+
+* **Zero-Media-Query Fluid Typography**: Automatically calculate responsive font sizes using CSS `clamp()` based on your base size, min/max viewport widths, and modular scale ratios (Minor Third, Major Third, Perfect Fourth, Golden Ratio, or custom).
+* **Automatic Heading & Token Mapping**: Maps `--utilfoge-step--1` through `--utilfoge-step-8` to `body` and `h1–h6`, and syncs them directly to **GenerateBlocks Pro Design Tokens**.
+
+= 🌙 Dynamic Dark Mode & HSL Contrast Engine =
+
+* **Zero-Duplication CSS Variable Override**: Overrides your existing GeneratePress Global Colors inside the `.dark` scope so every block using `var(--contrast)`, `var(--base)`, or **Design Tokens** adapts to Dark Mode automatically.
+* **HSL Contrast Boosting & Auto-Desaturation**: Automatically calculates eye-friendly dark counterparts for your entire color palette.
+* **Dark Mode Logo Replacement**: Dedicated Customizer controls for desktop, mobile header, and GP Premium sticky navigation dark mode logos with zero-FOUC early script execution.
+
+= 📦 GP Export / GP Import & GenerateBlocks Export / Import =
+
+A complete backup and migration toolkit for **GeneratePress** and **GenerateBlocks**:
+
+* **GP Export & GP Import**: Export and import GeneratePress theme settings, Global Colors, Typography, and customizer configurations.
+* **GP Elements Export/Import**: Backup and migrate custom **GeneratePress Elements** (`gp_elements` — Block, Header, Hook, and Layout Elements) across sites.
+* **GenerateBlocks Export & GenerateBlocks Import**: Migrate **Global Styles**, **Design Tokens** (`gb_style_tokens`), **Style Categories**, **Local Patterns**, **Asset Library SVGs & Icons**, **Overlay Panels**, **Display Conditions**, **Forms**, and **Editor Access Profiles** with automatic CSS cache rebuilding.
+* **GeneratePress Brand Tool `theme.json` Import**: Import palettes and typography directly from `theme.json` files.
 
 = ⚡ Performance-First Philosophy =
-We hate bloat as much as you do. This plugin enqueues minimal vanilla CSS and JS, utilizes native WordPress Gutenberg components, and does not rely on heavy external frameworks, keeping your Google PageSpeed scores at 100%.
+
+Zero bloat, zero external framework dependencies. Every module is individually toggleable under **Appearance > Utility**, uses native WordPress React components in the admin, and outputs ultra-clean CSS variables on the frontend.
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/utility-for-generatepress` directory, or install through the WordPress Plugins screen.
-2. Activate the plugin.
-3. Navigate to **Appearance > Utility** in your WordPress dashboard to toggle your desired modules.
+1. Upload the plugin files to the `/wp-content/plugins/utility-for-generatepress` directory, or install the plugin through the WordPress Plugins screen directly.
+2. Activate **Utility for GeneratePress** through the **Plugins** screen in WordPress.
+3. Navigate to **Appearance > Utility** to toggle modules, run **Customizer Sync**, or use the **GP / GenerateBlocks Export & Import** tools.
 
 == Frequently Asked Questions ==
 
-= Does this require GeneratePress Premium? =
-No! It works beautifully with the free version of GeneratePress. However, it is built to complement both the free and premium ecosystems perfectly.
+= How does Customizer Sync and Design Token Sync work with GenerateBlocks Pro? =
+When **GenerateBlocks Pro 2.8.0+** is active, the **Customizer Sync** module connects the GeneratePress Customizer with GenerateBlocks Design Tokens. Your **GeneratePress Global Colors** sync two-way with the `GeneratePress` token category, while **Color Shades / Variants** (`--slug-10` to `--slug-90`, harmonies) and **Fluid Typography** steps (`--utilfoge-step-*`) sync one-way into the `Variants` and `Fluid Typography` categories. If GenerateBlocks Pro is not installed, Customizer Sync continues to work as an Editor CSS Sync tool for Gutenberg.
 
-= How does the Dynamic Dark Mode contrast boosting work? =
-Our Dark Mode module uses a mathematical HSL color math engine. Instead of creating redundant CSS classes, it dynamically overrides the original global variables inside the `.dark` selector. The "Contrast Boosting" feature automatically desaturates bright colors and enhances background-to-text contrast ratios to guarantee optimal legibility and prevent eye strain.
+= Does this plugin require GeneratePress Premium or GenerateBlocks Pro? =
+No! It only requires the free **GeneratePress** theme. However, it deeply integrates with **GP Premium** (Elements, Sticky Navigation Dark Mode Logo) and **GenerateBlocks / GenerateBlocks Pro** (Design Tokens, Global Styles, Local Patterns, Forms, and Asset Library migration) when they are active.
 
-= Does Fluid Typography support custom scale ratios? =
-Yes! The Fluid Typography Wizard automatically calculates responsive text scaling using the modern CSS `clamp()` function. You can set custom minimum/maximum viewports and scale ratios, completely eliminating the need for tedious manual media queries.
+= How do Color Management and Color Shades work? =
+Inside the Customizer, the **Color Management** module lets you select any GeneratePress Global Color (or import `:root` CSS variables) and automatically generate 9-step **Color Shades** and tints (`10` through `90`), harmony variants, and dark mode counterparts. All generated variables are immediately available in Gutenberg and synced to GenerateBlocks Design Tokens.
 
-= How does the Gradient Builder sync with Gutenberg? =
-Our advanced Gradient Builder provides a drag-and-drop Color Stop slider using the native WordPress React ColorPicker. It automatically registers the resulting custom CSS gradients and seamlessly injects them directly into Gutenberg's block settings and native palettes via `theme.json` hooks.
+= Can I use this for GP Export, GP Import, and GP Elements Export/Import? =
+Yes! The built-in **Export / Import** module lets you perform a selective or full **GP Export** and **GP Import** — including GeneratePress theme settings, Global Colors, Fluid Typography, and **GP Elements Export/Import** (`gp_elements`) — in a single JSON file.
 
-= How does the GenerateBlocks Export/Import work? =
-Our Export/Import module natively supports both **GeneratePress** settings (including custom Elements) and **GenerateBlocks Pro** assets (including Local Patterns, Global Styles, SVGs, custom icons, and displays). It bundles everything into a secure package and automatically rebuilds the CSS styles cache on import to ensure your pages look perfect instantly.
+= Does it support GenerateBlocks Export, GenerateBlocks Import, and Global Styles? =
+Yes! You can export and import **GenerateBlocks Global Styles**, **Design Tokens**, **Style Categories**, **Local Patterns**, **SVG Shapes & Icons**, **Display Conditions**, **Overlay Panels**, **Forms**, and **Editor Access Profiles** with automatic dynamic CSS cache regeneration on import.
 
-= Will this plugin slow down my Gutenberg editor? =
-No. The Editor CSS Sync enqueues your styles using native WordPress editor styles hooks. This ensures they only load inside the active editor iframe frame with zero page overhead or blocking external scripts.
+= How does the Dynamic Dark Mode work with Global Colors and Design Tokens? =
+Instead of creating separate dark classes for every block, our Dark Mode engine overrides your original CSS variables (`--contrast`, `--base`, `--accent`, etc.) inside the `.dark` selector. Any GeneratePress element or GenerateBlocks block styled with Global Colors or **Design Tokens** automatically switches to its dark counterpart with zero extra configuration.
 
-= What makes this the most underrated helper tool? =
-Most utilities only focus on one minor feature. **Utility for GeneratePress** combines fluid typography scaling, an advanced math-based dark mode engine, dynamic theme.json gradient injection, and a robust migration engine into a single unified design system that runs with zero performance overhead.
+= How does the Gradient Palette builder integrate with Gutenberg? =
+The **Gradient Palette** module provides a drag-and-drop multi-stop gradient builder in the Customizer and automatically registers your presets into WordPress's native `theme.json` palette (`--wp--preset--gradient--*`) as well as `.has-{slug}-gradient-text` and `.has-{slug}-gradient-border` utility classes.
 
 == Screenshots ==
 
-1. Utility for GeneratePress Dashboard - Easily toggle and manage your modular design extensions.
-2. Dynamic Dark Mode Wizard - Real-time dark mode palette configuration inside the Customizer.
-3. Contrast Boosting Settings - Auto-desaturate vibrant colors and boost reading legibility.
-4. Fluid Typography Panel - Automatically calculate responsive typography scaling on the fly.
-5. Fluid Viewport Configuration - Customize min/max viewports and scaling ratios.
-6. Advanced Drag-and-Drop Gradient Builder - Craft beautiful custom CSS gradients.
-7. Gutenberg Palette Integration - Syncing custom gradient variables directly into block editor controls.
-8. Secure Export / Import Module - Easily backup or migrate your elements, styles, and configurations.
-9. Seamless Element Dashboard Injection - Quick migration buttons integrated into native CPT dashboards.
-10. Gutenberg Editor CSS Sync - Real-time WYSIWYG sync of your styles inside the editor canvas.
-11. Unified Admin Branding - Perfectly matches the native premium GeneratePress look and feel.
-12. HSL Color Math Engine Options - Configure custom alpha opacity and HSL auto-derivatives.
-13. Mobile Responsive Design Preview - Beautiful fluid typography scaling on mobile viewports.
-14. System Status and Diagnostics - Clean inline indicators reflecting your active modular setup.
+1. Utility for GeneratePress Dashboard - Toggle modules, run Customizer Sync, and manage GP & GenerateBlocks Export/Import.
+2. Customizer Sync & Design Tokens - Automatic synchronization of GP Global Colors, Color Variants, and Fluid Typography into GenerateBlocks Pro Design Tokens.
+3. Color Management & Color Shades - Generate 10–90 tints/shades and color harmony variants in the Customizer.
+4. Dynamic Dark Mode Wizard - Real-time dark mode palette and logo configuration inside the Customizer.
+5. Contrast Boosting Settings - Auto-desaturate vibrant colors and boost reading legibility in Dark Mode.
+6. Fluid Typography Panel - Automatically calculate responsive `clamp()` typography scaling on the fly.
+7. Fluid Viewport Configuration - Customize min/max viewports and modular scale ratios.
+8. Advanced Drag-and-Drop Gradient Palette Builder - Craft custom linear and radial CSS gradients.
+9. Gutenberg Palette Integration - Custom gradient variables and Design Tokens inside block editor controls.
+10. GP & GenerateBlocks Export / Import Module - Backup or migrate GP Elements, Global Styles, Design Tokens, Patterns, and settings.
+11. Seamless Element Dashboard Injection - Quick export/import buttons integrated into native GP & GB admin screens.
+12. Gutenberg Editor CSS Sync - Real-time WYSIWYG sync of your Customizer and Child Theme styles inside the editor canvas.
+13. HSL Color Math Engine Options - Configure alpha opacity and HSL auto-derivatives.
+14. Mobile Responsive Design Preview - Fluid typography scaling across desktop, tablet, and mobile viewports.
 
 == Changelog ==
+
+= 1.1.03 =
+* Feature: New Customizer Sync module (evolves Editor CSS Sync). Syncs GeneratePress Global Colors two-way with GenerateBlocks Pro Design Tokens (2.8.0+), and exposes Color Management variants and Fluid Typography steps as tokens.
+* Feature: Added manual 'Sync Now' action and live sync status feedback directly on the Utility dashboard card.
+* Tweak: Expanded color token scope to include borderTopColor, borderRightColor, borderBottomColor, and borderLeftColor for complete GenerateBlocks Pro border color picker support.
+* Tweak: Context-aware module hint displaying 'Sync customizer with design tokens.' when GenerateBlocks Pro is active, or a non-intrusive hint when it is not.
+* Tweak: Repositioned 'Appearance > Utility' submenu directly above Theme Editor and below all GeneratePress / GP Premium items.
+* Compliance: Achieved 100% clean pass on automated WordPress.org Plugin Check (synced Stable tag, standard English short description, removed redundant Tested up to from PHP header).
+* Compatibility: Replaced deprecated ReactDOM.unmountComponentAtNode with createRoot() and root.unmount() for React 19 forward compatibility.
+* Cleanup: Removed deprecated Elite dashboard navigation link and cleaned up legacy utilgp-* files.
+* Docs: Comprehensive documentation and discovery overhaul for Design Tokens, Customizer Sync, Global Styles, and GP / GenerateBlocks Export & Import.
 
 = 1.1.02 =
 * Compatibility: Fully tested and certified compatible with WordPress 7.1.

@@ -26,6 +26,7 @@ class UTILFOGE_Core {
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-typography.php';
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-dark-mode.php';
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-export-import.php';
+		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-customizer-sync.php';
 		require_once UTILFOGE_PLUGIN_DIR . 'includes/class-utilfoge-settings.php';
 	}
 
@@ -65,7 +66,13 @@ class UTILFOGE_Core {
 			$dark_mode->init();
 		}
 
-		// 4. Editor CSS Sync is handled via enqueue_editor_assets() below
+		// 4. Customizer Sync: legacy Editor CSS sync is handled via enqueue_editor_assets() below;
+		// Design Tokens sync (GenerateBlocks Pro) is handled by UTILFOGE_Customizer_Sync.
+		$is_customizer_sync = isset( $options['enable_editor_sync'] ) ? $options['enable_editor_sync'] : true;
+		if ( $is_customizer_sync ) {
+			$customizer_sync = new UTILFOGE_Customizer_Sync();
+			$customizer_sync->init();
+		}
 
 		// 5. Export Import
 		$is_export_import = isset( $options['enable_export_import'] ) ? $options['enable_export_import'] : true;
